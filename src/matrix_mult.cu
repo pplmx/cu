@@ -233,39 +233,48 @@ void runMatrixMulBenchmark(int size) {
     cudaEvent_t start, stop;
     float naiveTime, tiledTime, cublasTime;
 
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
+    CUDA_CHECK(cudaEventCreate(&start));
+    CUDA_CHECK(cudaEventCreate(&stop));
 
     std::cout << "\n===== Matrix Multiplication Benchmark (" << size << "x" << size << ") =====" << std::endl;
 
-    cudaEventRecord(start);
+    CUDA_CHECK(cudaEventRecord(start));
     multiplyMatricesNaive(h_A.data(), h_B.data(), h_C_naive.data(), M, N, K);
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&naiveTime, start, stop);
+    CUDA_CHECK(cudaEventRecord(stop));
+    CUDA_CHECK(cudaEventSynchronize(stop));
+    CUDA_CHECK(cudaEventElapsedTime(&naiveTime, start, stop));
     std::cout << "Naive:  " << naiveTime << " ms" << std::endl;
 
-    cudaEventRecord(start);
+    CUDA_CHECK(cudaEventRecord(start));
     multiplyMatricesTiled(h_A.data(), h_B.data(), h_C_tiled.data(), M, N, K);
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&tiledTime, start, stop);
+    CUDA_CHECK(cudaEventRecord(stop));
+    CUDA_CHECK(cudaEventSynchronize(stop));
+    CUDA_CHECK(cudaEventElapsedTime(&tiledTime, start, stop));
     std::cout << "Tiled:  " << tiledTime << " ms (speedup: " << naiveTime / tiledTime << "x)" << std::endl;
 
-    cudaEventRecord(start);
+    CUDA_CHECK(cudaEventRecord(start));
     multiplyMatricesOnGPU(h_A.data(), h_B.data(), h_C_cublas.data(), M, N, K);
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&cublasTime, start, stop);
+    CUDA_CHECK(cudaEventRecord(stop));
+    CUDA_CHECK(cudaEventSynchronize(stop));
+    CUDA_CHECK(cudaEventElapsedTime(&cublasTime, start, stop));
     std::cout << "cuBLAS: " << cublasTime << " ms (speedup: " << naiveTime / cublasTime << "x)" << std::endl;
 
-    float maxDiff = 0;
+    float maxDiffNaive = 0;
+    float maxDiffTiled = 0;
     for (int i = 0; i < M * K; i++) {
-        float diff = std::abs(h_C_naive[i] - h_C_tiled[i]);
-        if (diff > maxDiff) maxDiff = diff;
+        float diffNaive = std::abs(h_C_naive[i] - h_C_cublas[i]);
+        float diffTiled = std::abs(h_C_tiled[i] - h_C_cublas[i]);
+        if (diffNaive > maxDiffNaive) maxDiffNaive = diffNaive;
+        if (diffTiled > maxDiffTiled) maxDiffTiled = diffTiled;
     }
-    std::cout << "Max diff (naive vs tiled): " << maxDiff << std::endl;
+    std::cout << "Max diff (naive vs cuBLAS): " << maxDiffNaive << std::endl;
+    std::cout << "Max diff (tiled vs cuBLAS): " << maxDiffTiled << std::endl;
 
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
+    const float EPSILON = 1e-4f;
+    bool passed = (maxDiffNaive < EPSILON && maxDiffTiled < EPSILON);
+    std::cout << "Verification: " << (passed ? "PASS" : "FAIL")
+              << " (threshold: " << EPSILON << ")" << std::endl;
+
+    CUDA_CHECK(cudaEventDestroy(start));
+    CUDA_CHECK(cudaEventDestroy(stop));
 }
