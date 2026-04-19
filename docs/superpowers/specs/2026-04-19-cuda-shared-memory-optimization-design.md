@@ -20,7 +20,7 @@
 |------|------|
 | Tiling | 将矩阵分块加载到 shared memory |
 | Memory Coalescing | 确保 global memory 访问是合并的 |
-| Bank Conflict 规避 | 通过 padding 避免 shared memory bank conflict |
+| Bank Conflict 规避 | shared memory 使用 17 列 padding (17 而不是 16) 来避免 bank conflict |
 
 ## Data Flow
 
@@ -52,6 +52,7 @@ src/
 
 ```cpp
 // Tiled 矩阵乘法 (带 shared memory 优化)
+// 参数: A(MxN) * B(NxK) = C(MxK)
 template <typename T>
 void multiplyMatricesTiled(const T* h_A, const T* h_B, T* h_C, int M, int N, int K);
 
