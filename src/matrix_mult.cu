@@ -1,4 +1,8 @@
 #include <type_traits>    // For std::is_same_v
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
+#include <vector>
 #include "cuda_utils.h"   // Custom CUDA utility functions and macros for error checking
 #include "matrix_mult.h"  // Header for this matrix multiplication module
 
@@ -211,3 +215,57 @@ void multiplyMatricesTiled(const T* hostMatrixA, const T* hostMatrixB, T* hostRe
 
 template void multiplyMatricesTiled<float>(const float*, const float*, float*, int, int, int);
 template void multiplyMatricesTiled<double>(const double*, const double*, double*, int, int, int);
+
+void runMatrixMulBenchmark(int size) {
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
+
+    int M = size, N = size, K = size;
+
+    std::vector<float> h_A(M * N);
+    std::vector<float> h_B(N * K);
+    std::vector<float> h_C_naive(M * K);
+    std::vector<float> h_C_tiled(M * K);
+    std::vector<float> h_C_cublas(M * K);
+
+    for (int i = 0; i < M * N; i++) h_A[i] = static_cast<float>(std::rand()) / RAND_MAX;
+    for (int i = 0; i < N * K; i++) h_B[i] = static_cast<float>(std::rand()) / RAND_MAX;
+
+    cudaEvent_t start, stop;
+    float naiveTime, tiledTime, cublasTime;
+
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    std::cout << "\n===== Matrix Multiplication Benchmark (" << size << "x" << size << ") =====" << std::endl;
+
+    cudaEventRecord(start);
+    multiplyMatricesNaive(h_A.data(), h_B.data(), h_C_naive.data(), M, N, K);
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&naiveTime, start, stop);
+    std::cout << "Naive:  " << naiveTime << " ms" << std::endl;
+
+    cudaEventRecord(start);
+    multiplyMatricesTiled(h_A.data(), h_B.data(), h_C_tiled.data(), M, N, K);
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&tiledTime, start, stop);
+    std::cout << "Tiled:  " << tiledTime << " ms (speedup: " << naiveTime / tiledTime << "x)" << std::endl;
+
+    cudaEventRecord(start);
+    multiplyMatricesOnGPU(h_A.data(), h_B.data(), h_C_cublas.data(), M, N, K);
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&cublasTime, start, stop);
+    std::cout << "cuBLAS: " << cublasTime << " ms (speedup: " << naiveTime / cublasTime << "x)" << std::endl;
+
+    float maxDiff = 0;
+    for (int i = 0; i < M * K; i++) {
+        float diff = std::abs(h_C_naive[i] - h_C_tiled[i]);
+        if (diff > maxDiff) maxDiff = diff;
+    }
+    std::cout << "Max diff (naive vs tiled): " << maxDiff << std::endl;
+
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+}

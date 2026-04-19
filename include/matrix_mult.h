@@ -25,3 +25,5 @@ void multiplyMatricesTiled(const T* hostMatrixA, const T* hostMatrixB, T* hostRe
 
 extern template void multiplyMatricesTiled<float>(const float*, const float*, float*, int, int, int);
 extern template void multiplyMatricesTiled<double>(const double*, const double*, double*, int, int, int);
+
+void runMatrixMulBenchmark(int size);
