@@ -12,15 +12,21 @@ __global__ void sobelKernel(const uint8_t* input, uint8_t* output,
         return;
     }
 
-    int gx = -static_cast<int>(input[(y-1)*width+(x-1)]) + static_cast<int>(input[(y-1)*width+(x+1)])
-             -2*static_cast<int>(input[y*width+(x-1)]) + 2*static_cast<int>(input[y*width+(x+1)])
-             -static_cast<int>(input[(y+1)*width+(x-1)]) + static_cast<int>(input[(y+1)*width+(x+1)]);
+    auto getGray = [&](int row, int col) -> float {
+        size_t idx = (row * static_cast<int>(width) + col) * 3;
+        float r = static_cast<float>(input[idx]);
+        float g = static_cast<float>(input[idx + 1]);
+        float b = static_cast<float>(input[idx + 2]);
+        return 0.299f * r + 0.587f * g + 0.114f * b;
+    };
 
-    int gy = -static_cast<int>(input[(y-1)*width+(x-1)]) - 2*static_cast<int>(input[(y-1)*width+x]) - static_cast<int>(input[(y-1)*width+(x+1)])
-             +static_cast<int>(input[(y+1)*width+(x-1)]) + 2*static_cast<int>(input[(y+1)*width+x]) + static_cast<int>(input[(y+1)*width+(x+1)]);
+    float gx = -getGray(y-1, x-1) - 2.0f*getGray(y, x-1) - getGray(y+1, x-1)
+               +getGray(y-1, x+1) + 2.0f*getGray(y, x+1) + getGray(y+1, x+1);
 
-    int magnitude = static_cast<int>(sqrtf(static_cast<float>(gx*gx + gy*gy)));
+    float gy = -getGray(y-1, x-1) - 2.0f*getGray(y-1, x) - getGray(y-1, x+1)
+               +getGray(y+1, x-1) + 2.0f*getGray(y+1, x) + getGray(y+1, x+1);
 
+    int magnitude = static_cast<int>(sqrtf(gx*gx + gy*gy));
     output[y * width + x] = (magnitude > static_cast<int>(threshold)) ? 255 : 0;
 }
 
