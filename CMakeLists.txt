@@ -67,5 +67,15 @@ set_target_properties(${PROJECT_NAME}_lib PROPERTIES
 add_executable(${PROJECT_NAME} ${SRC_DIR}/main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_lib)
 
-# Tests
+# GoogleTest
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG v1.14.0
+)
+FetchContent_MakeAvailable(googletest)
+
+# Enable testing
+enable_testing()
 add_subdirectory(tests)

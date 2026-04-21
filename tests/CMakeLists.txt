@@ -1,25 +1,30 @@
-# Enable testing
-enable_testing()
+find_package(CUDAToolkit REQUIRED)
 
-# Fetch and make available Google Test
-include(FetchContent)
-FetchContent_Declare(
-        googletest
-        URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.tar.gz
-)
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
-# Collect test source files
-file(GLOB_RECURSE TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
-
-# Create test executable
-add_executable(${PROJECT_NAME}-tests ${TEST_SOURCES})
-target_link_libraries(${PROJECT_NAME}-tests PRIVATE
-        GTest::gtest_main
-        ${PROJECT_NAME}_lib
+add_executable(cuda-samples-tests
+    image_utils_test.cu
+    gaussian_blur_test.cu
+    sobel_edge_test.cu
+    brightness_test.cu
 )
 
-# Enable test discovery
+target_link_libraries(cuda-samples-tests
+    PRIVATE
+    GTest::gtest_main
+    GTest::gmock
+    CUDA::cudart
+)
+
+target_include_directories(cuda-samples-tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/data
+)
+
+target_compile_options(cuda-samples-tests PRIVATE
+    $<$<COMPILE_LANGUAGE:CUDA>:
+        --expt-relaxed-constexpr
+        -lineinfo
+    >
+)
+
 include(GoogleTest)
-gtest_discover_tests(${PROJECT_NAME}-tests)
+gtest_discover_tests(cuda-samples-tests)
