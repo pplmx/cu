@@ -39,6 +39,7 @@ set(CUDA_SRC_ALGO ${CMAKE_SOURCE_DIR}/src/cuda/algo)
 set(IMAGE_DIR ${CMAKE_SOURCE_DIR}/src/image)
 set(PARALLEL_DIR ${CMAKE_SOURCE_DIR}/src/parallel)
 set(MATRIX_DIR ${CMAKE_SOURCE_DIR}/src/matrix)
+set(CONVOLUTION_DIR ${CMAKE_SOURCE_DIR}/src/convolution)
 
 add_library(cuda_kernel INTERFACE)
 target_include_directories(cuda_kernel INTERFACE
@@ -89,12 +90,17 @@ file(GLOB_RECURSE MATRIX_SOURCES CONFIGURE_DEPENDS
         ${MATRIX_DIR}/*.cu
 )
 
+file(GLOB_RECURSE CONVOLUTION_SOURCES CONFIGURE_DEPENDS
+        ${CONVOLUTION_DIR}/*.cu
+)
+
 set(ALL_CUDA_SOURCES
         ${KERNEL_SOURCES}
         ${ALGO_SOURCES}
         ${IMAGE_SOURCES}
         ${PARALLEL_SOURCES}
         ${MATRIX_SOURCES}
+        ${CONVOLUTION_SOURCES}
 )
 
 add_library(cuda_impl STATIC ${ALL_CUDA_SOURCES})
