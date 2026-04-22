@@ -26,6 +26,7 @@ target_link_libraries(cuda-samples-tests
     GTest::gtest_main
     GTest::gmock
     CUDA::cudart
+    cuda_api
     cuda_impl
 )
 target_include_directories(cuda-samples-tests PRIVATE
