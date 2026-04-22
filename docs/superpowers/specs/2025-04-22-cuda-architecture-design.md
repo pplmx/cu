@@ -1,113 +1,238 @@
-# CUDA Samples Architecture Redesign Specification
+# CUDA Parallel Algorithms Library - Architecture Specification
 
 **Date:** 2025-04-22
-**Status:** Implemented
+**Status:** Implemented (Phase 1 Complete)
 **Type:** Architecture Refactoring
 
 ## 1. Overview
 
-Refactor the existing CUDA samples project from a flat structure into a production-ready, layered architecture that supports:
+A production-ready CUDA parallel algorithms library with a multi-layered architecture supporting:
 - Educational demonstrations
 - Extensibility for new algorithms
 - Production-grade library quality
+- Memory efficiency and allocation optimization
+- Future-proof design patterns
 
 ## 2. Architecture
 
-### 2.1 Directory Structure
+### 2.1 Layered Architecture (Five Layers)
 
 ```
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 3: High-Level API (STL-style)                        │
+│  - cuda::reduce(), cuda::sort()                            │
+│  - Iterator support, Range-based                           │
+└─────────────────────────────────────────────────────────────┘
+                              ▲
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 2: Algorithm Wrappers                                │
+│  - cuda::algo::reduce_sum(), cuda::algo::sort()           │
+│  - Memory management, Stream scheduling                     │
+│  - Execution policy support                                │
+└─────────────────────────────────────────────────────────────┘
+                              ▲
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 1: Device Kernels                                   │
+│  - Pure __global__ kernels                                │
+│  - No memory allocation                                    │
+│  - Device-side utilities only                              │
+└─────────────────────────────────────────────────────────────┘
+                              ▲
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 0: Memory Foundation                                │
+│  - Buffer<T>, unique_ptr<T>, MemoryPool                    │
+│  - Allocator concepts                                     │
+│  - Memory efficiency                                      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 2.2 Directory Structure
+
+```
+include/cuda/
+├── memory/               # Layer 0: Memory Foundation
+│   ├── buffer.h         # cuda::memory::Buffer<T>
+│   ├── unique_ptr.h     # cuda::memory::unique_ptr<T>
+│   ├── memory_pool.h    # MemoryPool for allocation efficiency
+│   └── allocator.h      # Allocator concepts and implementations
+├── device/              # Layer 1: Device Kernels
+│   ├── reduce_kernels.h # Kernel declarations
+│   ├── scan_kernels.h
+│   ├── sort_kernels.h
+│   └── device_utils.h   # CUDA_CHECK, warp_reduce, etc.
+├── algo/                 # Layer 2: Algorithm Wrappers
+│   ├── reduce.h         # reduce_sum, reduce_max, etc.
+│   ├── scan.h
+│   ├── sort.h
+│   └── policy.h         # ExecutionPolicy (future)
+├── api/                  # Layer 3: High-Level API
+│   ├── algorithm.h      # cuda::reduce(), cuda::sort()
+│   ├── iterator.h
+│   └── device_vector.h  # cuda::api::DeviceVector<T>
+
 include/
-├── cuda/                # Layered architecture (core library)
-│   ├── kernel/          # Layer 1: Pure device kernels
-│   │   ├── cuda_utils.h # CUDA_CHECK, ReduceOp, warp_reduce
-│   │   └── reduce.h     # Kernel declarations
-│   ├── algo/            # Layer 2: Algorithm wrappers
-│   │   ├── device_buffer.h  # RAII device memory
-│   │   └── reduce.h     # reduce_sum, reduce_max, reduce_min
-│   └── api/             # Layer 3: High-level STL-style API
-│       └── device_vector.h  # STL-style container
 ├── image/               # Image processing module
-│   ├── types.h          # ImageBuffer, ImageDimensions, PixelFormat
-│   ├── brightness.h     # Brightness/contrast adjustment
-│   ├── gaussian_blur.h  # Gaussian blur filter
-│   └── sobel_edge.h     # Sobel edge detection
+│   ├── types.h
+│   ├── brightness.h
+│   ├── gaussian_blur.h
+│   ├── sobel_edge.h
+│   └── morphology.h     # erode, dilate, opening, closing
 ├── parallel/            # Parallel primitives module
-│   ├── scan.h           # Prefix sum (exclusive/inclusive)
-│   └── sort.h           # Odd-even sort, bitonic sort
-└── matrix/              # Matrix operations module
-    ├── add.h            # Matrix addition
-    └── mult.h           # Matrix multiplication
+│   ├── scan.h
+│   ├── sort.h
+│   └── histogram.h      # Histogram computation
+├── matrix/              # Matrix operations module
+│   ├── add.h
+│   ├── mult.h
+│   └── ops.h            # transpose, element-wise ops
+└── convolution/         # Convolution module
+    └── conv2d.h         # 2D convolution
 
 src/
-├── cuda/kernel/         # Layer 1 kernel implementations
+├── memory/               # Layer 0 implementations
+├── device/               # Layer 1 kernel implementations
+├── algo/                 # Layer 2 wrappers
+├── api/                  # Layer 3 implementations
 ├── image/               # Image processing implementations
 ├── parallel/            # Parallel primitive implementations
 ├── matrix/              # Matrix operation implementations
-└── main.cpp             # Benchmark demo
+└── convolution/         # Convolution implementations
 ```
 
-### 2.2 Layer Responsibilities
+### 2.3 Layer Responsibilities
 
-| Layer | Location | Purpose | Dependencies |
-|-------|----------|---------|--------------|
-| Layer 1 | cuda/kernel/ | Pure CUDA kernels, no memory management, maximum performance | CUDA runtime only |
-| Layer 2 | cuda/algo/ | Memory allocation/deallocation, error handling, algorithm orchestration | Layer 1 |
-| Layer 3 | cuda/api/ | STL-style containers, iterators, range adapters | Layer 1, Layer 2 |
+| Layer | Namespace | Purpose | Dependencies |
+|-------|-----------|---------|--------------|
+| **Layer 0** | `cuda::memory` | Memory allocation, RAII wrappers, pooling | CUDA runtime |
+| **Layer 1** | `cuda::device` | Pure device kernels, maximum performance | Layer 0 |
+| **Layer 2** | `cuda::algo` | Memory management, algorithm orchestration | Layers 0, 1 |
+| **Layer 3** | `cuda::api` | STL-style containers, iterators | Layers 0, 1, 2 |
 
-### 2.3 Design Principles
+### 2.4 Design Principles
 
 1. **Single Responsibility**: Each layer has one clear purpose
 2. **Interface Segregation**: Headers expose only necessary APIs
 3. **Dependency Inversion**: High-level code depends on abstractions
-4. **Zero-Cost Abstraction**: Layer 3 overhead must be minimal
+4. **Zero-Cost Abstraction**: Higher layers add minimal overhead
+5. **Memory Efficiency**: Layer 0 provides allocation optimization
+6. **Future-Proof**: Allocator and Policy patterns support evolution
 
-## 3. Modules
+## 3. Layer 0: Memory Foundation
 
-### 3.1 CUDA Layer (Core)
+### 3.1 Buffer<T>
 
-Three-layer architecture following cuBLAS/cuDNN patterns:
-- **Layer 1 (kernel)**: Pure CUDA kernels, no memory management
-- **Layer 2 (algo)**: Algorithm wrappers with memory management
-- **Layer 3 (api)**: High-level STL-style abstractions
+```cpp
+// include/cuda/memory/buffer.h
+namespace cuda::memory {
 
-### 3.2 Image Processing
+template<typename T>
+class Buffer {
+public:
+    explicit Buffer(size_t count);
+    ~Buffer();
 
-| Header | Description |
-|--------|-------------|
-| types.h | ImageBuffer template, ImageDimensions, PixelFormat |
-| brightness.h | adjustBrightnessContrast() |
-| gaussian_blur.h | gaussianBlur() |
-| sobel_edge.h | sobelEdgeDetection() |
+    T* data();
+    const T* data() const;
+    size_t size() const;
 
-### 3.3 Parallel Primitives
+    void copy_from(const T* host_data, size_t count);
+    void copy_to(T* host_data, size_t count) const;
 
-| Header | Description |
-|--------|-------------|
-| scan.h | exclusiveScan(), inclusiveScan(), exclusiveScanOptimized() |
-| sort.h | oddEvenSort(), bitonicSort() |
+    T* release();  // Transfer ownership
+};
 
-### 3.4 Matrix Operations
+} // namespace cuda::memory
+```
 
-| Header | Description |
-|--------|-------------|
-| add.h | Matrix element-wise addition |
-| mult.h | multiplyMatricesNaive(), multiplyMatricesTiled(), multiplyMatricesOnGPU() |
+### 3.2 unique_ptr<T>
+
+```cpp
+// include/cuda/memory/unique_ptr.h
+namespace cuda::memory {
+
+template<typename T>
+class unique_ptr {
+public:
+    unique_ptr() = default;
+    explicit unique_ptr(size_t count);
+    
+    T* get() const;
+    T* release();
+    explicit operator bool() const;
+    
+    // Move semantics
+    unique_ptr(unique_ptr&&) noexcept;
+    unique_ptr& operator=(unique_ptr&&) noexcept;
+};
+
+} // namespace cuda::memory
+```
+
+### 3.3 MemoryPool
+
+```cpp
+// include/cuda/memory/memory_pool.h
+namespace cuda::memory {
+
+class MemoryPool {
+public:
+    struct Config {
+        size_t block_size = 1 << 20;  // 1MB
+        size_t max_blocks = 16;
+        bool preallocate = false;
+    };
+    
+    explicit MemoryPool(const Config& config = {});
+    
+    Buffer<void> allocate(size_t bytes);
+    void deallocate(Buffer<void> buffer);
+    
+    size_t total_allocated() const;
+    size_t total_available() const;
+    void clear();
+};
+
+} // namespace cuda::memory
+```
+
+### 3.4 Allocator Concepts
+
+```cpp
+// include/cuda/memory/allocator.h
+namespace cuda::memory {
+
+template<typename T>
+concept DeviceAllocator = requires(T alloc, size_t n, size_t size) {
+    { alloc.allocate(n * size) } -> std::same_as<void*>;
+    { alloc.deallocate(nullptr, n * size) } -> std::same_as<void>;
+};
+
+struct DefaultAllocator;
+struct PooledAllocator;
+
+} // namespace cuda::memory
+```
 
 ## 4. CMake Structure
 
 ```cmake
-# Layer 1: cuda_kernel (INTERFACE library)
-add_library(cuda_kernel INTERFACE)
-target_include_directories(cuda_kernel INTERFACE
-        $<BUILD_INTERFACE:${CUDA_KERNEL_DIR}>
-        $<BUILD_INTERFACE:${CUDA_SRC_KERNEL}>
+# Layer 0: cuda_memory (INTERFACE library)
+add_library(cuda_memory INTERFACE)
+target_include_directories(cuda_memory INTERFACE
+        $<BUILD_INTERFACE:${CUDA_MEMORY_DIR}>
+        $<BUILD_INTERFACE:${MEMORY_DIR}>
 )
-target_link_libraries(cuda_kernel INTERFACE CUDA::cudart)
+target_link_libraries(cuda_memory INTERFACE CUDA::cudart)
 
-# Layer 2: cuda_algo (depends on cuda_kernel)
+# Layer 1: cuda_device (depends on cuda_memory)
+add_library(cuda_device INTERFACE)
+target_include_directories(cuda_device INTERFACE ...)
+target_link_libraries(cuda_device INTERFACE cuda_memory CUDA::cudart)
+
+# Layer 2: cuda_algo (depends on cuda_device)
 add_library(cuda_algo INTERFACE)
 target_include_directories(cuda_algo INTERFACE ...)
-target_link_libraries(cuda_algo INTERFACE cuda_kernel CUDA::cublas)
+target_link_libraries(cuda_algo INTERFACE cuda_device CUDA::cublas)
 
 # Layer 3: cuda_api (depends on cuda_algo)
 add_library(cuda_api INTERFACE)
@@ -115,86 +240,56 @@ target_include_directories(cuda_api INTERFACE ...)
 target_link_libraries(cuda_api INTERFACE cuda_algo)
 
 # Implementation library
-add_library(cuda_impl STATIC ${ALL_CUDA_SOURCES})
-target_link_libraries(cuda_impl PUBLIC cuda_kernel cuda_algo CUDA::cudart CUDA::cublas)
+add_library(cuda_impl STATIC ${ALL_SOURCES})
+target_link_libraries(cuda_impl PUBLIC cuda_api CUDA::cudart CUDA::cublas)
 ```
 
-## 5. API Design
+## 5. Modules
 
-### 5.1 Layer 1: Kernel Interface
+### 5.1 Image Processing
 
-```cpp
-// include/cuda/kernel/cuda_utils.h
-namespace cuda::kernel {
+| Header | Description |
+|--------|-------------|
+| types.h | ImageBuffer, ImageDimensions, PixelFormat |
+| brightness.h | adjustBrightnessContrast() |
+| gaussian_blur.h | gaussianBlur() |
+| sobel_edge.h | sobelEdgeDetection() |
+| morphology.h | erodeImage, dilateImage, openingImage, closingImage |
 
-enum class ReduceOp { SUM, MAX, MIN };
+### 5.2 Parallel Primitives
 
-constexpr int WARP_SIZE = 32;
+| Header | Description |
+|--------|-------------|
+| scan.h | exclusiveScan, inclusiveScan, exclusiveScanOptimized |
+| sort.h | oddEvenSort, bitonicSort |
+| histogram.h | computeHistogram, computeHistogramPerChannel, equalizeHistogram |
 
-template<typename T>
-__device__ T warp_reduce(T val, ReduceOp op);
+### 5.3 Matrix Operations
 
-} // namespace cuda::kernel
-```
+| Header | Description |
+|--------|-------------|
+| add.h | Matrix element-wise addition |
+| mult.h | multiplyMatricesNaive, multiplyMatricesTiled, multiplyMatricesOnGPU |
+| ops.h | transposeMatrix, transposeMatrixTiled, matrixElementwiseAdd, matrixScale |
 
-### 5.2 Layer 2: Algorithm Interface
+### 5.4 Convolution
 
-```cpp
-// include/cuda/algo/reduce.h
-namespace cuda::algo {
-
-template<typename T>
-T reduce_sum(const T* input, size_t size);
-
-template<typename T>
-T reduce_sum_optimized(const T* input, size_t size);
-
-template<typename T>
-T reduce_max(const T* input, size_t size);
-
-template<typename T>
-T reduce_min(const T* input, size_t size);
-
-} // namespace cuda::algo
-```
-
-### 5.3 Layer 3: High-level API
-
-```cpp
-// include/cuda/api/device_vector.h
-namespace cuda::api {
-
-template<typename T>
-class DeviceVector {
-public:
-    explicit DeviceVector(size_t size = 0);
-
-    size_t size() const;
-    T* data();
-    const T* data() const;
-
-    void copy_from(const std::vector<T>& host_data);
-    void copy_to(std::vector<T>& host_data) const;
-};
-
-} // namespace cuda::api
-```
+| Header | Description |
+|--------|-------------|
+| conv2d.h | convolve2D, createGaussianKernel, createSobelKernelX/Y |
 
 ## 6. Testing
 
-### 6.1 Test Organization
+### 6.1 Test Coverage
 
-| Test Suite | Description |
-|------------|-------------|
-| cuda-samples-tests | All algorithm tests (67 tests) |
-| test_patterns-tests | Test pattern generators (14 tests) |
-
-### 6.2 Test Coverage
-
-- Image processing: ImageBuffer, GaussianBlur, Sobel, Brightness
-- Parallel primitives: Scan, Sort
-- Matrix operations: MatrixMult
-- Layered architecture: Reduce (sum, max, min, optimized)
+| Module | Tests | Description |
+|--------|-------|-------------|
+| Image | 29 | Buffer, GaussianBlur, Sobel, Brightness, Morphology |
+| Parallel | 23 | Scan, Sort, Histogram |
+| Matrix | 23 | Mult, Ops |
+| Convolution | 13 | Conv2D, Kernels |
+| CUDA Layer | 11 | Reduce (sum, max, min) |
+| **Total** | **119** | **All passing** |
 
 ## 7. Build System
 
@@ -209,24 +304,58 @@ public:
 
 | Target | Description |
 |--------|-------------|
-| cuda_impl | Static library with all CUDA implementations |
+| cuda_impl | Static library with all implementations |
 | cuda-samples | Benchmark demo executable |
-| cuda-samples-tests | Test executable |
+| cuda-samples-tests | Test executable (119 tests) |
+| test_patterns-tests | Pattern generator tests (14 tests) |
 
-## 8. File Naming Conventions
+### 7.3 Makefile Targets
 
-| Type | Extension | Example |
-|------|-----------|---------|
-| Header | .h | reduce.h |
-| CUDA source | .cu | reduce.cu |
-| C++ source | .cpp | - |
+| Target | Description |
+|--------|-------------|
+| make build | Configure and build |
+| make run | Run benchmark demo |
+| make test | Run all tests |
+| make clean | Clean build artifacts |
+
+## 8. Future Extensions
+
+### 8.1 Execution Policy (Planned)
+
+```cpp
+// Future: ExecutionPolicy support
+struct execution::device_policy {
+    cudaStream_t stream;
+    MemoryPool* pool;
+};
+
+cuda::reduce(execution::device_policy{stream}, data, n);
+```
+
+### 8.2 Async/Future (Planned)
+
+```cpp
+// Future: Async operations
+cuda::future<T> reduce_async(data, n);
+
+auto result = cuda::reduce_async(data, n)
+    .then([](T r) { return r * 2; });
+```
+
+### 8.3 Multi-GPU (Planned)
+
+```cpp
+// Future: GPU topology awareness
+cuda::reduce(gpu_topology{}, data, n);
+```
 
 ## 9. Acceptance Criteria
 
-- [x] All existing tests pass after migration (67 tests)
+- [x] All tests pass (119 tests)
 - [x] Main demo runs successfully
 - [x] Clean CMake configuration
-- [x] Clear separation between layers
-- [x] Consistent naming conventions
+- [x] Layer 0 Memory Foundation implemented
+- [x] Layer 1/2/3 separation maintained
 - [x] Directory structure organized by module
-- [x] No backward compatibility forwarding headers
+- [x] Allocator concepts defined
+- [x] MemoryPool for allocation efficiency

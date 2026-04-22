@@ -4,50 +4,91 @@
 [![CI](https://github.com/pplmx/cuda-samples/workflows/CI/badge.svg)](https://github.com/pplmx/cuda-samples/actions)
 [![Coverage Status](https://coveralls.io/repos/github/pplmx/cuda-samples/badge.svg?branch=main)](https://coveralls.io/github/pplmx/cuda-samples?branch=main)
 
-A production-ready CUDA parallel algorithms library with layered architecture, supporting education, extensibility, and production use cases.
+A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases.
 
 ## Architecture
+
+### Five-Layer Design
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 3: High-Level API (STL-style)                        │
+│  cuda::reduce(), cuda::sort()                              │
+└─────────────────────────────────────────────────────────────┘
+                              ▲
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 2: Algorithm Wrappers                                │
+│  cuda::algo::reduce_sum(), memory management               │
+└─────────────────────────────────────────────────────────────┘
+                              ▲
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 1: Device Kernels                                   │
+│  Pure __global__ kernels, no memory allocation             │
+└─────────────────────────────────────────────────────────────┘
+                              ▲
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 0: Memory Foundation                                │
+│  Buffer<T>, unique_ptr<T>, MemoryPool, Allocator concepts   │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ### Directory Structure
 
 ```
+include/cuda/
+├── memory/               # Layer 0: Memory Foundation
+│   ├── buffer.h         # cuda::memory::Buffer<T>
+│   ├── unique_ptr.h     # cuda::memory::unique_ptr<T>
+│   ├── memory_pool.h    # MemoryPool for allocation
+│   └── allocator.h      # Allocator concepts
+├── device/              # Layer 1: Device Kernels
+│   ├── reduce_kernels.h
+│   ├── scan_kernels.h
+│   └── device_utils.h   # CUDA_CHECK, warp_reduce
+├── algo/                 # Layer 2: Algorithm Wrappers
+│   ├── reduce.h
+│   ├── scan.h
+│   └── sort.h
+└── api/                  # Layer 3: High-Level API
+    └── device_vector.h
+
 include/
-├── cuda/                # Layered architecture (core)
-│   ├── kernel/          # Layer 1: Pure device kernels
-│   │   ├── cuda_utils.h # CUDA_CHECK macro, ReduceOp, warp_reduce
-│   │   └── reduce.h     # Kernel declarations
-│   ├── algo/            # Layer 2: Algorithm wrappers
-│   │   ├── device_buffer.h  # RAII device memory management
-│   │   └── reduce.h     # reduce_sum, reduce_max, reduce_min
-│   └── api/             # Layer 3: High-level STL-style API
-│       └── device_vector.h  # STL-style container
 ├── image/               # Image processing
-│   ├── types.h          # ImageBuffer, ImageDimensions, PixelFormat
-│   ├── brightness.h     # Brightness/contrast adjustment
-│   ├── gaussian_blur.h  # Gaussian blur filter
-│   └── sobel_edge.h     # Sobel edge detection
+│   ├── types.h
+│   ├── brightness.h
+│   ├── gaussian_blur.h
+│   ├── sobel_edge.h
+│   └── morphology.h
 ├── parallel/            # Parallel primitives
-│   ├── scan.h           # Prefix sum (exclusive/inclusive)
-│   └── sort.h           # Odd-even sort, bitonic sort
-└── matrix/              # Matrix operations
-    ├── add.h            # Matrix addition
-    └── mult.h           # Matrix multiplication (naive/tiled/cuBLAS)
+│   ├── scan.h
+│   ├── sort.h
+│   └── histogram.h
+├── matrix/              # Matrix operations
+│   ├── add.h
+│   ├── mult.h
+│   └── ops.h
+└── convolution/         # Convolution
+    └── conv2d.h
 
 src/
-├── cuda/kernel/         # Layer 1 kernel implementations
-├── image/               # Image processing implementations
-├── parallel/            # Parallel primitive implementations
-├── matrix/              # Matrix operation implementations
-└── main.cpp             # Benchmark demo
+├── memory/               # Layer 0 implementations
+├── device/               # Layer 1 implementations
+├── algo/                 # Layer 2 implementations
+├── api/                  # Layer 3 implementations
+├── image/
+├── parallel/
+├── matrix/
+└── convolution/
 ```
 
 ### Layer Responsibilities
 
-| Layer | Purpose | Dependencies |
-|-------|---------|--------------|
-| **Layer 1 (kernel)** | Pure CUDA kernels, maximum performance, no memory management | CUDA runtime only |
-| **Layer 2 (algo)** | Memory management, error handling, algorithm orchestration | Layer 1 |
-| **Layer 3 (api)** | STL-style containers and utilities | Layer 1, Layer 2 |
+| Layer | Namespace | Purpose | Dependencies |
+|-------|-----------|---------|--------------|
+| **Layer 0** | `cuda::memory` | Memory allocation, RAII, pooling | CUDA runtime |
+| **Layer 1** | `cuda::device` | Pure device kernels | Layer 0 |
+| **Layer 2** | `cuda::algo` | Memory management, algorithms | Layers 0, 1 |
+| **Layer 3** | `cuda::api` | STL-style containers | Layers 0, 1, 2 |
 
 ## Quick Start
 
@@ -69,21 +110,31 @@ make run
 
 ```sh
 make test          # Run all tests
-make test-unit     # Run CUDA algorithm tests
-make test-patterns # Run test pattern generators
+make test-unit     # Run algorithm tests
 ```
 
 ## Usage Examples
 
-### Layer 2: Algorithm API (Recommended)
+### Layer 0: Memory Foundation
+
+```cpp
+#include "cuda/memory/buffer.h"
+
+// RAII memory management
+cuda::memory::Buffer<int> buf(1024);
+buf.copy_from(host_data.data(), 1024);
+
+// Memory pool for efficiency
+cuda::memory::MemoryPool pool({.block_size = 1 << 20});
+auto buf2 = pool.allocate(1024);
+```
+
+### Layer 2: Algorithm API
 
 ```cpp
 #include "cuda/algo/reduce.h"
 
-int* d_input;
-cudaMalloc(&d_input, N * sizeof(int));
-// ... copy data to device ...
-
+// Use layered API
 int sum = cuda::algo::reduce_sum(d_input, N);
 int max = cuda::algo::reduce_max(d_input, N);
 ```
@@ -93,25 +144,41 @@ int max = cuda::algo::reduce_max(d_input, N);
 ```cpp
 #include "cuda/api/device_vector.h"
 
-std::vector<int> input(N);
-std::iota(input.begin(), input.end(), 1);
-
 cuda::api::DeviceVector<int> d_vec(N);
 d_vec.copy_from(input);
-
 int sum = cuda::algo::reduce_sum(d_vec.data(), d_vec.size());
 ```
 
 ## Modules
 
-| Module | Description | Files |
-|--------|-------------|-------|
-| **cuda/kernel** | Core CUDA kernels | reduce.cu |
-| **cuda/algo** | Algorithm wrappers | reduce.h |
-| **cuda/api** | High-level API | device_vector.h |
-| **image** | Image processing | types, brightness, gaussian_blur, sobel_edge |
-| **parallel** | Parallel primitives | scan, sort |
-| **matrix** | Matrix operations | add, mult |
+| Module | Files | Description |
+|--------|-------|-------------|
+| **cuda/memory** | buffer, unique_ptr, memory_pool, allocator | Memory management |
+| **cuda/device** | reduce, scan, sort kernels | Pure CUDA kernels |
+| **cuda/algo** | reduce, scan, sort wrappers | Algorithm orchestration |
+| **image** | types, brightness, gaussian_blur, sobel, morphology | Image processing |
+| **parallel** | scan, sort, histogram | Parallel primitives |
+| **matrix** | add, mult, ops | Matrix operations |
+| **convolution** | conv2d | 2D convolution |
+
+## Testing
+
+**119 tests across 13 test suites, all passing:**
+
+| Test Suite | Tests |
+|------------|-------|
+| ReduceTest | 11 |
+| ScanTest | 10 |
+| SortTest | 10 |
+| MatrixMultTest | 7 |
+| MatrixOpsTest | 16 |
+| ImageBufferTest | 5 |
+| GaussianBlurTest | 7 |
+| SobelTest | 7 |
+| BrightnessTest | 10 |
+| MorphologyTest | 13 |
+| HistogramTest | 10 |
+| ConvolutionTest | 13 |
 
 ## Development
 
@@ -121,12 +188,8 @@ int sum = cuda::algo::reduce_sum(d_vec.data(), d_vec.size());
 |--------|-------------|
 | `make build` | Configure and build project |
 | `make run` | Run benchmark demo |
-| `make test` | Run all tests |
-| `make test-unit` | Run CUDA algorithm tests |
-| `make test-patterns` | Run test pattern generators |
+| `make test` | Run all tests (119 tests) |
 | `make clean` | Clean build artifacts |
-| `make image` | Build Docker image |
-| `make init` | Initialize git hooks |
 
 ## Requirements
 
