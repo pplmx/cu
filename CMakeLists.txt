@@ -69,7 +69,11 @@ target_link_libraries(cuda_api INTERFACE cuda_algo)
 
 file(GLOB_RECURSE CUDA_SOURCES CONFIGURE_DEPENDS
         ${CMAKE_SOURCE_DIR}/src/*.cu
+        ${CMAKE_SOURCE_DIR}/src/kernel/*.cu
+        ${CMAKE_SOURCE_DIR}/src/benchmark/*.cu
 )
+
+list(FILTER CUDA_SOURCES EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/src/reduce\\.cu$")
 
 add_library(cuda_impl STATIC ${CUDA_SOURCES})
 target_include_directories(cuda_impl PUBLIC
