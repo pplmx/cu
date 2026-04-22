@@ -125,3 +125,65 @@ TEST_F(BrightnessTest, ClampingAtLowerBound) {
 
     EXPECT_TRUE(compareBuffers(h_expected_.get(), h_output_.get(), size_));
 }
+
+TEST_F(BrightnessTest, SinglePixel) {
+    size_t size = 3;
+    std::vector<unsigned char> input(size, 100);
+    std::vector<unsigned char> output(size, 0);
+
+    uint8_t *d_input, *d_output;
+    CUDA_CHECK_IMAGE(cudaMalloc(&d_input, size));
+    CUDA_CHECK_IMAGE(cudaMalloc(&d_output, size));
+
+    CUDA_CHECK_IMAGE(cudaMemcpy(d_input, input.data(), size, cudaMemcpyHostToDevice));
+    adjustBrightnessContrast(d_input, d_output, 1, 1, 1.5f, 30.0f);
+    CUDA_CHECK_IMAGE(cudaMemcpy(output.data(), d_output, size, cudaMemcpyDeviceToHost));
+
+    EXPECT_EQ(output[0], 180);  // 100 * 1.5 + 30 = 180
+    EXPECT_EQ(output[1], 180);
+    EXPECT_EQ(output[2], 180);
+
+    CUDA_CHECK_IMAGE(cudaFree(d_input));
+    CUDA_CHECK_IMAGE(cudaFree(d_output));
+}
+
+TEST_F(BrightnessTest, LargeImage) {
+    size_t size = 2048 * 2048 * 3;
+    std::vector<unsigned char> input(size, 128);
+    std::vector<unsigned char> output(size, 0);
+
+    uint8_t *d_input, *d_output;
+    CUDA_CHECK_IMAGE(cudaMalloc(&d_input, size));
+    CUDA_CHECK_IMAGE(cudaMalloc(&d_output, size));
+
+    CUDA_CHECK_IMAGE(cudaMemcpy(d_input, input.data(), size, cudaMemcpyHostToDevice));
+    adjustBrightnessContrast(d_input, d_output, 2048, 2048, 1.0f, 10.0f);
+    CUDA_CHECK_IMAGE(cudaMemcpy(output.data(), d_output, size, cudaMemcpyDeviceToHost));
+
+    for (size_t i = 0; i < size; ++i) {
+        EXPECT_EQ(output[i], 138);
+    }
+
+    CUDA_CHECK_IMAGE(cudaFree(d_input));
+    CUDA_CHECK_IMAGE(cudaFree(d_output));
+}
+
+TEST_F(BrightnessTest, ExtremeBrightness) {
+    size_t size = 3;
+    std::vector<unsigned char> input(size, 255);
+    std::vector<unsigned char> output(size, 0);
+
+    uint8_t *d_input, *d_output;
+    CUDA_CHECK_IMAGE(cudaMalloc(&d_input, size));
+    CUDA_CHECK_IMAGE(cudaMalloc(&d_output, size));
+
+    CUDA_CHECK_IMAGE(cudaMemcpy(d_input, input.data(), size, cudaMemcpyHostToDevice));
+    adjustBrightnessContrast(d_input, d_output, 1, 1, 2.0f, 100.0f);
+    CUDA_CHECK_IMAGE(cudaMemcpy(output.data(), d_output, size, cudaMemcpyDeviceToHost));
+
+    // 255 * 2 + 100 = 610, clamped to 255
+    EXPECT_EQ(output[0], 255);
+
+    CUDA_CHECK_IMAGE(cudaFree(d_input));
+    CUDA_CHECK_IMAGE(cudaFree(d_output));
+}

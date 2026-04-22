@@ -84,3 +84,66 @@ TEST_F(GaussianBlurTest, Checkerboard) {
     }
     EXPECT_GT(nonZeroCount, size_ / 10);
 }
+
+TEST_F(GaussianBlurTest, SinglePixel) {
+    size_t size = 3;
+    std::vector<unsigned char> input(size, 128);
+    std::vector<unsigned char> output(size, 0);
+
+    uint8_t *d_input, *d_output;
+    CUDA_CHECK_IMAGE(cudaMalloc(&d_input, size));
+    CUDA_CHECK_IMAGE(cudaMalloc(&d_output, size));
+
+    CUDA_CHECK_IMAGE(cudaMemcpy(d_input, input.data(), size, cudaMemcpyHostToDevice));
+    gaussianBlur(d_input, d_output, 1, 1, 1.0f, 3);
+    CUDA_CHECK_IMAGE(cudaMemcpy(output.data(), d_output, size, cudaMemcpyDeviceToHost));
+
+    EXPECT_NEAR(output[0], 128, 5);
+
+    CUDA_CHECK_IMAGE(cudaFree(d_input));
+    CUDA_CHECK_IMAGE(cudaFree(d_output));
+}
+
+TEST_F(GaussianBlurTest, NonSquareImage) {
+    width_ = 100;
+    height_ = 50;
+    size_ = width_ * height_ * 3;
+
+    h_input_ = std::make_unique<unsigned char[]>(size_);
+    h_output_ = std::make_unique<unsigned char[]>(size_);
+
+    generateSolid(h_input_.get(), width_, height_, 128);
+
+    CUDA_CHECK_IMAGE(cudaMalloc(&d_input_, size_));
+    CUDA_CHECK_IMAGE(cudaMalloc(&d_output_, size_));
+
+    CUDA_CHECK_IMAGE(cudaMemcpy(d_input_, h_input_.get(), size_, cudaMemcpyHostToDevice));
+    gaussianBlur(d_input_, d_output_, width_, height_, 1.0f, 3);
+    CUDA_CHECK_IMAGE(cudaMemcpy(h_output_.get(), d_output_, size_, cudaMemcpyDeviceToHost));
+
+    for (size_t i = 0; i < size_; ++i) {
+        EXPECT_NEAR(h_output_[i], 128, 3);
+    }
+}
+
+TEST_F(GaussianBlurTest, LargeKernel) {
+    width_ = 128;
+    height_ = 128;
+    size_ = width_ * height_ * 3;
+
+    h_input_ = std::make_unique<unsigned char[]>(size_);
+    h_output_ = std::make_unique<unsigned char[]>(size_);
+
+    generateSolid(h_input_.get(), width_, height_, 100);
+
+    CUDA_CHECK_IMAGE(cudaMalloc(&d_input_, size_));
+    CUDA_CHECK_IMAGE(cudaMalloc(&d_output_, size_));
+
+    CUDA_CHECK_IMAGE(cudaMemcpy(d_input_, h_input_.get(), size_, cudaMemcpyHostToDevice));
+    gaussianBlur(d_input_, d_output_, width_, height_, 3.0f, 7);
+    CUDA_CHECK_IMAGE(cudaMemcpy(h_output_.get(), d_output_, size_, cudaMemcpyDeviceToHost));
+
+    for (size_t i = 0; i < size_; ++i) {
+        EXPECT_NEAR(h_output_[i], 100, 10);
+    }
+}
