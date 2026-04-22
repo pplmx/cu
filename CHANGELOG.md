@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Five-Layer Architecture**: Production-ready layered architecture
+  - Layer 0: `cuda::memory` - Buffer<T>, unique_ptr<T>, MemoryPool, Allocator concepts
+  - Layer 1: `cuda::device` - Pure device kernels, CUDA_CHECK, ReduceOp, warp_reduce
+  - Layer 2: `cuda::algo` - Algorithm wrappers, DeviceBuffer aliases
+  - Layer 3: `cuda::api` - DeviceVector, Stream, Event, Config objects
+- **Memory Pool**: Efficient device memory allocation with caching
+- **Stream/Event API**: RAII wrappers for CUDA streams and events
+- **Configuration Objects**: ReduceConfig, ScanConfig, SortConfig, MatrixMultConfig
+
+### Changed
+
+- **CMake**: Modernized with INTERFACE libraries (cuda_memory, cuda_device, cuda_algo, cuda_api)
+- **Namespace Renaming**: `cuda::kernel` → `cuda::device`
+- **Directory Structure**: All CUDA headers in `include/cuda/` subdirectories
+
+### Removed
+
+- **Backward Compatibility**: Removed `include/cuda/kernel/` forwarding headers
+- **Legacy Aliases**: All code now uses new architecture directly
+
+### Documentation
+
+- Updated README with five-layer architecture diagram
+- Updated architecture specifications in docs/superpowers/specs/
+- Added Layer 0 (memory) documentation
+
 ## [0.1.0] - 2025-04-22
 
 ### Added

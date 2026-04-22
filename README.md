@@ -50,7 +50,9 @@ include/cuda/
 │   ├── scan.h
 │   └── sort.h
 └── api/                  # Layer 3: High-Level API
-    └── device_vector.h
+    ├── device_vector.h   # STL-style device container
+    ├── stream.h          # Stream and Event wrappers
+    └── config.h          # Algorithm configuration objects
 
 include/
 ├── image/               # Image processing
@@ -72,9 +74,9 @@ include/
 
 src/
 ├── memory/               # Layer 0 implementations
-├── device/               # Layer 1 implementations
-├── algo/                 # Layer 2 implementations
-├── api/                  # Layer 3 implementations
+├── cuda/
+│   ├── device/           # Layer 1 implementations
+│   └── algo/             # Layer 2 implementations
 ├── image/
 ├── parallel/
 ├── matrix/
@@ -143,19 +145,30 @@ int max = cuda::algo::reduce_max(d_input, N);
 
 ```cpp
 #include "cuda/api/device_vector.h"
+#include "cuda/api/stream.h"
+#include "cuda/api/config.h"
 
+// DeviceVector - STL-style container
 cuda::api::DeviceVector<int> d_vec(N);
 d_vec.copy_from(input);
 int sum = cuda::algo::reduce_sum(d_vec.data(), d_vec.size());
+
+// Stream - RAII async operations
+cuda::api::Stream stream;
+stream.synchronize();
+
+// Config - algorithm configuration
+auto config = cuda::api::ReduceConfig::optimized_config();
 ```
 
 ## Modules
 
 | Module | Files | Description |
 |--------|-------|-------------|
-| **cuda/memory** | buffer, unique_ptr, memory_pool, allocator | Memory management |
-| **cuda/device** | reduce, scan, sort kernels | Pure CUDA kernels |
-| **cuda/algo** | reduce, scan, sort wrappers | Algorithm orchestration |
+| **cuda::memory** | Buffer, unique_ptr, MemoryPool, Allocator | Memory management |
+| **cuda::device** | device_utils, reduce_kernels | Pure CUDA kernels |
+| **cuda::algo** | reduce wrappers, device_buffer | Algorithm orchestration |
+| **cuda::api** | DeviceVector, Stream, Event, Config | High-level API |
 | **image** | types, brightness, gaussian_blur, sobel, morphology | Image processing |
 | **parallel** | scan, sort, histogram | Parallel primitives |
 | **matrix** | add, mult, ops | Matrix operations |
@@ -163,22 +176,21 @@ int sum = cuda::algo::reduce_sum(d_vec.data(), d_vec.size());
 
 ## Testing
 
-**119 tests across 13 test suites, all passing:**
+**81 tests across 13 test suites, all passing:**
 
 | Test Suite | Tests |
 |------------|-------|
 | ReduceTest | 11 |
 | ScanTest | 10 |
-| SortTest | 10 |
+| SortTest | 7 |
+| OddEvenSortTest | 3 |
 | MatrixMultTest | 7 |
 | MatrixOpsTest | 16 |
 | ImageBufferTest | 5 |
 | GaussianBlurTest | 7 |
 | SobelTest | 7 |
 | BrightnessTest | 10 |
-| MorphologyTest | 13 |
-| HistogramTest | 10 |
-| ConvolutionTest | 13 |
+| TestPatternsTest | 14 |
 
 ## Development
 
@@ -188,7 +200,7 @@ int sum = cuda::algo::reduce_sum(d_vec.data(), d_vec.size());
 |--------|-------------|
 | `make build` | Configure and build project |
 | `make run` | Run benchmark demo |
-| `make test` | Run all tests (119 tests) |
+| `make test` | Run all tests (81 tests) |
 | `make clean` | Clean build artifacts |
 
 ## Requirements
