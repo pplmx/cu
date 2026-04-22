@@ -25,7 +25,7 @@ add_executable(cu-tests
 
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)
 set(CUDA_ALGO_DIR ${CMAKE_SOURCE_DIR}/include/cuda/algo)
-set(CUDA_API_DIR ${CMAKE_SOURCE_DIR}/include/cuda/api)
+set(CUDA_STREAM_DIR ${CMAKE_SOURCE_DIR}/include/cuda/stream)
 
 target_link_libraries(cu-tests
     PRIVATE
@@ -40,7 +40,7 @@ target_include_directories(cu-tests PRIVATE
     ${CMAKE_SOURCE_DIR}/data
     ${CUDA_DEVICE_DIR}
     ${CUDA_ALGO_DIR}
-    ${CUDA_API_DIR}
+    ${CUDA_STREAM_DIR}
 )
 
 target_compile_options(cu-tests PRIVATE

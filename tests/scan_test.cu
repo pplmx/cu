@@ -1,179 +1,171 @@
 #include <gtest/gtest.h>
 #include "parallel/scan.h"
-#include "cuda/device/device_utils.h"
+#include "cuda/memory/buffer.h"
 #include <vector>
 #include <numeric>
+
+using cuda::memory::Buffer;
 
 class ScanTest : public ::testing::Test {
 protected:
     size_t size_ = 8;
-    std::vector<int> h_input_, h_output_;
 
     void SetUp() override {
-        h_input_.resize(size_);
-        h_output_.resize(size_);
-        CUDA_CHECK(cudaMalloc(&d_input_, size_ * sizeof(int)));
-        CUDA_CHECK(cudaMalloc(&d_output_, size_ * sizeof(int)));
+        d_input_ = cuda::memory::Buffer<int>(size_);
+        d_output_ = cuda::memory::Buffer<int>(size_);
     }
 
-    void TearDown() override {
-        CUDA_CHECK(cudaFree(d_input_));
-        CUDA_CHECK(cudaFree(d_output_));
-    }
-
-    int *d_input_ = nullptr, *d_output_ = nullptr;
+    cuda::memory::Buffer<int> d_input_;
+    cuda::memory::Buffer<int> d_output_;
 };
 
 TEST_F(ScanTest, BasicPrefixSum) {
-    h_input_ = {3, 1, 4, 1, 5, 9, 2, 6};
+    std::vector<int> h_input = {3, 1, 4, 1, 5, 9, 2, 6};
     std::vector<int> expected = {0, 3, 4, 8, 9, 14, 23, 25};
 
-    CUDA_CHECK(cudaMemcpy(d_input_, h_input_.data(), size_ * sizeof(int), cudaMemcpyHostToDevice));
-    exclusiveScan(d_input_, d_output_, size_);
-    CUDA_CHECK(cudaMemcpy(h_output_.data(), d_output_, size_ * sizeof(int), cudaMemcpyDeviceToHost));
+    d_input_.copy_from(h_input.data(), h_input.size());
+    cuda::algo::exclusiveScan(d_input_, d_output_, size_);
 
-    EXPECT_EQ(h_output_, expected);
+    std::vector<int> h_output(size_);
+    d_output_.copy_to(h_output.data(), size_);
+
+    EXPECT_EQ(h_output, expected);
 }
 
 TEST_F(ScanTest, SingleElement) {
-    int single_input = 42;
-    int single_output = -1;
+    std::vector<int> h_input = {42};
+    std::vector<int> h_output(1);
 
-    CUDA_CHECK(cudaMemcpy(d_input_, &single_input, sizeof(int), cudaMemcpyHostToDevice));
-    exclusiveScan(d_input_, d_output_, 1);
-    CUDA_CHECK(cudaMemcpy(&single_output, d_output_, sizeof(int), cudaMemcpyDeviceToHost));
+    d_input_.copy_from(h_input.data(), 1);
+    cuda::algo::exclusiveScan(d_input_, d_output_, 1);
+    d_output_.copy_to(h_output.data(), 1);
 
-    EXPECT_EQ(single_output, 0);
+    EXPECT_EQ(h_output[0], 0);
 }
 
 TEST_F(ScanTest, AllZeros) {
-    h_input_.assign(size_, 0);
+    std::vector<int> h_input(size_, 0);
     std::vector<int> expected(size_, 0);
 
-    CUDA_CHECK(cudaMemcpy(d_input_, h_input_.data(), size_ * sizeof(int), cudaMemcpyHostToDevice));
-    exclusiveScan(d_input_, d_output_, size_);
-    CUDA_CHECK(cudaMemcpy(h_output_.data(), d_output_, size_ * sizeof(int), cudaMemcpyDeviceToHost));
+    d_input_.copy_from(h_input.data(), size_);
+    cuda::algo::exclusiveScan(d_input_, d_output_, size_);
 
-    EXPECT_EQ(h_output_, expected);
+    std::vector<int> h_output(size_);
+    d_output_.copy_to(h_output.data(), size_);
+
+    EXPECT_EQ(h_output, expected);
 }
 
 TEST_F(ScanTest, OptimizedVersion) {
-    h_input_ = {3, 1, 4, 1, 5, 9, 2, 6};
+    std::vector<int> h_input = {3, 1, 4, 1, 5, 9, 2, 6};
     std::vector<int> expected = {0, 3, 4, 8, 9, 14, 23, 25};
 
-    CUDA_CHECK(cudaMemcpy(d_input_, h_input_.data(), size_ * sizeof(int), cudaMemcpyHostToDevice));
-    exclusiveScanOptimized(d_input_, d_output_, size_);
-    CUDA_CHECK(cudaMemcpy(h_output_.data(), d_output_, size_ * sizeof(int), cudaMemcpyDeviceToHost));
+    d_input_.copy_from(h_input.data(), size_);
+    cuda::algo::exclusiveScanOptimized(d_input_, d_output_, size_);
 
-    EXPECT_EQ(h_output_, expected);
+    std::vector<int> h_output(size_);
+    d_output_.copy_to(h_output.data(), size_);
+
+    EXPECT_EQ(h_output, expected);
 }
 
 TEST_F(ScanTest, BasicAndOptimizedConsistency) {
-    h_input_ = {3, 1, 4, 1, 5, 9, 2, 6};
-    std::vector<int> output_basic(size_), output_opt(size_);
+    std::vector<int> h_input = {3, 1, 4, 1, 5, 9, 2, 6};
 
-    CUDA_CHECK(cudaMemcpy(d_input_, h_input_.data(), size_ * sizeof(int), cudaMemcpyHostToDevice));
+    d_input_.copy_from(h_input.data(), size_);
 
-    exclusiveScan(d_input_, d_output_, size_);
-    CUDA_CHECK(cudaMemcpy(output_basic.data(), d_output_, size_ * sizeof(int), cudaMemcpyDeviceToHost));
+    cuda::memory::Buffer<int> output_basic(size_);
+    cuda::algo::exclusiveScan(d_input_, output_basic, size_);
 
-    exclusiveScanOptimized(d_input_, d_output_, size_);
-    CUDA_CHECK(cudaMemcpy(output_opt.data(), d_output_, size_ * sizeof(int), cudaMemcpyDeviceToHost));
+    cuda::algo::exclusiveScanOptimized(d_input_, d_output_, size_);
 
-    EXPECT_EQ(output_basic, output_opt);
+    std::vector<int> h_basic(size_), h_opt(size_);
+    output_basic.copy_to(h_basic.data(), size_);
+    d_output_.copy_to(h_opt.data(), size_);
+
+    EXPECT_EQ(h_basic, h_opt);
 }
 
 TEST_F(ScanTest, InclusiveScan) {
-    h_input_ = {3, 1, 4, 1, 5, 9, 2, 6};
+    std::vector<int> h_input = {3, 1, 4, 1, 5, 9, 2, 6};
     std::vector<int> expected = {3, 4, 8, 9, 14, 23, 25, 31};
 
-    CUDA_CHECK(cudaMemcpy(d_input_, h_input_.data(), size_ * sizeof(int), cudaMemcpyHostToDevice));
-    inclusiveScan(d_input_, d_output_, size_);
-    CUDA_CHECK(cudaMemcpy(h_output_.data(), d_output_, size_ * sizeof(int), cudaMemcpyDeviceToHost));
+    d_input_.copy_from(h_input.data(), size_);
+    cuda::algo::inclusiveScan(d_input_, d_output_, size_);
 
-    EXPECT_EQ(h_output_, expected);
+    std::vector<int> h_output(size_);
+    d_output_.copy_to(h_output.data(), size_);
+
+    EXPECT_EQ(h_output, expected);
 }
 
 TEST_F(ScanTest, LargeArray) {
-    size_ = 1024;
-    h_input_.resize(size_);
-    h_output_.resize(size_);
+    size_t large_size = 1024;
+    d_input_ = cuda::memory::Buffer<int>(large_size);
+    d_output_ = cuda::memory::Buffer<int>(large_size);
 
-    CUDA_CHECK(cudaFree(d_input_));
-    CUDA_CHECK(cudaFree(d_output_));
-    CUDA_CHECK(cudaMalloc(&d_input_, size_ * sizeof(int)));
-    CUDA_CHECK(cudaMalloc(&d_output_, size_ * sizeof(int)));
+    std::vector<int> h_input(large_size, 1);
+    d_input_.copy_from(h_input.data(), large_size);
 
-    for (size_t i = 0; i < size_; ++i) {
-        h_input_[i] = 1;
-    }
+    cuda::algo::exclusiveScan(d_input_, d_output_, large_size);
 
-    CUDA_CHECK(cudaMemcpy(d_input_, h_input_.data(), size_ * sizeof(int), cudaMemcpyHostToDevice));
-    exclusiveScan(d_input_, d_output_, size_);
-    CUDA_CHECK(cudaMemcpy(h_output_.data(), d_output_, size_ * sizeof(int), cudaMemcpyDeviceToHost));
+    std::vector<int> h_output(large_size);
+    d_output_.copy_to(h_output.data(), large_size);
 
-    for (size_t i = 0; i < size_; ++i) {
-        EXPECT_EQ(h_output_[i], static_cast<int>(i));
+    for (size_t i = 0; i < large_size; ++i) {
+        EXPECT_EQ(h_output[i], static_cast<int>(i));
     }
 }
 
 TEST_F(ScanTest, AlternatingPattern) {
-    size_ = 8;
-    h_input_ = {1, 0, 1, 0, 1, 0, 1, 0};
-    h_output_.resize(size_);
-
-    CUDA_CHECK(cudaMemcpy(d_input_, h_input_.data(), size_ * sizeof(int), cudaMemcpyHostToDevice));
-    exclusiveScan(d_input_, d_output_, size_);
-    CUDA_CHECK(cudaMemcpy(h_output_.data(), d_output_, size_ * sizeof(int), cudaMemcpyDeviceToHost));
-
+    std::vector<int> h_input = {1, 0, 1, 0, 1, 0, 1, 0};
     std::vector<int> expected = {0, 1, 1, 2, 2, 3, 3, 4};
-    EXPECT_EQ(h_output_, expected);
+
+    d_input_.copy_from(h_input.data(), size_);
+    cuda::algo::exclusiveScan(d_input_, d_output_, size_);
+
+    std::vector<int> h_output(size_);
+    d_output_.copy_to(h_output.data(), size_);
+
+    EXPECT_EQ(h_output, expected);
 }
 
 TEST_F(ScanTest, EmptyArray) {
-    EXPECT_NO_THROW(exclusiveScan(d_input_, d_output_, 0));
+    cuda::memory::Buffer<int> empty_input(1);
+    cuda::memory::Buffer<int> empty_output(1);
+    EXPECT_NO_THROW(cuda::algo::exclusiveScan(empty_input, empty_output, 0));
 }
 
 TEST_F(ScanTest, ExceedsMaxSize) {
     size_t largeSize = MAX_SCAN_SIZE + 1;
-    std::vector<int> large_input(largeSize, 1);
-    std::vector<int> large_output(largeSize);
+    cuda::memory::Buffer<int> large_input(largeSize);
+    cuda::memory::Buffer<int> large_output(largeSize);
 
-    int* d_large_input = nullptr;
-    int* d_large_output = nullptr;
-    CUDA_CHECK(cudaMalloc(&d_large_input, largeSize * sizeof(int)));
-    CUDA_CHECK(cudaMalloc(&d_large_output, largeSize * sizeof(int)));
+    std::vector<int> h_large(largeSize, 1);
+    large_input.copy_from(h_large.data(), largeSize);
 
-    CUDA_CHECK(cudaMemcpy(d_large_input, large_input.data(), largeSize * sizeof(int), cudaMemcpyHostToDevice));
-
-    EXPECT_THROW(exclusiveScan(d_large_input, d_large_output, largeSize), std::invalid_argument);
-    EXPECT_THROW(inclusiveScan(d_large_input, d_large_output, largeSize), std::invalid_argument);
-
-    CUDA_CHECK(cudaFree(d_large_input));
-    CUDA_CHECK(cudaFree(d_large_output));
+    EXPECT_THROW(cuda::algo::exclusiveScan(large_input, large_output, largeSize),
+                 ScanSizeException);
+    EXPECT_THROW(cuda::algo::inclusiveScan(large_input, large_output, largeSize),
+                 ScanSizeException);
 }
 
 TEST_F(ScanTest, MaximumSize) {
     size_t maxSize = 1024;
-    h_input_.resize(maxSize);
-    h_output_.resize(maxSize);
+    d_input_ = cuda::memory::Buffer<int>(maxSize);
+    d_output_ = cuda::memory::Buffer<int>(maxSize);
 
-    CUDA_CHECK(cudaFree(d_input_));
-    CUDA_CHECK(cudaFree(d_output_));
-    CUDA_CHECK(cudaMalloc(&d_input_, maxSize * sizeof(int)));
-    CUDA_CHECK(cudaMalloc(&d_output_, maxSize * sizeof(int)));
-
-    for (size_t i = 0; i < maxSize; ++i) {
-        h_input_[i] = 1;
-    }
+    std::vector<int> h_input(maxSize, 1);
     std::vector<int> expected(maxSize);
     for (size_t i = 0; i < maxSize; ++i) {
         expected[i] = static_cast<int>(i);
     }
 
-    CUDA_CHECK(cudaMemcpy(d_input_, h_input_.data(), maxSize * sizeof(int), cudaMemcpyHostToDevice));
-    exclusiveScan(d_input_, d_output_, maxSize);
-    CUDA_CHECK(cudaMemcpy(h_output_.data(), d_output_, maxSize * sizeof(int), cudaMemcpyDeviceToHost));
+    d_input_.copy_from(h_input.data(), maxSize);
+    cuda::algo::exclusiveScan(d_input_, d_output_, maxSize);
 
-    EXPECT_EQ(h_output_, expected);
+    std::vector<int> h_output(maxSize);
+    d_output_.copy_to(h_output.data(), maxSize);
+
+    EXPECT_EQ(h_output, expected);
 }

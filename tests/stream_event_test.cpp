@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "cuda/api/stream.h"
-#include "cuda/device/error.h"
+#include "cuda/stream/stream.h"
+#include "cuda/stream/event.h"
 #include <vector>
 #include <algorithm>
 #include <numeric>
@@ -21,31 +21,31 @@ protected:
 };
 
 TEST_F(StreamTest, DefaultConstruction) {
-    cuda::api::Stream stream;
+    cuda::stream::Stream stream;
     EXPECT_NE(stream.get(), nullptr);
 }
 
 TEST_F(StreamTest, CopyConstructionDeleted) {
-    cuda::api::Stream stream;
-    EXPECT_FALSE(std::is_copy_constructible_v<cuda::api::Stream>);
+    cuda::stream::Stream stream;
+    EXPECT_FALSE(std::is_copy_constructible_v<cuda::stream::Stream>);
 }
 
 TEST_F(StreamTest, CopyAssignmentDeleted) {
-    cuda::api::Stream stream;
-    EXPECT_FALSE(std::is_copy_assignable_v<cuda::api::Stream>);
+    cuda::stream::Stream stream;
+    EXPECT_FALSE(std::is_copy_assignable_v<cuda::stream::Stream>);
 }
 
 TEST_F(StreamTest, MoveConstruction) {
-    cuda::api::Stream stream1;
+    cuda::stream::Stream stream1;
     auto handle = stream1.get();
 
-    cuda::api::Stream stream2(std::move(stream1));
+    cuda::stream::Stream stream2(std::move(stream1));
     EXPECT_EQ(stream2.get(), handle);
 }
 
 TEST_F(StreamTest, MoveAssignment) {
-    cuda::api::Stream stream1;
-    cuda::api::Stream stream2;
+    cuda::stream::Stream stream1;
+    cuda::stream::Stream stream2;
     auto handle1 = stream1.get();
 
     stream2 = std::move(stream1);
@@ -53,13 +53,13 @@ TEST_F(StreamTest, MoveAssignment) {
 }
 
 TEST_F(StreamTest, GetReturnsStreamHandle) {
-    cuda::api::Stream stream;
+    cuda::stream::Stream stream;
     EXPECT_NE(stream.get(), nullptr);
     EXPECT_NE(*stream, nullptr);
 }
 
 TEST_F(StreamTest, SynchronizeVerifiesDataTransfer) {
-    cuda::api::Stream stream;
+    cuda::stream::Stream stream;
     constexpr int N = 1000;
     std::vector<int> h_input(N);
     std::iota(h_input.begin(), h_input.end(), 1);
@@ -81,12 +81,12 @@ TEST_F(StreamTest, SynchronizeVerifiesDataTransfer) {
 }
 
 TEST_F(StreamTest, QueryReturnsTrue) {
-    cuda::api::Stream stream;
+    cuda::stream::Stream stream;
     EXPECT_TRUE(stream.query());
 }
 
 TEST_F(StreamTest, QueryAfterAsyncWork) {
-    cuda::api::Stream stream;
+    cuda::stream::Stream stream;
     constexpr int N = 100;
     std::vector<int> h_data(N, 42);
     int* d_data = nullptr;
@@ -102,7 +102,7 @@ TEST_F(StreamTest, QueryAfterAsyncWork) {
 }
 
 TEST_F(StreamTest, MakeStream) {
-    auto stream = cuda::api::make_stream();
+    auto stream = cuda::stream::make_stream();
     EXPECT_NE(stream->get(), nullptr);
 }
 
@@ -114,31 +114,31 @@ protected:
 };
 
 TEST_F(EventTest, DefaultConstruction) {
-    cuda::api::Event event;
+    cuda::stream::Event event;
     EXPECT_NE(event.get(), nullptr);
 }
 
 TEST_F(EventTest, CopyConstructionDeleted) {
-    cuda::api::Event event;
-    EXPECT_FALSE(std::is_copy_constructible_v<cuda::api::Event>);
+    cuda::stream::Event event;
+    EXPECT_FALSE(std::is_copy_constructible_v<cuda::stream::Event>);
 }
 
 TEST_F(EventTest, CopyAssignmentDeleted) {
-    cuda::api::Event event;
-    EXPECT_FALSE(std::is_copy_assignable_v<cuda::api::Event>);
+    cuda::stream::Event event;
+    EXPECT_FALSE(std::is_copy_assignable_v<cuda::stream::Event>);
 }
 
 TEST_F(EventTest, MoveConstruction) {
-    cuda::api::Event event1;
+    cuda::stream::Event event1;
     auto handle = event1.get();
 
-    cuda::api::Event event2(std::move(event1));
+    cuda::stream::Event event2(std::move(event1));
     EXPECT_EQ(event2.get(), handle);
 }
 
 TEST_F(EventTest, MoveAssignment) {
-    cuda::api::Event event1;
-    cuda::api::Event event2;
+    cuda::stream::Event event1;
+    cuda::stream::Event event2;
     auto handle1 = event1.get();
 
     event2 = std::move(event1);
@@ -146,14 +146,14 @@ TEST_F(EventTest, MoveAssignment) {
 }
 
 TEST_F(EventTest, GetReturnsEventHandle) {
-    cuda::api::Event event;
+    cuda::stream::Event event;
     EXPECT_NE(event.get(), nullptr);
     EXPECT_NE(*event, nullptr);
 }
 
 TEST_F(EventTest, RecordOnStreamAndQuery) {
-    cuda::api::Stream stream;
-    cuda::api::Event event;
+    cuda::stream::Stream stream;
+    cuda::stream::Event event;
 
     constexpr int N = 100;
     std::vector<int> h_data(N, 42);
@@ -172,7 +172,7 @@ TEST_F(EventTest, RecordOnStreamAndQuery) {
 }
 
 TEST_F(EventTest, SynchronizeBlocksUntilComplete) {
-    cuda::api::Event event;
+    cuda::stream::Event event;
 
     event.synchronize();
 
@@ -180,13 +180,13 @@ TEST_F(EventTest, SynchronizeBlocksUntilComplete) {
 }
 
 TEST_F(EventTest, QueryAfterCreation) {
-    cuda::api::Event event;
+    cuda::stream::Event event;
     EXPECT_TRUE(event.query());
 }
 
 TEST_F(EventTest, QueryAfterRecordWithDataTransfer) {
-    cuda::api::Stream stream;
-    cuda::api::Event start_event, end_event;
+    cuda::stream::Stream stream;
+    cuda::stream::Event start_event, end_event;
 
     constexpr int N = 1000;
     std::vector<int> h_data(N);
@@ -212,8 +212,8 @@ TEST_F(EventTest, QueryAfterRecordWithDataTransfer) {
 }
 
 TEST_F(EventTest, ElapsedTimeIsNonNegative) {
-    cuda::api::Stream stream;
-    cuda::api::Event start_event, end_event;
+    cuda::stream::Stream stream;
+    cuda::stream::Event start_event, end_event;
 
     constexpr int N = 10000;
     std::vector<int> h_data(N, 42);
@@ -229,7 +229,7 @@ TEST_F(EventTest, ElapsedTimeIsNonNegative) {
 
     stream.synchronize();
 
-    float elapsed = cuda::api::Event::elapsed_time(start_event, end_event);
+    float elapsed = cuda::stream::Event::elapsed_time(start_event, end_event);
     EXPECT_GE(elapsed, 0.0f);
     EXPECT_LT(elapsed, 10000.0f);
 
@@ -237,8 +237,8 @@ TEST_F(EventTest, ElapsedTimeIsNonNegative) {
 }
 
 TEST_F(EventTest, ElapsedTimeAccurateForSequentialOps) {
-    cuda::api::Stream stream;
-    cuda::api::Event start_event, end_event;
+    cuda::stream::Stream stream;
+    cuda::stream::Event start_event, end_event;
 
     constexpr int N = 5000;
     int* d_data = nullptr;
@@ -251,14 +251,14 @@ TEST_F(EventTest, ElapsedTimeAccurateForSequentialOps) {
     end_event.record(stream);
     stream.synchronize();
 
-    float elapsed = cuda::api::Event::elapsed_time(start_event, end_event);
+    float elapsed = cuda::stream::Event::elapsed_time(start_event, end_event);
     EXPECT_GE(elapsed, 0.0f);
 
     CUDA_CHECK(cudaFree(d_data));
 }
 
 TEST_F(EventTest, MakeEvent) {
-    auto event = cuda::api::make_event();
+    auto event = cuda::stream::make_event();
     EXPECT_NE(event->get(), nullptr);
 }
 
@@ -270,8 +270,8 @@ protected:
 };
 
 TEST_F(StreamEventIntegrationTest, MeasureKernelTimeAndVerifyData) {
-    cuda::api::Stream stream;
-    cuda::api::Event start_event, end_event;
+    cuda::stream::Stream stream;
+    cuda::stream::Event start_event, end_event;
 
     constexpr int N = 10000;
     std::vector<int> h_input(N, 1);
@@ -290,7 +290,7 @@ TEST_F(StreamEventIntegrationTest, MeasureKernelTimeAndVerifyData) {
 
     stream.synchronize();
 
-    float elapsed = cuda::api::Event::elapsed_time(start_event, end_event);
+    float elapsed = cuda::stream::Event::elapsed_time(start_event, end_event);
     EXPECT_GE(elapsed, 0.0f);
     EXPECT_LT(elapsed, 1000.0f);
 
@@ -302,7 +302,7 @@ TEST_F(StreamEventIntegrationTest, MeasureKernelTimeAndVerifyData) {
 }
 
 TEST_F(StreamEventIntegrationTest, MultipleStreamsIndependenceWithDataVerification) {
-    cuda::api::Stream stream1, stream2;
+    cuda::stream::Stream stream1, stream2;
 
     constexpr int N = 1000;
     std::vector<int> h_data(N, 42);
@@ -335,8 +335,8 @@ TEST_F(StreamEventIntegrationTest, MultipleStreamsIndependenceWithDataVerificati
 }
 
 TEST_F(StreamEventIntegrationTest, EventOrderingWithDataVerification) {
-    cuda::api::Stream stream;
-    cuda::api::Event events[3];
+    cuda::stream::Stream stream;
+    cuda::stream::Event events[3];
     constexpr int N = 100;
     std::vector<int> h_data(N, 1);
     std::vector<int> h_result(N, 0);
@@ -354,9 +354,9 @@ TEST_F(StreamEventIntegrationTest, EventOrderingWithDataVerification) {
 
     stream.synchronize();
 
-    float time01 = cuda::api::Event::elapsed_time(events[0], events[1]);
-    float time12 = cuda::api::Event::elapsed_time(events[1], events[2]);
-    float time02 = cuda::api::Event::elapsed_time(events[0], events[2]);
+    float time01 = cuda::stream::Event::elapsed_time(events[0], events[1]);
+    float time12 = cuda::stream::Event::elapsed_time(events[1], events[2]);
+    float time02 = cuda::stream::Event::elapsed_time(events[0], events[2]);
 
     EXPECT_GE(time01, 0.0f);
     EXPECT_GE(time12, 0.0f);
@@ -370,8 +370,8 @@ TEST_F(StreamEventIntegrationTest, EventOrderingWithDataVerification) {
 }
 
 TEST_F(StreamEventIntegrationTest, EventTimingConsistency) {
-    cuda::api::Stream stream;
-    cuda::api::Event start, middle, end;
+    cuda::stream::Stream stream;
+    cuda::stream::Event start, middle, end;
 
     constexpr int N = 5000;
     std::vector<int> h_data(N, 0);
@@ -385,9 +385,9 @@ TEST_F(StreamEventIntegrationTest, EventTimingConsistency) {
     end.record(stream);
     stream.synchronize();
 
-    float t1 = cuda::api::Event::elapsed_time(start, middle);
-    float t2 = cuda::api::Event::elapsed_time(middle, end);
-    float t_total = cuda::api::Event::elapsed_time(start, end);
+    float t1 = cuda::stream::Event::elapsed_time(start, middle);
+    float t2 = cuda::stream::Event::elapsed_time(middle, end);
+    float t_total = cuda::stream::Event::elapsed_time(start, end);
 
     EXPECT_GE(t1, 0.0f);
     EXPECT_GE(t2, 0.0f);
@@ -398,7 +398,7 @@ TEST_F(StreamEventIntegrationTest, EventTimingConsistency) {
 }
 
 TEST_F(StreamEventIntegrationTest, StreamPriorityIndependence) {
-    cuda::api::Stream stream1, stream2;
+    cuda::stream::Stream stream1, stream2;
 
     constexpr int N = 2000;
     std::vector<int> h_data(N, 7);

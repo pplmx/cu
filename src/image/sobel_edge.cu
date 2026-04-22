@@ -1,9 +1,9 @@
-#include "image/sobel_edge.h"
-#include "cuda/device/device_utils.h"
 #include <math.h>
 
-__global__ void sobelKernel(const uint8_t* input, uint8_t* output,
-                            size_t width, size_t height, float threshold) {
+#include "cuda/device/device_utils.h"
+#include "image/sobel_edge.h"
+
+__global__ void sobelKernel(const uint8_t* input, uint8_t* output, size_t width, size_t height, float threshold) {
     size_t x = blockIdx.x * blockDim.x + threadIdx.x;
     size_t y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -23,13 +23,11 @@ __global__ void sobelKernel(const uint8_t* input, uint8_t* output,
         return 0.299f * r + 0.587f * g + 0.114f * b;
     };
 
-    float gx = -getGray(y-1, x-1) - 2.0f*getGray(y, x-1) - getGray(y+1, x-1)
-               +getGray(y-1, x+1) + 2.0f*getGray(y, x+1) + getGray(y+1, x+1);
+    float gx = -getGray(y - 1, x - 1) - 2.0f * getGray(y, x - 1) - getGray(y + 1, x - 1) + getGray(y - 1, x + 1) + 2.0f * getGray(y, x + 1) + getGray(y + 1, x + 1);
 
-    float gy = -getGray(y-1, x-1) - 2.0f*getGray(y-1, x) - getGray(y-1, x+1)
-               +getGray(y+1, x-1) + 2.0f*getGray(y+1, x) + getGray(y+1, x+1);
+    float gy = -getGray(y - 1, x - 1) - 2.0f * getGray(y - 1, x) - getGray(y - 1, x + 1) + getGray(y + 1, x - 1) + 2.0f * getGray(y + 1, x) + getGray(y + 1, x + 1);
 
-    int magnitude = static_cast<int>(sqrtf(gx*gx + gy*gy));
+    int magnitude = static_cast<int>(sqrtf(gx * gx + gy * gy));
     uint8_t edgeVal = (magnitude > static_cast<int>(threshold)) ? 255 : 0;
     size_t outIdx = (y * width + x) * 3;
     output[outIdx] = edgeVal;
@@ -37,9 +35,7 @@ __global__ void sobelKernel(const uint8_t* input, uint8_t* output,
     output[outIdx + 2] = edgeVal;
 }
 
-void sobelEdgeDetection(const uint8_t* d_input, uint8_t* d_output,
-                        size_t width, size_t height,
-                        float threshold) {
+void sobelEdgeDetection(const uint8_t* d_input, uint8_t* d_output, size_t width, size_t height, float threshold) {
     CUDA_CHECK(cudaMemset(d_output, 0, width * height * 3));
 
     dim3 block(16, 16);

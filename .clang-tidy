@@ -28,11 +28,11 @@ CheckOptions:
     -   key: readability-identifier-naming.ParameterCase
         value: lower_case
     -   key: readability-identifier-naming.MemberCase
-        value: m_camelBack
+        value: camelBack
     -   key: readability-identifier-naming.StaticMemberCase
-        value: s_camelBack
+        value: camelBack
     -   key: readability-identifier-naming.GlobalVariableCase
-        value: g_lower_case
+        value: lower_case
     -   key: readability-identifier-naming.NamespaceCase
         value: lower_case
 

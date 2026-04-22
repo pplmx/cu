@@ -2,10 +2,13 @@
 #include <memory>
 #include <cstddef>
 #include <cstdint>
+#include <vector>
 
-#include "cuda/device/device_utils.h"
+#include "cuda/memory/buffer.h"
 #include "image/gaussian_blur.h"
 #include "test_patterns.cuh"
+
+using cuda::memory::Buffer;
 
 class GaussianBlurTest : public ::testing::Test {
 protected:
@@ -14,35 +17,30 @@ protected:
         height_ = 64;
         size_ = width_ * height_ * 3;
 
-        h_input_ = std::make_unique<unsigned char[]>(size_);
-        h_output_ = std::make_unique<unsigned char[]>(size_);
+        h_input_.resize(size_);
+        h_output_.resize(size_);
 
-        CUDA_CHECK(cudaMalloc(&d_input_, size_));
-        CUDA_CHECK(cudaMalloc(&d_output_, size_));
-    }
-
-    void TearDown() override {
-        CUDA_CHECK(cudaFree(d_input_));
-        CUDA_CHECK(cudaFree(d_output_));
+        d_input_ = cuda::memory::Buffer<uint8_t>(size_);
+        d_output_ = cuda::memory::Buffer<uint8_t>(size_);
     }
 
     void runAndDownload(float sigma = 1.0f, int kernel_size = 3) {
-        CUDA_CHECK(cudaMemcpy(d_input_, h_input_.get(), size_, cudaMemcpyHostToDevice));
-        gaussianBlur(d_input_, d_output_, width_, height_, sigma, kernel_size);
-        CUDA_CHECK(cudaMemcpy(h_output_.get(), d_output_, size_, cudaMemcpyDeviceToHost));
+        d_input_.copy_from(h_input_.data(), size_);
+        cuda::algo::gaussianBlur(d_input_, d_output_, width_, height_, sigma, kernel_size);
+        d_output_.copy_to(h_output_.data(), size_);
     }
 
     size_t width_;
     size_t height_;
     size_t size_;
-    std::unique_ptr<unsigned char[]> h_input_;
-    std::unique_ptr<unsigned char[]> h_output_;
-    uint8_t *d_input_;
-    uint8_t *d_output_;
+    std::vector<uint8_t> h_input_;
+    std::vector<uint8_t> h_output_;
+    cuda::memory::Buffer<uint8_t> d_input_;
+    cuda::memory::Buffer<uint8_t> d_output_;
 };
 
 TEST_F(GaussianBlurTest, SolidImage) {
-    generateSolid(h_input_.get(), width_, height_, 128);
+    generateSolid(h_input_.data(), width_, height_, 128);
 
     runAndDownload(1.0f, 3);
 
@@ -52,7 +50,7 @@ TEST_F(GaussianBlurTest, SolidImage) {
 }
 
 TEST_F(GaussianBlurTest, SmallKernel) {
-    generateSolid(h_input_.get(), width_, height_, 200);
+    generateSolid(h_input_.data(), width_, height_, 200);
 
     runAndDownload(0.5f, 3);
 
@@ -62,7 +60,7 @@ TEST_F(GaussianBlurTest, SmallKernel) {
 }
 
 TEST_F(GaussianBlurTest, LargerKernel) {
-    generateSolid(h_input_.get(), width_, height_, 100);
+    generateSolid(h_input_.data(), width_, height_, 100);
 
     runAndDownload(2.0f, 5);
 
@@ -72,7 +70,7 @@ TEST_F(GaussianBlurTest, LargerKernel) {
 }
 
 TEST_F(GaussianBlurTest, Checkerboard) {
-    generateCheckerboard(h_input_.get(), width_, height_, 8);
+    generateCheckerboard(h_input_.data(), width_, height_, 8);
 
     runAndDownload(1.5f, 5);
 
@@ -90,18 +88,14 @@ TEST_F(GaussianBlurTest, SinglePixel) {
     std::vector<unsigned char> input(size, 128);
     std::vector<unsigned char> output(size, 0);
 
-    uint8_t *d_input, *d_output;
-    CUDA_CHECK(cudaMalloc(&d_input, size));
-    CUDA_CHECK(cudaMalloc(&d_output, size));
+    cuda::memory::Buffer<uint8_t> d_input(size);
+    cuda::memory::Buffer<uint8_t> d_output(size);
 
-    CUDA_CHECK(cudaMemcpy(d_input, input.data(), size, cudaMemcpyHostToDevice));
-    gaussianBlur(d_input, d_output, 1, 1, 1.0f, 3);
-    CUDA_CHECK(cudaMemcpy(output.data(), d_output, size, cudaMemcpyDeviceToHost));
+    d_input.copy_from(input.data(), size);
+    cuda::algo::gaussianBlur(d_input, d_output, 1, 1, 1.0f, 3);
+    d_output.copy_to(output.data(), size);
 
     EXPECT_NEAR(output[0], 128, 5);
-
-    CUDA_CHECK(cudaFree(d_input));
-    CUDA_CHECK(cudaFree(d_output));
 }
 
 TEST_F(GaussianBlurTest, NonSquareImage) {
@@ -109,17 +103,14 @@ TEST_F(GaussianBlurTest, NonSquareImage) {
     height_ = 50;
     size_ = width_ * height_ * 3;
 
-    h_input_ = std::make_unique<unsigned char[]>(size_);
-    h_output_ = std::make_unique<unsigned char[]>(size_);
+    h_input_.resize(size_);
+    h_output_.resize(size_);
+    d_input_ = cuda::memory::Buffer<uint8_t>(size_);
+    d_output_ = cuda::memory::Buffer<uint8_t>(size_);
 
-    generateSolid(h_input_.get(), width_, height_, 128);
+    generateSolid(h_input_.data(), width_, height_, 128);
 
-    CUDA_CHECK(cudaMalloc(&d_input_, size_));
-    CUDA_CHECK(cudaMalloc(&d_output_, size_));
-
-    CUDA_CHECK(cudaMemcpy(d_input_, h_input_.get(), size_, cudaMemcpyHostToDevice));
-    gaussianBlur(d_input_, d_output_, width_, height_, 1.0f, 3);
-    CUDA_CHECK(cudaMemcpy(h_output_.get(), d_output_, size_, cudaMemcpyDeviceToHost));
+    runAndDownload(1.0f, 3);
 
     for (size_t i = 0; i < size_; ++i) {
         EXPECT_NEAR(h_output_[i], 128, 3);
@@ -131,17 +122,14 @@ TEST_F(GaussianBlurTest, LargeKernel) {
     height_ = 128;
     size_ = width_ * height_ * 3;
 
-    h_input_ = std::make_unique<unsigned char[]>(size_);
-    h_output_ = std::make_unique<unsigned char[]>(size_);
+    h_input_.resize(size_);
+    h_output_.resize(size_);
+    d_input_ = cuda::memory::Buffer<uint8_t>(size_);
+    d_output_ = cuda::memory::Buffer<uint8_t>(size_);
 
-    generateSolid(h_input_.get(), width_, height_, 100);
+    generateSolid(h_input_.data(), width_, height_, 100);
 
-    CUDA_CHECK(cudaMalloc(&d_input_, size_));
-    CUDA_CHECK(cudaMalloc(&d_output_, size_));
-
-    CUDA_CHECK(cudaMemcpy(d_input_, h_input_.get(), size_, cudaMemcpyHostToDevice));
-    gaussianBlur(d_input_, d_output_, width_, height_, 3.0f, 7);
-    CUDA_CHECK(cudaMemcpy(h_output_.get(), d_output_, size_, cudaMemcpyDeviceToHost));
+    runAndDownload(3.0f, 7);
 
     for (size_t i = 0; i < size_; ++i) {
         EXPECT_NEAR(h_output_[i], 100, 10);

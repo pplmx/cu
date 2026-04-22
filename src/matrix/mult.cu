@@ -1,8 +1,9 @@
-#include <type_traits>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
+#include <type_traits>
 #include <vector>
+
 #include "cuda/device/device_utils.h"
 #include "matrix/mult.h"
 
@@ -49,23 +50,37 @@ void multiplyMatricesOnGPU(const T* hostMatrixA, const T* hostMatrixB, T* hostRe
     // For row-major B (K×N), cuBLAS sees it as N×K column-major: ldb = numColsA
     // For row-major C (M×N), cuBLAS sees it as N×M column-major: ldc = numRowsA
     if constexpr (std::is_same_v<T, float>) {
-        CUBLAS_CHECK(cublasSgemm(cublasHandle, CUBLAS_OP_N, CUBLAS_OP_N,  // No transposition for both matrices
-                                 numColsB, numRowsA, numColsA,            // m=N, n=M, k=K
-                                 &alpha,                                  // Scalar alpha
-                                 deviceMatrixB, numColsA,                 // B: N×K, lda=K
-                                 deviceMatrixA, numRowsA,                 // A: K×M, lda=M
-                                 &beta,                                   // Scalar beta
-                                 deviceResultMatrix, numRowsA));          // C: N×M, ldc=M
+        CUBLAS_CHECK(cublasSgemm(cublasHandle,
+                                 CUBLAS_OP_N,
+                                 CUBLAS_OP_N,  // No transposition for both matrices
+                                 numColsB,
+                                 numRowsA,
+                                 numColsA,  // m=N, n=M, k=K
+                                 &alpha,    // Scalar alpha
+                                 deviceMatrixB,
+                                 numColsA,  // B: N×K, lda=K
+                                 deviceMatrixA,
+                                 numRowsA,  // A: K×M, lda=M
+                                 &beta,     // Scalar beta
+                                 deviceResultMatrix,
+                                 numRowsA));  // C: N×M, ldc=M
     }
     // For double: Use cublasDgemm (double precision)
     else if constexpr (std::is_same_v<T, double>) {
-        CUBLAS_CHECK(cublasDgemm(cublasHandle, CUBLAS_OP_N, CUBLAS_OP_N,  // No transposition for both matrices
-                                 numColsB, numRowsA, numColsA,            // m=N, n=M, k=K
-                                 &alpha,                                  // Scalar alpha
-                                 deviceMatrixB, numColsA,                 // B: N×K, lda=K
-                                 deviceMatrixA, numRowsA,                 // A: K×M, lda=M
-                                 &beta,                                   // Scalar beta
-                                 deviceResultMatrix, numRowsA));          // C: N×M, ldc=M
+        CUBLAS_CHECK(cublasDgemm(cublasHandle,
+                                 CUBLAS_OP_N,
+                                 CUBLAS_OP_N,  // No transposition for both matrices
+                                 numColsB,
+                                 numRowsA,
+                                 numColsA,  // m=N, n=M, k=K
+                                 &alpha,    // Scalar alpha
+                                 deviceMatrixB,
+                                 numColsA,  // B: N×K, lda=K
+                                 deviceMatrixA,
+                                 numRowsA,  // A: K×M, lda=M
+                                 &beta,     // Scalar beta
+                                 deviceResultMatrix,
+                                 numRowsA));  // C: N×M, ldc=M
     }
     // If neither float nor double, throw a compile-time error
     else {
@@ -88,67 +103,66 @@ template void multiplyMatricesOnGPU<double>(const double*, const double*, double
 
 namespace cuda_kernel {
 
-template <typename T>
-__global__ void matrixMulNaiveKernel(const T* A, const T* B, T* C, int M, int N, int K) {
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    template <typename T>
+    __global__ void matrixMulNaiveKernel(const T* A, const T* B, T* C, int M, int N, int K) {
+        int row = blockIdx.y * blockDim.y + threadIdx.y;
+        int col = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (row < M && col < K) {
+        if (row < M && col < K) {
+            T sum = 0;
+            for (int i = 0; i < N; i++) {
+                sum += A[row * N + i] * B[i * K + col];
+            }
+            C[row * K + col] = sum;
+        }
+    }
+
+    template <typename T>
+    __global__ void matrixMulTiledKernel(const T* A, const T* B, T* C, int M, int N, int K) {
+        __shared__ T sharedA[16][17];
+        __shared__ T sharedB[16][17];
+
+        int bx = blockIdx.x;
+        int by = blockIdx.y;
+        int tx = threadIdx.x;
+        int ty = threadIdx.y;
+
+        int row = by * 16 + ty;
+        int col = bx * 16 + tx;
+
         T sum = 0;
-        for (int i = 0; i < N; i++) {
-            sum += A[row * N + i] * B[i * K + col];
+
+        for (int phase = 0; phase < (N + 15) / 16; phase++) {
+            if (row < M && (phase * 16 + tx) < N) {
+                sharedA[ty][tx] = A[row * N + phase * 16 + tx];
+            } else {
+                sharedA[ty][tx] = 0;
+            }
+
+            if ((phase * 16 + ty) < N && col < K) {
+                sharedB[ty][tx] = B[(phase * 16 + ty) * K + col];
+            } else {
+                sharedB[ty][tx] = 0;
+            }
+
+            __syncthreads();
+
+            for (int i = 0; i < 16; i++) {
+                sum += sharedA[ty][i] * sharedB[i][tx];
+            }
+
+            __syncthreads();
         }
-        C[row * K + col] = sum;
+
+        if (row < M && col < K) {
+            C[row * K + col] = sum;
+        }
     }
-}
-
-template <typename T>
-__global__ void matrixMulTiledKernel(const T* A, const T* B, T* C, int M, int N, int K) {
-    __shared__ T sharedA[16][17];
-    __shared__ T sharedB[16][17];
-
-    int bx = blockIdx.x;
-    int by = blockIdx.y;
-    int tx = threadIdx.x;
-    int ty = threadIdx.y;
-
-    int row = by * 16 + ty;
-    int col = bx * 16 + tx;
-
-    T sum = 0;
-
-    for (int phase = 0; phase < (N + 15) / 16; phase++) {
-        if (row < M && (phase * 16 + tx) < N) {
-            sharedA[ty][tx] = A[row * N + phase * 16 + tx];
-        } else {
-            sharedA[ty][tx] = 0;
-        }
-
-        if ((phase * 16 + ty) < N && col < K) {
-            sharedB[ty][tx] = B[(phase * 16 + ty) * K + col];
-        } else {
-            sharedB[ty][tx] = 0;
-        }
-
-        __syncthreads();
-
-        for (int i = 0; i < 16; i++) {
-            sum += sharedA[ty][i] * sharedB[i][tx];
-        }
-
-        __syncthreads();
-    }
-
-    if (row < M && col < K) {
-        C[row * K + col] = sum;
-    }
-}
 
 }  // namespace cuda_kernel
 
 template <typename T>
-void multiplyMatricesNaive(const T* hostMatrixA, const T* hostMatrixB, T* hostResultMatrix,
-                           int numRowsA, int numColsA, int numColsB) {
+void multiplyMatricesNaive(const T* hostMatrixA, const T* hostMatrixB, T* hostResultMatrix, int numRowsA, int numColsA, int numColsB) {
     size_t byteSizeA = numRowsA * numColsA * sizeof(T);
     size_t byteSizeB = numColsA * numColsB * sizeof(T);
     size_t byteSizeC = numRowsA * numColsB * sizeof(T);
@@ -163,11 +177,9 @@ void multiplyMatricesNaive(const T* hostMatrixA, const T* hostMatrixB, T* hostRe
     CUDA_CHECK(cudaMemcpy(deviceMatrixB, hostMatrixB, byteSizeB, cudaMemcpyHostToDevice));
 
     dim3 threadsPerBlock(16, 16);
-    dim3 numBlocks((numColsB + threadsPerBlock.x - 1) / threadsPerBlock.x,
-                   (numRowsA + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    dim3 numBlocks((numColsB + threadsPerBlock.x - 1) / threadsPerBlock.x, (numRowsA + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
-    cuda_kernel::matrixMulNaiveKernel<<<numBlocks, threadsPerBlock>>>(
-        deviceMatrixA, deviceMatrixB, deviceResultMatrix, numRowsA, numColsA, numColsB);
+    cuda_kernel::matrixMulNaiveKernel<<<numBlocks, threadsPerBlock>>>(deviceMatrixA, deviceMatrixB, deviceResultMatrix, numRowsA, numColsA, numColsB);
     CUDA_CHECK(cudaGetLastError());
     CUDA_CHECK(cudaDeviceSynchronize());
 
@@ -182,8 +194,7 @@ template void multiplyMatricesNaive<float>(const float*, const float*, float*, i
 template void multiplyMatricesNaive<double>(const double*, const double*, double*, int, int, int);
 
 template <typename T>
-void multiplyMatricesTiled(const T* hostMatrixA, const T* hostMatrixB, T* hostResultMatrix,
-                           int numRowsA, int numColsA, int numColsB) {
+void multiplyMatricesTiled(const T* hostMatrixA, const T* hostMatrixB, T* hostResultMatrix, int numRowsA, int numColsA, int numColsB) {
     size_t byteSizeA = numRowsA * numColsA * sizeof(T);
     size_t byteSizeB = numColsA * numColsB * sizeof(T);
     size_t byteSizeC = numRowsA * numColsB * sizeof(T);
@@ -198,11 +209,9 @@ void multiplyMatricesTiled(const T* hostMatrixA, const T* hostMatrixB, T* hostRe
     CUDA_CHECK(cudaMemcpy(deviceMatrixB, hostMatrixB, byteSizeB, cudaMemcpyHostToDevice));
 
     dim3 threadsPerBlock(16, 16);
-    dim3 numBlocks((numColsB + threadsPerBlock.x - 1) / threadsPerBlock.x,
-                   (numRowsA + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    dim3 numBlocks((numColsB + threadsPerBlock.x - 1) / threadsPerBlock.x, (numRowsA + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
-    cuda_kernel::matrixMulTiledKernel<<<numBlocks, threadsPerBlock>>>(
-        deviceMatrixA, deviceMatrixB, deviceResultMatrix, numRowsA, numColsA, numColsB);
+    cuda_kernel::matrixMulTiledKernel<<<numBlocks, threadsPerBlock>>>(deviceMatrixA, deviceMatrixB, deviceResultMatrix, numRowsA, numColsA, numColsB);
     CUDA_CHECK(cudaGetLastError());
     CUDA_CHECK(cudaDeviceSynchronize());
 
@@ -227,8 +236,12 @@ void runMatrixMulBenchmark(int size) {
     std::vector<float> h_C_tiled(M * K);
     std::vector<float> h_C_cublas(M * K);
 
-    for (int i = 0; i < M * N; i++) h_A[i] = static_cast<float>(std::rand()) / RAND_MAX;
-    for (int i = 0; i < N * K; i++) h_B[i] = static_cast<float>(std::rand()) / RAND_MAX;
+    for (int i = 0; i < M * N; i++) {
+        h_A[i] = static_cast<float>(std::rand()) / RAND_MAX;
+    }
+    for (int i = 0; i < N * K; i++) {
+        h_B[i] = static_cast<float>(std::rand()) / RAND_MAX;
+    }
 
     cudaEvent_t start, stop;
     float naiveTime, tiledTime, cublasTime;
@@ -264,16 +277,19 @@ void runMatrixMulBenchmark(int size) {
     for (int i = 0; i < M * K; i++) {
         float diffNaive = std::abs(h_C_naive[i] - h_C_cublas[i]);
         float diffTiled = std::abs(h_C_tiled[i] - h_C_cublas[i]);
-        if (diffNaive > maxDiffNaive) maxDiffNaive = diffNaive;
-        if (diffTiled > maxDiffTiled) maxDiffTiled = diffTiled;
+        if (diffNaive > maxDiffNaive) {
+            maxDiffNaive = diffNaive;
+        }
+        if (diffTiled > maxDiffTiled) {
+            maxDiffTiled = diffTiled;
+        }
     }
     std::cout << "Max diff (naive vs cuBLAS): " << maxDiffNaive << std::endl;
     std::cout << "Max diff (tiled vs cuBLAS): " << maxDiffTiled << std::endl;
 
     const float EPSILON = 1e-4f;
     bool passed = (maxDiffNaive < EPSILON && maxDiffTiled < EPSILON);
-    std::cout << "Verification: " << (passed ? "PASS" : "FAIL")
-              << " (threshold: " << EPSILON << ")" << std::endl;
+    std::cout << "Verification: " << (passed ? "PASS" : "FAIL") << " (threshold: " << EPSILON << ")" << std::endl;
 
     CUDA_CHECK(cudaEventDestroy(start));
     CUDA_CHECK(cudaEventDestroy(stop));

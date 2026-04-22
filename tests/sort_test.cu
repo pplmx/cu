@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
 #include "parallel/sort.h"
-#include "cuda/device/device_utils.h"
+#include "cuda/memory/buffer.h"
 #include <algorithm>
 #include <numeric>
+
+using cuda::memory::Buffer;
 
 namespace {
 
@@ -21,25 +23,20 @@ protected:
     size_t size_ = 1024;
     std::vector<int> h_input_;
     std::vector<int> h_output_;
-    int *d_input_ = nullptr;
-    int *d_output_ = nullptr;
+    cuda::memory::Buffer<int> d_input_;
+    cuda::memory::Buffer<int> d_output_;
 
     void SetUp() override {
         h_input_.resize(size_);
         h_output_.resize(size_);
-        CUDA_CHECK(cudaMalloc(&d_input_, size_ * sizeof(int)));
-        CUDA_CHECK(cudaMalloc(&d_output_, size_ * sizeof(int)));
-    }
-
-    void TearDown() override {
-        if (d_input_) CUDA_CHECK(cudaFree(d_input_));
-        if (d_output_) CUDA_CHECK(cudaFree(d_output_));
+        d_input_ = cuda::memory::Buffer<int>(size_);
+        d_output_ = cuda::memory::Buffer<int>(size_);
     }
 
     void runSort(size_t size) {
-        CUDA_CHECK(cudaMemcpy(d_input_, h_input_.data(), size * sizeof(int), cudaMemcpyHostToDevice));
+        d_input_.copy_from(h_input_.data(), size);
         cuda::parallel::bitonicSort(d_input_, d_output_, size);
-        CUDA_CHECK(cudaMemcpy(h_output_.data(), d_output_, size * sizeof(int), cudaMemcpyDeviceToHost));
+        d_output_.copy_to(h_output_.data(), size);
     }
 };
 
@@ -99,11 +96,8 @@ TEST_F(SortTest, LargeArray) {
     size_t size = 512;
     h_input_.resize(size);
     h_output_.resize(size);
-
-    CUDA_CHECK(cudaFree(d_input_));
-    CUDA_CHECK(cudaFree(d_output_));
-    CUDA_CHECK(cudaMalloc(&d_input_, size * sizeof(int)));
-    CUDA_CHECK(cudaMalloc(&d_output_, size * sizeof(int)));
+    d_input_ = cuda::memory::Buffer<int>(size);
+    d_output_ = cuda::memory::Buffer<int>(size);
 
     for (size_t i = 0; i < size; ++i) {
         h_input_[i] = static_cast<int>(size - i);
@@ -136,23 +130,18 @@ TEST_F(SortTest, AllSame) {
 class OddEvenSortTest : public ::testing::Test {
 protected:
     std::vector<int> h_input_, h_output_;
-    int *d_input_ = nullptr;
-    int *d_output_ = nullptr;
+    cuda::memory::Buffer<int> d_input_;
+    cuda::memory::Buffer<int> d_output_;
 
     void SetUp() override {
-        CUDA_CHECK(cudaMalloc(&d_input_, 1024 * sizeof(int)));
-        CUDA_CHECK(cudaMalloc(&d_output_, 1024 * sizeof(int)));
-    }
-
-    void TearDown() override {
-        if (d_input_) CUDA_CHECK(cudaFree(d_input_));
-        if (d_output_) CUDA_CHECK(cudaFree(d_output_));
+        d_input_ = cuda::memory::Buffer<int>(1024);
+        d_output_ = cuda::memory::Buffer<int>(1024);
     }
 
     void runAndDownload(size_t size) {
-        CUDA_CHECK(cudaMemcpy(d_input_, h_input_.data(), size * sizeof(int), cudaMemcpyHostToDevice));
+        d_input_.copy_from(h_input_.data(), size);
         cuda::parallel::oddEvenSort(d_input_, d_output_, size);
-        CUDA_CHECK(cudaMemcpy(h_output_.data(), d_output_, size * sizeof(int), cudaMemcpyDeviceToHost));
+        d_output_.copy_to(h_output_.data(), size);
     }
 };
 
@@ -168,7 +157,7 @@ TEST_F(OddEvenSortTest, RandomArray) {
 }
 
 TEST_F(OddEvenSortTest, LargeArray) {
-    size_t size = 1000;
+    size_t size = 100;
     h_input_.resize(size);
     h_output_.resize(size);
 

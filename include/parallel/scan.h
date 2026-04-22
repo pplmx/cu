@@ -1,15 +1,9 @@
 #pragma once
 
+#include "cuda/memory/buffer.h"
 #include <cstddef>
-#include <cstdint>
 #include <stdexcept>
 #include <string>
-
-/**
- * @brief Exclusive prefix sum (scan) operation on GPU
- * @details All scan functions support sizes up to 1024 elements only.
- * @throws std::invalid_argument if size exceeds 1024
- */
 
 constexpr size_t MAX_SCAN_SIZE = 1024;
 
@@ -20,11 +14,15 @@ public:
                                 " exceeds maximum supported size " + std::to_string(max_size)) {}
 };
 
-template<typename T>
-void exclusiveScan(const T* d_input, T* d_output, size_t size);
+namespace cuda::algo {
 
 template<typename T>
-void inclusiveScan(const T* d_input, T* d_output, size_t size);
+void exclusiveScan(const memory::Buffer<T>& input, memory::Buffer<T>& output, size_t size);
 
 template<typename T>
-void exclusiveScanOptimized(const T* d_input, T* d_output, size_t size);
+void inclusiveScan(const memory::Buffer<T>& input, memory::Buffer<T>& output, size_t size);
+
+template<typename T>
+void exclusiveScanOptimized(const memory::Buffer<T>& input, memory::Buffer<T>& output, size_t size);
+
+}

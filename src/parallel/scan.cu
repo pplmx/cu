@@ -1,129 +1,149 @@
+#include "cuda/algo/kernel_launcher.h"
 #include "parallel/scan.h"
-#include "cuda/device/device_utils.h"
 
-template<typename T>
-__global__ void exclusiveScanKernel(const T* input, T* output, size_t size) {
-    extern __shared__ T temp[];
-    const size_t tid = threadIdx.x;
+namespace {
 
-    if (tid < size) {
-        temp[tid] = input[tid];
-    } else {
-        temp[tid] = T{};
-    }
-    __syncthreads();
+    template <typename T>
+    __global__ void exclusiveScanKernel(const T* input, T* output, size_t size) {
+        extern __shared__ T temp[];
+        const size_t tid = threadIdx.x;
 
-    for (int offset = 1; offset < size; offset *= 2) {
-        T val = T{};
-        if (tid >= offset) {
-            val = temp[tid - offset];
+        if (tid < size) {
+            temp[tid] = input[tid];
+        } else {
+            temp[tid] = T{};
         }
         __syncthreads();
 
-        if (tid >= offset) {
-            temp[tid] += val;
+        for (int offset = 1; offset < size; offset *= 2) {
+            T val = T{};
+            if (tid >= offset) {
+                val = temp[tid - offset];
+            }
+            __syncthreads();
+
+            if (tid >= offset) {
+                temp[tid] += val;
+            }
+            __syncthreads();
         }
-        __syncthreads();
+
+        if (tid < size) {
+            output[tid] = (tid > 0) ? temp[tid - 1] : T{};
+        }
     }
 
-    if (tid < size) {
-        output[tid] = (tid > 0) ? temp[tid - 1] : T{};
-    }
-}
+    template <typename T>
+    __global__ void inclusiveScanKernel(const T* input, T* output, size_t size) {
+        extern __shared__ T temp[];
+        const size_t tid = threadIdx.x;
 
-template<typename T>
-void exclusiveScan(const T* d_input, T* d_output, size_t size) {
-    if (size == 0) return;
-
-    if (size > MAX_SCAN_SIZE) {
-        throw ScanSizeException(size, MAX_SCAN_SIZE);
-    }
-
-    exclusiveScanKernel<<<1, MAX_SCAN_SIZE, MAX_SCAN_SIZE * sizeof(T)>>>(d_input, d_output, size);
-    CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
-}
-
-template<typename T>
-__global__ void inclusiveScanKernel(const T* input, T* output, size_t size) {
-    extern __shared__ T temp[];
-    const size_t tid = threadIdx.x;
-
-    if (tid < size) {
-        temp[tid] = input[tid];
-    } else {
-        temp[tid] = T{};
-    }
-    __syncthreads();
-
-    for (int offset = 1; offset < size; offset *= 2) {
-        T val = T{};
-        if (tid >= offset) {
-            val = temp[tid - offset];
+        if (tid < size) {
+            temp[tid] = input[tid];
+        } else {
+            temp[tid] = T{};
         }
         __syncthreads();
 
-        if (tid >= offset) {
-            temp[tid] += val;
+        for (int offset = 1; offset < size; offset *= 2) {
+            T val = T{};
+            if (tid >= offset) {
+                val = temp[tid - offset];
+            }
+            __syncthreads();
+
+            if (tid >= offset) {
+                temp[tid] += val;
+            }
+            __syncthreads();
+        }
+
+        if (tid < size) {
+            output[tid] = temp[tid];
+        }
+    }
+
+    template <typename T>
+    __global__ void exclusiveScanOptimizedKernel(const T* input, T* output, size_t size) {
+        extern __shared__ T temp[];
+        const size_t tid = threadIdx.x;
+
+        if (tid < size) {
+            temp[tid] = input[tid];
+        } else {
+            temp[tid] = T{};
         }
         __syncthreads();
-    }
 
-    if (tid < size) {
-        output[tid] = temp[tid];
-    }
-}
-
-template<typename T>
-void inclusiveScan(const T* d_input, T* d_output, size_t size) {
-    if (size == 0) return;
-
-    if (size > MAX_SCAN_SIZE) {
-        throw ScanSizeException(size, MAX_SCAN_SIZE);
-    }
-
-    inclusiveScanKernel<<<1, MAX_SCAN_SIZE, MAX_SCAN_SIZE * sizeof(T)>>>(d_input, d_output, size);
-    CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
-}
-
-template<typename T>
-__global__ void exclusiveScanOptimizedKernel(const T* input, T* output, size_t size) {
-    extern __shared__ T temp[];
-    const size_t tid = threadIdx.x;
-
-    if (tid < size) {
-        temp[tid] = input[tid];
-    } else {
-        temp[tid] = T{};
-    }
-    __syncthreads();
-
-    for (int offset = 1; offset < size; offset *= 2) {
-        if (tid >= offset) {
-            temp[tid] += temp[tid - offset];
+        for (int offset = 1; offset < size; offset *= 2) {
+            if (tid >= offset) {
+                temp[tid] += temp[tid - offset];
+            }
+            __syncthreads();
         }
-        __syncthreads();
+
+        if (tid < size) {
+            output[tid] = (tid > 0) ? temp[tid - 1] : T{};
+        }
     }
 
-    if (tid < size) {
-        output[tid] = (tid > 0) ? temp[tid - 1] : T{};
+}  // namespace
+
+namespace cuda::algo {
+
+    template <typename T>
+    void exclusiveScan(const memory::Buffer<T>& input, memory::Buffer<T>& output, size_t size) {
+        if (size == 0) {
+            return;
+        }
+        if (size > MAX_SCAN_SIZE) {
+            throw ScanSizeException(size, MAX_SCAN_SIZE);
+        }
+
+        detail::KernelLauncher launcher;
+        launcher.block({MAX_SCAN_SIZE, 1, 1});
+        launcher.shared(MAX_SCAN_SIZE * sizeof(T));
+
+        launcher.launch(exclusiveScanKernel<T>, input.data(), output.data(), size);
+        launcher.synchronize();
     }
-}
 
-template<typename T>
-void exclusiveScanOptimized(const T* d_input, T* d_output, size_t size) {
-    if (size == 0) return;
+    template <typename T>
+    void inclusiveScan(const memory::Buffer<T>& input, memory::Buffer<T>& output, size_t size) {
+        if (size == 0) {
+            return;
+        }
+        if (size > MAX_SCAN_SIZE) {
+            throw ScanSizeException(size, MAX_SCAN_SIZE);
+        }
 
-    if (size > MAX_SCAN_SIZE) {
-        throw ScanSizeException(size, MAX_SCAN_SIZE);
+        detail::KernelLauncher launcher;
+        launcher.block({MAX_SCAN_SIZE, 1, 1});
+        launcher.shared(MAX_SCAN_SIZE * sizeof(T));
+
+        launcher.launch(inclusiveScanKernel<T>, input.data(), output.data(), size);
+        launcher.synchronize();
     }
 
-    exclusiveScanOptimizedKernel<<<1, MAX_SCAN_SIZE, MAX_SCAN_SIZE * sizeof(T)>>>(d_input, d_output, size);
-    CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
-}
+    template <typename T>
+    void exclusiveScanOptimized(const memory::Buffer<T>& input, memory::Buffer<T>& output, size_t size) {
+        if (size == 0) {
+            return;
+        }
+        if (size > MAX_SCAN_SIZE) {
+            throw ScanSizeException(size, MAX_SCAN_SIZE);
+        }
 
-template void exclusiveScan<int>(const int*, int*, size_t);
-template void inclusiveScan<int>(const int*, int*, size_t);
-template void exclusiveScanOptimized<int>(const int*, int*, size_t);
+        detail::KernelLauncher launcher;
+        launcher.block({MAX_SCAN_SIZE, 1, 1});
+        launcher.shared(MAX_SCAN_SIZE * sizeof(T));
+
+        launcher.launch(exclusiveScanOptimizedKernel<T>, input.data(), output.data(), size);
+        launcher.synchronize();
+    }
+
+    template void exclusiveScan<int>(const memory::Buffer<int>&, memory::Buffer<int>&, size_t);
+    template void inclusiveScan<int>(const memory::Buffer<int>&, memory::Buffer<int>&, size_t);
+    template void exclusiveScanOptimized<int>(const memory::Buffer<int>&, memory::Buffer<int>&, size_t);
+
+}  // namespace cuda::algo

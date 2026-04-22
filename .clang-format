@@ -2,7 +2,7 @@
 # Base Style
 BasedOnStyle: Google                       # Based on Google style guidelines
 Language: Cpp                              # Explicitly specify C++
-Standard: c++17                            # Use C++17 standard
+Standard: c++20                            # Use C++17 standard
 
 # Code Layout
 ColumnLimit: 180                           # Recommended maximum line length

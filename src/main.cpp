@@ -1,22 +1,22 @@
-#include <iostream>
 #include <chrono>
-#include <vector>
-#include <numeric>
 #include <iomanip>
+#include <iostream>
+#include <numeric>
+#include <vector>
 
 #include "cuda/algo/reduce.h"
-#include "cuda/api/device_vector.h"
+#include "cuda/memory/buffer.h"
 
 class Timer {
 public:
-    Timer(const char* name) : name_(name), start_(std::chrono::high_resolution_clock::now()) {}
+    Timer(const char* name)
+        : name_(name),
+          start_(std::chrono::high_resolution_clock::now()) {}
 
     ~Timer() {
         auto end = std::chrono::high_resolution_clock::now();
         auto ms = std::chrono::duration<float, std::milli>(end - start_).count();
-        std::cout << std::left << std::setw(35) << name_
-                  << std::right << std::setw(10) << std::fixed << std::setprecision(3)
-                  << ms << " ms" << std::endl;
+        std::cout << std::left << std::setw(35) << name_ << std::right << std::setw(10) << std::fixed << std::setprecision(3) << ms << " ms" << std::endl;
     }
 
 private:
@@ -24,7 +24,7 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> start_;
 };
 
-template<typename T>
+template <typename T>
 void printResult(const char* name, T result) {
     std::cout << std::left << std::setw(35) << name << ": " << result << std::endl;
 }
@@ -43,55 +43,49 @@ int main() {
     std::vector<int> input(N);
     std::iota(input.begin(), input.end(), 1);
 
-    int *d_input;
-    CUDA_CHECK(cudaMalloc(&d_input, N * sizeof(int)));
-    CUDA_CHECK(cudaMemcpy(d_input, input.data(), N * sizeof(int), cudaMemcpyHostToDevice));
+    cuda::memory::Buffer<int> d_input(N);
+    d_input.copy_from(input.data(), N);
 
     std::cout << "\n--- Reduce (Sum) ---" << std::endl;
     std::cout << std::left << std::setw(35) << "Algorithm" << std::right << std::setw(15) << "Time" << std::endl;
     std::cout << std::string(50, '-') << std::endl;
 
-    int result = 0;
     {
         Timer t("Reduce Sum");
-        result = cuda::algo::reduce_sum(d_input, N);
+        int result = cuda::algo::reduce_sum(d_input.data(), N);
+        printResult("  Sum result", result);
     }
-    printResult("  Sum result", result);
 
     {
         Timer t("Reduce Sum Optimized");
-        result = cuda::algo::reduce_sum_optimized(d_input, N);
+        int result = cuda::algo::reduce_sum_optimized(d_input.data(), N);
+        printResult("  Sum result", result);
     }
-    printResult("  Sum result", result);
 
-    int maxResult = 0;
     {
         Timer t("Reduce Max");
-        maxResult = cuda::algo::reduce_max(d_input, N);
+        int result = cuda::algo::reduce_max(d_input.data(), N);
+        printResult("  Max result", result);
     }
-    printResult("  Max result", maxResult);
 
-    int minResult = 0;
     {
         Timer t("Reduce Min");
-        minResult = cuda::algo::reduce_min(d_input, N);
+        int result = cuda::algo::reduce_min(d_input.data(), N);
+        printResult("  Min result", result);
     }
-    printResult("  Min result", minResult);
 
-    std::cout << "\n--- Reduce (DeviceVector) ---" << std::endl;
+    std::cout << "\n--- Reduce (Buffer) ---" << std::endl;
     std::cout << std::left << std::setw(35) << "Algorithm" << std::right << std::setw(15) << "Time" << std::endl;
     std::cout << std::string(50, '-') << std::endl;
 
-    cuda::api::DeviceVector<int> d_vec(N);
-    d_vec.copy_from(input);
+    cuda::memory::Buffer<int> d_vec(N);
+    d_vec.copy_from(input.data(), input.size());
 
     {
-        Timer t("Reduce Sum (DeviceVector)");
-        result = cuda::algo::reduce_sum(d_vec.data(), d_vec.size());
+        Timer t("Reduce Sum (Buffer)");
+        int result = cuda::algo::reduce_sum(d_vec.data(), d_vec.size());
+        printResult("  Sum result", result);
     }
-    printResult("  Sum result", result);
-
-    CUDA_CHECK(cudaFree(d_input));
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "         Benchmark Complete!            " << std::endl;
