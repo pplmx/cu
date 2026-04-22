@@ -6,7 +6,7 @@
 
 template<typename T>
 __global__ void oddEvenPhaseKernel(const T* input, T* output, size_t size, bool evenPhase) {
-    size_t tid = threadIdx.x;
+    size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
     size_t i = evenPhase ? (tid * 2) : (tid * 2 + 1);
 
     if (i + 1 < size) {
@@ -23,22 +23,39 @@ __global__ void oddEvenPhaseKernel(const T* input, T* output, size_t size, bool 
 }
 
 template<typename T>
+__global__ void copyKernel(const T* input, T* output, size_t size) {
+    size_t i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < size) {
+        output[i] = input[i];
+    }
+}
+
+template<typename T>
 void oddEvenSort(const T* d_input, T* d_output, size_t size) {
+    if (size == 0) return;
+
     CUDA_CHECK(cudaMemcpy(d_output, d_input, size * sizeof(T), cudaMemcpyHostToDevice));
 
     T* d_temp;
     CUDA_CHECK(cudaMalloc(&d_temp, size * sizeof(T)));
 
-    dim3 block(256);
-    dim3 grid(1);
+    const int blockSize = 256;
+    dim3 block(blockSize);
 
     for (size_t phase = 0; phase < size; ++phase) {
-        bool evenPhase = (phase % 2 == 0);
-        oddEvenPhaseKernel<<<grid, block>>>(d_output, d_temp, size, evenPhase);
+        int gridSize = (size + blockSize - 1) / blockSize;
+        dim3 grid(gridSize);
+        copyKernel<<<grid, block>>>(d_output, d_temp, size);
         CUDA_CHECK(cudaGetLastError());
         CUDA_CHECK(cudaDeviceSynchronize());
 
-        CUDA_CHECK(cudaMemcpy(d_output, d_temp, size * sizeof(T), cudaMemcpyDeviceToDevice));
+        bool evenPhase = (phase % 2 == 0);
+        int elementsPerBlock = blockSize * 2;
+        int compGridSize = (size + elementsPerBlock - 1) / elementsPerBlock;
+        dim3 compGrid(compGridSize);
+        oddEvenPhaseKernel<<<compGrid, block>>>(d_temp, d_output, size, evenPhase);
+        CUDA_CHECK(cudaGetLastError());
+        CUDA_CHECK(cudaDeviceSynchronize());
     }
 
     CUDA_CHECK(cudaFree(d_temp));
@@ -122,3 +139,6 @@ void bitonicSort(const T* d_input, T* d_output, size_t size) {
 
 template void bitonicSort<int>(const int*, int*, size_t);
 template void bitonicSort<float>(const float*, float*, size_t);
+
+template void oddEvenSort<int>(const int*, int*, size_t);
+template void oddEvenSort<float>(const float*, float*, size_t);
