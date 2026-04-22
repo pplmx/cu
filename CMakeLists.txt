@@ -30,6 +30,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/bin>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/lib>")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/lib>")
 
+set(CUDA_MEMORY_DIR ${CMAKE_SOURCE_DIR}/include/cuda/memory)
 set(CUDA_KERNEL_DIR ${CMAKE_SOURCE_DIR}/include/cuda/kernel)
 set(CUDA_ALGO_DIR ${CMAKE_SOURCE_DIR}/include/cuda/algo)
 set(CUDA_API_DIR ${CMAKE_SOURCE_DIR}/include/cuda/api)
@@ -42,12 +43,19 @@ set(MATRIX_DIR ${CMAKE_SOURCE_DIR}/src/matrix)
 set(CONVOLUTION_DIR ${CMAKE_SOURCE_DIR}/src/convolution)
 set(MEMORY_DIR ${CMAKE_SOURCE_DIR}/src/memory)
 
+add_library(cuda_memory INTERFACE)
+target_include_directories(cuda_memory INTERFACE
+        $<BUILD_INTERFACE:${CUDA_MEMORY_DIR}>
+        $<BUILD_INTERFACE:${MEMORY_DIR}>
+)
+target_link_libraries(cuda_memory INTERFACE CUDA::cudart)
+
 add_library(cuda_kernel INTERFACE)
 target_include_directories(cuda_kernel INTERFACE
         $<BUILD_INTERFACE:${CUDA_KERNEL_DIR}>
         $<BUILD_INTERFACE:${CUDA_SRC_KERNEL}>
 )
-target_link_libraries(cuda_kernel INTERFACE CUDA::cudart)
+target_link_libraries(cuda_kernel INTERFACE CUDA::cudart cuda_memory)
 set_target_properties(cuda_kernel PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
 )
@@ -57,6 +65,7 @@ target_include_directories(cuda_algo INTERFACE
         $<BUILD_INTERFACE:${CUDA_ALGO_DIR}>
         $<BUILD_INTERFACE:${CUDA_KERNEL_DIR}>
         $<BUILD_INTERFACE:${CUDA_SRC_KERNEL}>
+        $<BUILD_INTERFACE:${CUDA_MEMORY_DIR}>
 )
 target_link_libraries(cuda_algo INTERFACE
         cuda_kernel
