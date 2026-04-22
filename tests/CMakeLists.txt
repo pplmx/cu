@@ -1,5 +1,15 @@
 find_package(CUDAToolkit REQUIRED)
 
+add_executable(test_patterns-tests
+    test_patterns_test.cpp
+)
+target_link_libraries(test_patterns-tests PRIVATE GTest::gtest_main)
+target_include_directories(test_patterns-tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/data
+)
+include(GoogleTest)
+gtest_discover_tests(test_patterns-tests)
+
 add_executable(cuda-samples-tests
     image_utils_test.cu
     gaussian_blur_test.cu
