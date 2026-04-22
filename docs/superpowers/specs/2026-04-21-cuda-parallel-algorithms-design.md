@@ -34,13 +34,10 @@ include/
 │   ├── algo/             # Layer 2 - Algorithms
 │   │   ├── reduce.h
 │   │   └── device_buffer.h
-│   ├── api/              # Layer 3 - High-Level API
-│   │   ├── device_vector.h
-│   │   ├── stream.h
-│   │   └── config.h
-│   └── kernel/           # Backward compatibility
-│       ├── cuda_utils.h
-│       └── reduce.h
+│   └── api/              # Layer 3 - High-Level API
+│       ├── device_vector.h
+│       ├── stream.h
+│       └── config.h
 src/
 ├── memory/               # Layer 0 implementations
 ├── cuda/
