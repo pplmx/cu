@@ -8,6 +8,7 @@ add_executable(cuda-samples-tests
     reduce_test.cu
     scan_test.cu
     sort_test.cu
+    matrix_mult_test.cu
 )
 
 target_link_libraries(cuda-samples-tests
