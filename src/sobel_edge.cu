@@ -8,7 +8,10 @@ __global__ void sobelKernel(const uint8_t* input, uint8_t* output,
     size_t y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x == 0 || x >= width - 1 || y == 0 || y >= height - 1) {
-        output[y * width + x] = 0;
+        size_t outIdx = (y * width + x) * 3;
+        output[outIdx] = 0;
+        output[outIdx + 1] = 0;
+        output[outIdx + 2] = 0;
         return;
     }
 
@@ -27,12 +30,18 @@ __global__ void sobelKernel(const uint8_t* input, uint8_t* output,
                +getGray(y+1, x-1) + 2.0f*getGray(y+1, x) + getGray(y+1, x+1);
 
     int magnitude = static_cast<int>(sqrtf(gx*gx + gy*gy));
-    output[y * width + x] = (magnitude > static_cast<int>(threshold)) ? 255 : 0;
+    uint8_t edgeVal = (magnitude > static_cast<int>(threshold)) ? 255 : 0;
+    size_t outIdx = (y * width + x) * 3;
+    output[outIdx] = edgeVal;
+    output[outIdx + 1] = edgeVal;
+    output[outIdx + 2] = edgeVal;
 }
 
 void sobelEdgeDetection(const uint8_t* d_input, uint8_t* d_output,
                         size_t width, size_t height,
                         float threshold) {
+    CUDA_CHECK(cudaMemset(d_output, 0, width * height * 3));
+
     dim3 block(16, 16);
     dim3 grid((width + 15) / 16, (height + 15) / 16);
 
