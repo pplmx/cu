@@ -25,6 +25,7 @@
 - **No worktrees** - work directly on main branch for linear git log
 - Create feature branches only when necessary
 - Squash/merge commits when appropriate
+- **Never amend commits** - if hooks fail, fix the issues first then commit normally
 
 ## Code Style
 
