@@ -26,9 +26,8 @@ target_link_libraries(cuda-samples-tests
     GTest::gtest_main
     GTest::gmock
     CUDA::cudart
-    ${PROJECT_NAME}_lib
+    cuda_impl
 )
-
 target_include_directories(cuda-samples-tests PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/data
