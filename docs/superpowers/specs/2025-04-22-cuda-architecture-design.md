@@ -90,9 +90,9 @@ include/
 
 src/
 ├── memory/               # Layer 0 implementations
-├── device/               # Layer 1 kernel implementations
-├── algo/                 # Layer 2 wrappers
-├── api/                  # Layer 3 implementations
+├── cuda/
+│   ├── device/          # Layer 1 kernel implementations
+│   └── algo/            # Layer 2 wrappers
 ├── image/               # Image processing implementations
 ├── parallel/            # Parallel primitive implementations
 ├── matrix/              # Matrix operation implementations
