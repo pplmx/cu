@@ -85,3 +85,42 @@ TEST_F(ReduceTest, NonPowerOfTwo) {
     int result = reduceSum(d_input_, 1000);
     EXPECT_EQ(result, 1000 * 1001 / 2);
 }
+
+TEST_F(ReduceTest, LargeArray) {
+    size_ = 1 << 20;
+    h_input_.resize(size_);
+
+    CUDA_CHECK(cudaFree(d_input_));
+    CUDA_CHECK(cudaMalloc(&d_input_, size_ * sizeof(int)));
+
+    for (size_t i = 0; i < size_; ++i) h_input_[i] = static_cast<int>(i + 1);
+
+    CUDA_CHECK(cudaMemcpy(d_input_, h_input_.data(), size_ * sizeof(int), cudaMemcpyHostToDevice));
+
+    int result = reduceSum(d_input_, size_);
+    int expected = static_cast<int>(size_) * (static_cast<int>(size_) + 1) / 2;
+
+    EXPECT_EQ(result, expected);
+}
+
+TEST_F(ReduceTest, NegativeNumbers) {
+    h_input_.resize(100);
+    for (int i = 0; i < 100; ++i) h_input_[i] = i - 50;
+
+    CUDA_CHECK(cudaMemcpy(d_input_, h_input_.data(), 100 * sizeof(int), cudaMemcpyHostToDevice));
+
+    int result = reduceSum(d_input_, 100);
+    int expected = -50;
+
+    EXPECT_EQ(result, expected);
+}
+
+TEST_F(ReduceTest, MinTestEdge) {
+    h_input_.assign(size_, 1000);
+    h_input_[42] = -999;
+
+    CUDA_CHECK(cudaMemcpy(d_input_, h_input_.data(), size_ * sizeof(int), cudaMemcpyHostToDevice));
+
+    int result = reduceMin(d_input_, size_);
+    EXPECT_EQ(result, -999);
+}

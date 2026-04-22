@@ -93,6 +93,42 @@ TEST_F(ScanTest, InclusiveScan) {
     EXPECT_EQ(h_output_, expected);
 }
 
+TEST_F(ScanTest, LargeArray) {
+    size_ = 1024;
+    h_input_.resize(size_);
+    h_output_.resize(size_);
+
+    CUDA_CHECK(cudaFree(d_input_));
+    CUDA_CHECK(cudaFree(d_output_));
+    CUDA_CHECK(cudaMalloc(&d_input_, size_ * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_output_, size_ * sizeof(int)));
+
+    for (size_t i = 0; i < size_; ++i) {
+        h_input_[i] = 1;
+    }
+
+    CUDA_CHECK(cudaMemcpy(d_input_, h_input_.data(), size_ * sizeof(int), cudaMemcpyHostToDevice));
+    exclusiveScan(d_input_, d_output_, size_);
+    CUDA_CHECK(cudaMemcpy(h_output_.data(), d_output_, size_ * sizeof(int), cudaMemcpyDeviceToHost));
+
+    for (size_t i = 0; i < size_; ++i) {
+        EXPECT_EQ(h_output_[i], static_cast<int>(i));
+    }
+}
+
+TEST_F(ScanTest, AlternatingPattern) {
+    size_ = 8;
+    h_input_ = {1, 0, 1, 0, 1, 0, 1, 0};
+    h_output_.resize(size_);
+
+    CUDA_CHECK(cudaMemcpy(d_input_, h_input_.data(), size_ * sizeof(int), cudaMemcpyHostToDevice));
+    exclusiveScan(d_input_, d_output_, size_);
+    CUDA_CHECK(cudaMemcpy(h_output_.data(), d_output_, size_ * sizeof(int), cudaMemcpyDeviceToHost));
+
+    std::vector<int> expected = {0, 1, 1, 2, 2, 3, 3, 4};
+    EXPECT_EQ(h_output_, expected);
+}
+
 TEST_F(ScanTest, EmptyArray) {
     EXPECT_NO_THROW(exclusiveScan(d_input_, d_output_, 0));
 }

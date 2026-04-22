@@ -81,6 +81,43 @@ TEST_F(SortTest, Duplicates) {
     }
 }
 
+TEST_F(SortTest, LargeArray) {
+    size_t size = 512;
+    h_input_.resize(size);
+    h_output_.resize(size);
+
+    CUDA_CHECK(cudaFree(d_input_));
+    CUDA_CHECK(cudaFree(d_output_));
+    CUDA_CHECK(cudaMalloc(&d_input_, size * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_output_, size * sizeof(int)));
+
+    for (size_t i = 0; i < size; ++i) {
+        h_input_[i] = static_cast<int>(size - i);
+    }
+
+    runSort(size);
+
+    for (size_t i = 1; i < size; ++i) {
+        EXPECT_LE(h_output_[i-1], h_output_[i]);
+    }
+}
+
+TEST_F(SortTest, AllSame) {
+    size_t size = 100;
+    h_input_.resize(size);
+    h_output_.resize(size);
+
+    for (size_t i = 0; i < size; ++i) {
+        h_input_[i] = 42;
+    }
+
+    runSort(size);
+
+    for (size_t i = 0; i < size; ++i) {
+        EXPECT_EQ(h_output_[i], 42);
+    }
+}
+
 class OddEvenSortTest : public ::testing::Test {
 protected:
     std::vector<int> h_input_, h_output_;
@@ -128,5 +165,21 @@ TEST_F(OddEvenSortTest, LargeArray) {
 
     for (size_t i = 1; i < size; ++i) {
         EXPECT_LE(h_output_[i-1], h_output_[i]);
+    }
+}
+
+TEST_F(OddEvenSortTest, AllSame) {
+    size_t size = 100;
+    h_input_.resize(size);
+    h_output_.resize(size);
+
+    for (size_t i = 0; i < size; ++i) {
+        h_input_[i] = 42;
+    }
+
+    runAndDownload(size);
+
+    for (size_t i = 0; i < size; ++i) {
+        EXPECT_EQ(h_output_[i], 42);
     }
 }
