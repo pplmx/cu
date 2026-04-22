@@ -8,21 +8,46 @@
 
 ## Architecture
 
+The architecture follows a five-layer design:
+
+```
+Layer 0: Memory (RAII, unique_ptr, Buffer, MemoryPool)
+Layer 1: Device (raw kernels, device utilities, CUDA_CHECK)
+Layer 2: Algorithm (algorithm wrappers, orchestration)
+Layer 3: API (high-level interfaces, streams, configs)
+Layer 4: Application (samples, tests)
+```
+
+### Current Implementation
+
 ```
 include/
-  reduce.h       # 归约算法
-  scan.h         # 前缀和
-  sort.h         # 排序算法
-
+├── cuda/
+│   ├── memory/           # Layer 0 - Memory
+│   │   ├── buffer.h
+│   │   ├── unique_ptr.h
+│   │   ├── memory_pool.h
+│   │   └── allocator.h
+│   ├── device/           # Layer 1 - Device Kernels
+│   │   ├── device_utils.h
+│   │   └── reduce_kernels.h
+│   ├── algo/             # Layer 2 - Algorithms
+│   │   ├── reduce.h
+│   │   └── device_buffer.h
+│   ├── api/              # Layer 3 - High-Level API
+│   │   ├── device_vector.h
+│   │   ├── stream.h
+│   │   └── config.h
+│   └── kernel/           # Backward compatibility
+│       ├── cuda_utils.h
+│       └── reduce.h
 src/
-  reduce.cu      # 实现+优化版本
-  scan.cu
-  sort.cu
-
-tests/
-  reduce_test.cu
-  scan_test.cu
-  sort_test.cu
+├── memory/               # Layer 0 implementations
+├── cuda/
+│   ├── device/           # Layer 1 implementations
+│   │   └── reduce_kernels.cu
+│   └── algo/             # Layer 2 implementations
+│       └── reduce.cu
 ```
 
 ## Algorithms
