@@ -11,6 +11,7 @@
 #include <type_traits>
 
 #include "cuda/device/error.h"
+#include "cuda/performance/device_info.h"
 
 namespace cuda::detail {
 
@@ -125,6 +126,16 @@ public:
      */
     [[nodiscard]] cudaStream_t get_stream() const { return stream_; }
 
+    /**
+     * @brief Sets block size to device-optimal value
+     * @param device_id GPU device ID (default: current device)
+     * @return Reference to this launcher for chaining
+     */
+    KernelLauncher& auto_block(int device_id = 0) & {
+        block_ = dim3{static_cast<unsigned int>(cuda::performance::get_optimal_block_size(device_id)), 1, 1};
+        return *this;
+    }
+
 private:
     dim3 grid_{1, 1, 1};
     dim3 block_{1, 1, 1};
@@ -164,6 +175,15 @@ private:
 [[nodiscard]] constexpr inline dim3 calc_grid_3d(size_t x, size_t y, size_t z, dim3 block = {8, 8, 8}) {
     return dim3{
         static_cast<unsigned int>((x + block.x - 1) / block.x), static_cast<unsigned int>((y + block.y - 1) / block.y), static_cast<unsigned int>((z + block.z - 1) / block.z)};
+}
+
+[[nodiscard]] inline dim3 calc_grid_auto(size_t n, int device_id = 0) {
+    dim3 block{static_cast<unsigned int>(cuda::performance::get_optimal_block_size(device_id)), 1, 1};
+    return dim3{static_cast<unsigned int>((n + block.x - 1) / block.x), 1, 1};
+}
+
+[[nodiscard]] inline dim3 calc_grid_1d_auto(size_t n, int device_id = 0) {
+    return calc_grid_auto(n, device_id);
 }
 
 }  // namespace cuda::detail

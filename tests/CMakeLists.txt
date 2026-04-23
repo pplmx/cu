@@ -23,11 +23,14 @@ add_executable(nova-tests
     memory_pool_test.cpp
     stream_event_test.cpp
     cublas_context_test.cu
+    device_info_test.cpp
 )
 
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)
 set(CUDA_ALGO_DIR ${CMAKE_SOURCE_DIR}/include/cuda/algo)
 set(CUDA_STREAM_DIR ${CMAKE_SOURCE_DIR}/include/cuda/stream)
+set(CUDA_PERFORMANCE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/performance)
+set(CUDA_MEMORY_DIR ${CMAKE_SOURCE_DIR}/include/cuda/memory)
 
 target_link_libraries(nova-tests
     PRIVATE
@@ -43,6 +46,8 @@ target_include_directories(nova-tests PRIVATE
     ${CUDA_DEVICE_DIR}
     ${CUDA_ALGO_DIR}
     ${CUDA_STREAM_DIR}
+    ${CUDA_PERFORMANCE_DIR}
+    ${CUDA_MEMORY_DIR}
 )
 
 target_compile_options(nova-tests PRIVATE
