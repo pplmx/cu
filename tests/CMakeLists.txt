@@ -43,6 +43,10 @@ add_executable(nova-tests
     graph/csr_graph_test.cpp
     graph/bfs_test.cpp
     graph/pagerank_test.cpp
+    neural/matmul_test.cpp
+    neural/softmax_test.cpp
+    neural/activations_test.cpp
+    neural/layer_norm_test.cpp
 )
 
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)
@@ -55,6 +59,7 @@ set(CUDA_ASYNC_DIR ${CMAKE_SOURCE_DIR}/include/cuda/async)
 set(CUDA_FFT_DIR ${CMAKE_SOURCE_DIR}/include/cuda/fft)
 set(CUDA_RAYTRACE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/raytrace)
 set(CUDA_GRAPH_DIR ${CMAKE_SOURCE_DIR}/include/cuda/graph)
+set(CUDA_NEURAL_DIR ${CMAKE_SOURCE_DIR}/include/cuda/neural)
 
 target_link_libraries(nova-tests
     PRIVATE
@@ -77,6 +82,7 @@ target_include_directories(nova-tests PRIVATE
     ${CUDA_FFT_DIR}
     ${CUDA_RAYTRACE_DIR}
     ${CUDA_GRAPH_DIR}
+    ${CUDA_NEURAL_DIR}
 )
 
 target_compile_options(nova-tests PRIVATE

@@ -45,6 +45,7 @@ set(MEMORY_DIR ${CMAKE_SOURCE_DIR}/src/memory)
 set(CUDA_FFT_DIR ${CMAKE_SOURCE_DIR}/src/cuda/fft)
 set(CUDA_RAYTRACE_DIR ${CMAKE_SOURCE_DIR}/src/cuda/raytrace)
 set(CUDA_GRAPH_DIR ${CMAKE_SOURCE_DIR}/src/cuda/graph)
+set(CUDA_NEURAL_DIR ${CMAKE_SOURCE_DIR}/src/cuda/neural)
 
 add_library(cuda_memory INTERFACE)
 target_include_directories(cuda_memory INTERFACE
@@ -135,6 +136,13 @@ set(GRAPH_SOURCES
         ${CUDA_GRAPH_DIR}/pagerank.cu
 )
 
+set(NEURAL_SOURCES
+        ${CUDA_NEURAL_DIR}/matmul.cu
+        ${CUDA_NEURAL_DIR}/softmax.cu
+        ${CUDA_NEURAL_DIR}/activations.cu
+        ${CUDA_NEURAL_DIR}/layer_norm.cu
+)
+
 set(ALL_CUDA_SOURCES
         ${DEVICE_SOURCES}
         ${ALGO_SOURCES}
@@ -146,6 +154,7 @@ set(ALL_CUDA_SOURCES
         ${FFT_SOURCES}
         ${RAYTRACE_SOURCES}
         ${GRAPH_SOURCES}
+        ${NEURAL_SOURCES}
 )
 
 add_library(cuda_impl STATIC ${ALL_CUDA_SOURCES})
