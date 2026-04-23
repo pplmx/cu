@@ -86,11 +86,16 @@ Plans:
 8. Pool allocation returns null/throws when limit reached
 
 **Key Files:**
-- `include/cuda/async/stream.h` (new)
+- `include/cuda/async/stream_manager.h` (new)
 - `include/cuda/async/pinned_memory.h` (new)
-- `include/cuda/async/event.h` (new)
+- `include/cuda/async/async_copy.h` (new)
 - `include/cuda/memory/memory_pool.h` (modify)
 - `tests/async/*.cpp` (new)
+
+**Plans:** 2 plans
+Plans:
+- [ ] 02-01-PLAN.md — Stream Manager and Pinned Memory (ASYNC-01, ASYNC-02)
+- [ ] 02-02-PLAN.md — Async Copy and Memory Pool v2 (ASYNC-03, POOL-03, POOL-04)
 
 ---
 
