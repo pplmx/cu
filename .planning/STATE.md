@@ -24,7 +24,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-23)
 
 | Phase | Status | Start Date | End Date | Requirements |
 |-------|--------|------------|----------|--------------|
-| 1: Performance Foundations | Not Started | — | — | 10 |
+| 1: Performance Foundations | Planned | — | — | 10 |
 | 2: Async & Streaming | Not Started | — | — | 8 |
 | 3: FFT Module | Not Started | — | — | 4 |
 | 4: Ray Tracing Primitives | Not Started | — | — | 4 |
@@ -40,6 +40,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-23)
 | 2026-04-23 | Requirements | Defined 28 v1 requirements |
 | 2026-04-23 | Roadmap | Created 6-phase roadmap |
 | 2026-04-23 | Codebase map | Mapped existing library |
+| 2026-04-23 | Phase Planning | Created 3 plans for Phase 1 |
 
 ## Notes
 
@@ -49,7 +50,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-23)
 
 ## Next Action
 
-Run `/gsd-plan-phase 1` to create execution plan for Phase 1.
+Run `/gsd-execute-phase 1` to execute Phase 1 plans.
 
 ---
 
