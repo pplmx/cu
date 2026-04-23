@@ -30,6 +30,8 @@ add_executable(nova-tests
     benchmark/benchmark_test.cpp
     benchmark/throughput_test.cpp
     benchmark/regression_test.cpp
+    stream_manager_test.cpp
+    pinned_memory_test.cpp
 )
 
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)
@@ -38,6 +40,7 @@ set(CUDA_STREAM_DIR ${CMAKE_SOURCE_DIR}/include/cuda/stream)
 set(CUDA_PERFORMANCE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/performance)
 set(CUDA_MEMORY_DIR ${CMAKE_SOURCE_DIR}/include/cuda/memory)
 set(CUDA_BENCHMARK_DIR ${CMAKE_SOURCE_DIR}/include/cuda/benchmark)
+set(CUDA_ASYNC_DIR ${CMAKE_SOURCE_DIR}/include/cuda/async)
 
 target_link_libraries(nova-tests
     PRIVATE
@@ -56,6 +59,7 @@ target_include_directories(nova-tests PRIVATE
     ${CUDA_PERFORMANCE_DIR}
     ${CUDA_MEMORY_DIR}
     ${CUDA_BENCHMARK_DIR}
+    ${CUDA_ASYNC_DIR}
 )
 
 target_compile_options(nova-tests PRIVATE
