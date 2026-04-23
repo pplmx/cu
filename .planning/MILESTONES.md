@@ -1,0 +1,27 @@
+# Milestones
+
+## v1.0 Production Release (Shipped: 2026-04-24)
+
+**Phases completed:** 6 phases, 9 plans, 58 requirements
+
+**Key accomplishments:**
+
+- **Phase 1: Performance Foundations** - Device-aware kernels, memory metrics, validation framework, and comprehensive benchmark suite
+- **Phase 2: Async & Streaming** - CUDA stream manager with priorities, pinned memory allocator, async copy primitives, and memory pool v2 with defragmentation
+- **Phase 3: FFT Module** - Fast Fourier Transform implementation with forward/inverse transforms and plan management
+- **Phase 4: Ray Tracing Primitives** - GPU-accelerated ray intersection (box, sphere) and BVH construction with 29 tests
+- **Phase 5: Graph Algorithms** - BFS and PageRank on GPU using CSR storage format
+- **Phase 6: Neural Net Primitives** - Matrix multiply, softmax, leaky ReLU, and layer normalization kernels
+
+**Requirements delivered:** 58 total (PERF-01 to PERF-06, BMCH-01 to BMCH-04, ASYNC-01 to ASYNC-04, POOL-01 to POOL-04, FFT-01 to FFT-04, RAY-01 to RAY-04, GRAPH-01 to GRAPH-04, NN-01 to NN-04)
+
+**Core features implemented:**
+- Device capability queries and auto block size selection
+- Memory pool statistics and fragmentation reporting
+- Stream-based async operations with event synchronization
+- Signal/image processing via FFT
+- Scientific computing primitives for ray tracing
+- Graph processing (traversal, ranking)
+- Deep learning primitives (matmul, activations, normalization)
+
+---
