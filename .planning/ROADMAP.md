@@ -180,7 +180,7 @@ Plans:
 
 **Plans:** 1 plan
 Plans:
-- [ ] 05-01-PLAN.md — Graph Algorithms (GRAPH-01, GRAPH-02, GRAPH-03, GRAPH-04)
+- [x] 05-01-PLAN.md — Graph Algorithms (GRAPH-01, GRAPH-02, GRAPH-03, GRAPH-04)
 
 ---
 
@@ -236,7 +236,7 @@ Plans:
 
 **Plans:** 1 plan
 Plans:
-- [ ] 06-01-PLAN.md — Neural Net Primitives (NN-01, NN-02, NN-03, NN-04)
+- [x] 06-01-PLAN.md — Neural Net Primitives (NN-01, NN-02, NN-03, NN-04)
 
 ---
 
