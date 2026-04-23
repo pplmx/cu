@@ -20,6 +20,13 @@ namespace cuda::memory {
             bool preallocate = true;
         };
 
+        struct PoolMetrics {
+            size_t hits = 0;
+            size_t misses = 0;
+            size_t fragmentation_bytes = 0;
+            double fragmentation_percent = 0.0;
+        };
+
         explicit MemoryPool();
         explicit MemoryPool(const Config& config);
         ~MemoryPool();
@@ -38,6 +45,9 @@ namespace cuda::memory {
         size_t num_blocks() const { return blocks_.size(); }
         size_t num_allocations() const { return allocation_map_.size(); }
 
+        PoolMetrics get_metrics() const;
+        void defragment();
+
         void clear();
 
     private:
@@ -51,8 +61,11 @@ namespace cuda::memory {
         std::vector<Block> blocks_;
         std::unordered_map<void*, size_t> allocation_map_;
         mutable std::mutex mutex_;
+        mutable std::mutex metrics_mutex_;
         size_t total_allocated_ = 0;
         size_t total_available_ = 0;
+        size_t hits_ = 0;
+        size_t misses_ = 0;
 
         Block* allocate_block();
         void free_block(Block& block);

@@ -21,9 +21,12 @@ add_executable(nova-tests
     matrix_mult_test.cu
     convolution_test.cu
     memory_pool_test.cpp
+    memory_pool_metrics_test.cpp
     stream_event_test.cpp
     cublas_context_test.cu
     device_info_test.cpp
+    memory_metrics_test.cpp
+    error_context_test.cpp
 )
 
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)

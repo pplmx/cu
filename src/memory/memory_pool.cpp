@@ -13,7 +13,9 @@ namespace cuda::memory {
         : config_(config) {
         if (config_.preallocate) {
             for (size_t i = 0; i < config_.max_blocks; ++i) {
-                allocate_block();
+                if (allocate_block()) {
+                    ++misses_;
+                }
             }
         }
     }
@@ -97,7 +99,10 @@ namespace cuda::memory {
 
         Block* block = find_block_for_size(bytes);
 
-        if (!block) {
+        if (block) {
+            ++hits_;
+        } else {
+            ++misses_;
             block = allocate_block();
             if (!block) {
                 throw std::runtime_error("MemoryPool: failed to allocate block");
@@ -157,6 +162,56 @@ namespace cuda::memory {
         allocation_map_.clear();
         total_allocated_ = 0;
         total_available_ = 0;
+        hits_ = 0;
+        misses_ = 0;
+    }
+
+    MemoryPool::PoolMetrics MemoryPool::get_metrics() const {
+        std::lock_guard<std::mutex> lock(metrics_mutex_);
+
+        PoolMetrics metrics;
+        metrics.hits = hits_;
+        metrics.misses = misses_;
+
+        size_t total_block_space = 0;
+        size_t total_free_space = 0;
+        for (const auto& block : blocks_) {
+            if (block.ptr) {
+                total_block_space += block.size;
+                total_free_space += (block.size - block.offset);
+            }
+        }
+
+        if (total_block_space > 0) {
+            metrics.fragmentation_bytes = total_free_space;
+            metrics.fragmentation_percent =
+                static_cast<double>(total_free_space) / static_cast<double>(total_block_space) * 100.0;
+        }
+
+        return metrics;
+    }
+
+    void MemoryPool::defragment() {
+        std::lock_guard<std::mutex> lock(mutex_);
+
+        for (auto& block : blocks_) {
+            if (block.ptr && block.offset > 0) {
+                size_t used_size = block.offset;
+                void* new_ptr = nullptr;
+                CUDA_CHECK(cudaMalloc(&new_ptr, used_size));
+                CUDA_CHECK(cudaMemcpy(new_ptr, block.ptr, used_size, cudaMemcpyDeviceToDevice));
+                CUDA_CHECK(cudaFree(block.ptr));
+                block.ptr = new_ptr;
+                block.offset = 0;
+            }
+        }
+
+        total_available_ = 0;
+        for (const auto& block : blocks_) {
+            if (block.ptr) {
+                total_available_ += (block.size - block.offset);
+            }
+        }
     }
 
 }  // namespace cuda::memory
