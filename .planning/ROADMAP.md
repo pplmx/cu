@@ -172,10 +172,15 @@ Plans:
 4. CSR format stores graph with O(V+E) memory for V vertices, E edges
 
 **Key Files:**
+- `include/cuda/graph/csr_graph.h` (new)
 - `include/cuda/graph/bfs.h` (new)
 - `include/cuda/graph/pagerank.h` (new)
 - `src/cuda/graph/*.cu` (new)
-- `tests/graph/*_test.cu` (new)
+- `tests/graph/*_test.cpp` (new)
+
+**Plans:** 1 plan
+Plans:
+- [ ] 05-01-PLAN.md — Graph Algorithms (GRAPH-01, GRAPH-02, GRAPH-03, GRAPH-04)
 
 ---
 
