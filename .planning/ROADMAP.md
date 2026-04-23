@@ -47,8 +47,17 @@
 **Key Files:**
 - `include/cuda/performance/device_info.h` (new)
 - `include/cuda/performance/memory_metrics.h` (new)
+- `include/cuda/benchmark/benchmark.h` (new)
 - `include/cuda/device/error.h` (modify)
+- `include/cuda/algo/kernel_launcher.h` (modify)
+- `include/cuda/memory/memory_pool.h` (modify)
 - `tests/benchmark/*.cpp` (new)
+
+**Plans:** 3 plans
+Plans:
+- [ ] 01-01-PLAN.md — Device Info and Kernel Launcher Enhancement (PERF-01, PERF-02)
+- [ ] 01-02-PLAN.md — Memory Metrics and Error Enhancement (PERF-03, PERF-04, PERF-05, PERF-06)
+- [ ] 01-03-PLAN.md — Benchmark Suite (BMCH-01, BMCH-02, BMCH-03, BMCH-04)
 
 ---
 
