@@ -94,10 +94,10 @@ git add -A && git commit -m "chore: create layered directory structure"
 ```cmake
 cmake_minimum_required(VERSION 3.25)
 
-project(cu
+project(nova
         VERSION 0.0.1
         DESCRIPTION "A CUDA parallel algorithms library"
-        HOMEPAGE_URL "https://github.com/pplmx/cu"
+        HOMEPAGE_URL "https://github.com/pplmx/nova"
         LANGUAGES CXX CUDA
 )
 
@@ -740,7 +740,7 @@ target_include_directories(test_patterns-tests PRIVATE
 include(GoogleTest)
 gtest_discover_tests(test_patterns-tests)
 
-add_executable(cu-tests
+add_executable(nova-tests
     image_utils_test.cu
     gaussian_blur_test.cu
     sobel_edge_test.cu
@@ -751,7 +751,7 @@ add_executable(cu-tests
     matrix_mult_test.cu
 )
 
-target_link_libraries(cu-tests
+target_link_libraries(nova-tests
     PRIVATE
     GTest::gtest_main
     GTest::gmock
@@ -760,12 +760,12 @@ target_link_libraries(cu-tests
     cuda_kernel_impl
 )
 
-target_include_directories(cu-tests PRIVATE
+target_include_directories(nova-tests PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/data
 )
 
-target_compile_options(cu-tests PRIVATE
+target_compile_options(nova-tests PRIVATE
     $<$<COMPILE_LANGUAGE:CUDA>:
         --expt-relaxed-constexpr
         -lineinfo
@@ -773,7 +773,7 @@ target_compile_options(cu-tests PRIVATE
 )
 
 include(GoogleTest)
-gtest_discover_tests(cu-tests)
+gtest_discover_tests(nova-tests)
 ```
 
 - [ ] **Step 3: Rebuild and run tests**
@@ -883,7 +883,7 @@ int main() {
 
 - [ ] **Step 2: Build and run demo**
 
-Run: `cmake --build build && ./build/bin/cu`
+Run: `cmake --build build && ./build/bin/nova`
 Expected: Demo runs successfully
 
 - [ ] **Step 3: Commit**

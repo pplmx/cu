@@ -1,11 +1,11 @@
 service:
-    cu:
+    nova:
         build: .
-        image: cu
+        image: nova
 
 networks:
-    cu-net:
-        name: cu-net
+    nova-net:
+        name: nova-net
         ipam:
             config:
                 -   subnet: 172.16.238.0/24

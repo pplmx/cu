@@ -10,7 +10,7 @@ target_include_directories(test_patterns-tests PRIVATE
 include(GoogleTest)
 gtest_discover_tests(test_patterns-tests)
 
-add_executable(cu-tests
+add_executable(nova-tests
     image_utils_test.cu
     gaussian_blur_test.cu
     sobel_edge_test.cu
@@ -29,7 +29,7 @@ set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)
 set(CUDA_ALGO_DIR ${CMAKE_SOURCE_DIR}/include/cuda/algo)
 set(CUDA_STREAM_DIR ${CMAKE_SOURCE_DIR}/include/cuda/stream)
 
-target_link_libraries(cu-tests
+target_link_libraries(nova-tests
     PRIVATE
     GTest::gtest_main
     GTest::gmock
@@ -37,7 +37,7 @@ target_link_libraries(cu-tests
     cuda_api
     cuda_impl
 )
-target_include_directories(cu-tests PRIVATE
+target_include_directories(nova-tests PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/data
     ${CUDA_DEVICE_DIR}
@@ -45,7 +45,7 @@ target_include_directories(cu-tests PRIVATE
     ${CUDA_STREAM_DIR}
 )
 
-target_compile_options(cu-tests PRIVATE
+target_compile_options(nova-tests PRIVATE
     $<$<COMPILE_LANGUAGE:CUDA>:
         --expt-relaxed-constexpr
         -lineinfo
@@ -53,4 +53,4 @@ target_compile_options(cu-tests PRIVATE
 )
 
 include(GoogleTest)
-gtest_discover_tests(cu-tests)
+gtest_discover_tests(nova-tests)
