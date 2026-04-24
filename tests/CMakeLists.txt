@@ -47,6 +47,7 @@ add_executable(nova-tests
     neural/softmax_test.cpp
     neural/activations_test.cpp
     neural/layer_norm_test.cpp
+    mesh/device_mesh_test.cu
 )
 
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)
@@ -60,6 +61,7 @@ set(CUDA_FFT_DIR ${CMAKE_SOURCE_DIR}/include/cuda/fft)
 set(CUDA_RAYTRACE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/raytrace)
 set(CUDA_GRAPH_DIR ${CMAKE_SOURCE_DIR}/include/cuda/graph)
 set(CUDA_NEURAL_DIR ${CMAKE_SOURCE_DIR}/include/cuda/neural)
+set(CUDA_MESH_DIR ${CMAKE_SOURCE_DIR}/include/cuda/mesh)
 
 target_link_libraries(nova-tests
     PRIVATE
@@ -83,6 +85,7 @@ target_include_directories(nova-tests PRIVATE
     ${CUDA_RAYTRACE_DIR}
     ${CUDA_GRAPH_DIR}
     ${CUDA_NEURAL_DIR}
+    ${CUDA_MESH_DIR}
 )
 
 target_compile_options(nova-tests PRIVATE
