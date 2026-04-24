@@ -34,6 +34,9 @@ option(NOVA_ENABLE_NCCL "Enable NCCL for optimized multi-GPU collectives" ON)
 # Enable multi-node training with MPI-based NCCL bootstrapping
 option(NOVA_ENABLE_MPI "Enable MPI for multi-node support" OFF)
 
+# Unity build for faster compilation (CMake 3.16+)
+option(NOVA_ENABLE_UNITY_BUILD "Enable unity build to speed up compilation" ON)
+
 if(NOVA_ENABLE_MPI)
     find_package(MPI 3.1 REQUIRED)
     if(MPI_FOUND)
@@ -49,7 +52,7 @@ endif()
 
 if(NOVA_ENABLE_NCCL)
     find_package(NCCL 2.25 QUIET)
-    if(NCCL_FOUND)
+    if(NCCL_FOUND AND TARGET NCCL::nccl)
         message(STATUS "NCCL ${NCCL_VERSION} found -- enabling NCCL support")
         set(NOVA_NCCL_ENABLED TRUE)
     else()
@@ -59,6 +62,11 @@ if(NOVA_ENABLE_NCCL)
 else()
     message(STATUS "NCCL disabled by user option")
     set(NOVA_NCCL_ENABLED FALSE)
+endif()
+
+if(NOVA_ENABLE_UNITY_BUILD)
+    set_property(GLOBAL PROPERTY UNITY_BUILD ON)
+    set_property(GLOBAL PROPERTY UNITY_BUILD_BATCH_SIZE 16)
 endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/bin>")
@@ -277,7 +285,7 @@ target_link_libraries(cuda_nccl PUBLIC
         CUDA::cudart
         cuda_device
 )
-if(NCCL_FOUND)
+if(NCCL_FOUND AND TARGET NCCL::nccl)
         target_link_libraries(cuda_nccl PUBLIC NCCL::nccl)
         target_compile_definitions(cuda_nccl PUBLIC NOVA_NCCL_ENABLED=1)
 else()
@@ -290,7 +298,7 @@ target_include_directories(cuda_mpi PUBLIC
         ${CUDA_MPI_DIR}
 )
 target_link_libraries(cuda_mpi PUBLIC CUDA::cudart)
-if(MPI_FOUND)
+if(MPI_FOUND AND TARGET MPI::MPI_CXX)
         target_link_libraries(cuda_mpi PUBLIC MPI::MPI_CXX)
         target_compile_definitions(cuda_mpi PUBLIC NOVA_MPI_ENABLED=1)
 else()
@@ -303,7 +311,7 @@ target_include_directories(cuda_topology PUBLIC
         ${CUDA_TOPOLOGY_DIR}
 )
 target_link_libraries(cuda_topology PUBLIC CUDA::cudart)
-if(NCCL_FOUND)
+if(NCCL_FOUND AND TARGET NCCL::nccl)
         target_link_libraries(cuda_topology PUBLIC NCCL::nccl)
 endif()
 
