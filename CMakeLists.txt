@@ -26,6 +26,24 @@ endif()
 
 find_package(CUDAToolkit REQUIRED)
 
+# NCCL support (optional)
+# Enable NCCL for optimized multi-GPU collectives with P2P fallback when unavailable
+option(NOVA_ENABLE_NCCL "Enable NCCL for optimized multi-GPU collectives" ON)
+
+if(NOVA_ENABLE_NCCL)
+    find_package(NCCL 2.25 QUIET)
+    if(NCCL_FOUND)
+        message(STATUS "NCCL ${NCCL_VERSION} found -- enabling NCCL support")
+        set(NOVA_NCCL_ENABLED TRUE)
+    else()
+        message(STATUS "NCCL not found -- using P2P fallback for multi-GPU")
+        set(NOVA_NCCL_ENABLED FALSE)
+    endif()
+else()
+    message(STATUS "NCCL disabled by user option")
+    set(NOVA_NCCL_ENABLED FALSE)
+endif()
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/bin>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/lib>")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/lib>")
@@ -50,6 +68,8 @@ set(CUDA_MESH_DIR ${CMAKE_SOURCE_DIR}/include/cuda/mesh)
 set(SRC_CUDA_MESH ${CMAKE_SOURCE_DIR}/src/cuda/mesh)
 set(CUDA_DISTRIBUTED_DIR ${CMAKE_SOURCE_DIR}/include/cuda/distributed)
 set(SRC_CUDA_DISTRIBUTED ${CMAKE_SOURCE_DIR}/src/cuda/distributed)
+set(CUDA_NCCL_DIR ${CMAKE_SOURCE_DIR}/include/cuda/nccl)
+set(SRC_CUDA_NCCL ${CMAKE_SOURCE_DIR}/src/cuda/nccl)
 
 add_library(cuda_memory INTERFACE)
 target_include_directories(cuda_memory INTERFACE
@@ -158,6 +178,10 @@ set(MESH_SOURCES
         ${SRC_CUDA_MESH}/peer_copy.cu
 )
 
+set(NCCL_SOURCES
+        ${SRC_CUDA_NCCL}/nccl_context.cpp
+)
+
 set(DISTRIBUTED_SOURCES
         ${SRC_CUDA_DISTRIBUTED}/common.cu
         ${SRC_CUDA_DISTRIBUTED}/reduce.cu
@@ -181,8 +205,24 @@ set(ALL_CUDA_SOURCES
         ${GRAPH_SOURCES}
         ${NEURAL_SOURCES}
         ${MESH_SOURCES}
+        ${NCCL_SOURCES}
         ${DISTRIBUTED_SOURCES}
 )
+
+add_library(cuda_nccl STATIC ${NCCL_SOURCES})
+target_include_directories(cuda_nccl PUBLIC
+        ${CUDA_NCCL_DIR}
+)
+target_link_libraries(cuda_nccl PUBLIC
+        CUDA::cudart
+        cuda_device
+)
+if(NCCL_FOUND)
+        target_link_libraries(cuda_nccl PUBLIC NCCL::nccl)
+        target_compile_definitions(cuda_nccl PUBLIC NOVA_NCCL_ENABLED=1)
+else()
+        target_compile_definitions(cuda_nccl PUBLIC NOVA_NCCL_ENABLED=0)
+endif()
 
 add_library(cuda_impl STATIC ${ALL_CUDA_SOURCES})
 target_include_directories(cuda_impl PUBLIC
@@ -194,6 +234,7 @@ target_include_directories(cuda_impl PUBLIC
 target_link_libraries(cuda_impl PUBLIC
         cuda_device
         cuda_algo
+        cuda_nccl
         CUDA::cudart
         CUDA::cublas
         CUDA::cufft
