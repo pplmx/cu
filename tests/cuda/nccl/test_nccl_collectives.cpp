@@ -19,7 +19,7 @@
 
 #include "cuda/memory/buffer.h"
 
-#ifdef NOVA_NCCL_ENABLED
+#if NOVA_NCCL_ENABLED
 
 namespace cuda::nccl {
 
