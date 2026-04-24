@@ -4,6 +4,16 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
+## Current Milestone: v1.1 Multi-GPU Support
+
+**Goal:** Enable distributed GPU compute across device meshes with data parallelism primitives and multi-GPU matmul.
+
+**Target features:**
+- Device mesh detection and peer memory access
+- Multi-GPU data parallelism primitives (reduce, broadcast, all-gather, distributed batch norm)
+- Distributed memory pool across GPU devices
+- Multi-GPU matmul with approach TBD (tensor parallelism, pipeline parallelism, or hybrid)
+
 ## Core Value
 
 A reliable, high-performance CUDA compute library that can be trusted in production environments, with comprehensive algorithms for scientific computing, image processing, and emerging workloads.
@@ -17,45 +27,43 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 - ✓ Algorithm wrappers (reduce, scan, sort, histogram) — existing
 - ✓ Image processing (blur, sobel, morphology, brightness) — existing
 - ✓ Matrix operations (add, mult, ops) — existing
+- ✓ Device capability queries and auto block size selection — v1.0
+- ✓ Memory pool statistics and fragmentation reporting — v1.0
+- ✓ Stream-based async operations with event synchronization — v1.0
+- ✓ Signal/image processing via FFT — v1.0
+- ✓ Ray tracing primitives (ray-box, ray-sphere, BVH) — v1.0
+- ✓ Graph processing (BFS, PageRank) — v1.0
+- ✓ Deep learning primitives (matmul, activations, normalization) — v1.0
 - ✓ 81+ tests across 13 test suites — existing
 - ✓ CMake build with Google Test — existing
 
 ### Active
 
-- [ ] Device capability-aware kernel launch configuration
-- [ ] Memory metrics and profiling hooks
-- [ ] Input validation with enhanced error context
-- [ ] Benchmark suite for throughput/latency measurement
-- [ ] Async operations with CUDA streams
-- [ ] Pinned memory for faster host-device transfers
-- [ ] Memory pool improvements (defragmentation, metrics)
-- [ ] Multi-GPU support foundation
-- [ ] FFT (Fast Fourier Transform)
-- [ ] Ray tracing primitives (ray-box, ray-sphere, BVH helpers)
-- [ ] Graph algorithms (BFS, PageRank on GPU)
-- [ ] Neural network primitives (matmul, softmax, ReLU, layer norm)
+- [ ] Device mesh detection and peer memory access (MGPU-01)
+- [ ] Multi-GPU data parallelism primitives (MGPU-02)
+- [ ] Distributed memory pool across GPU devices (MGPU-03)
+- [ ] Multi-GPU matmul (MGPU-04)
 
 ### Out of Scope
 
-- Real-time video processing pipeline — requires streams first
-- Distributed multi-node computation — beyond single-GPU scope
+- Distributed multi-node computation (multiple nodes, not just multiple GPUs) — future work
 - Python bindings — separate project
-- GPU memory allocator tuning beyond pool improvements
+- Real-time video processing pipeline — not in scope
 
 ## Context
 
-**Existing project:** nova CUDA library at `https://github.com/pplmx/nova`
+**Project:** nova CUDA library at `https://github.com/pplmx/nova`
 - C++20, CUDA 17, CMake 3.25+
 - Target architectures: 6.0, 7.0, 8.0, 9.0 (Pascal through Ampere)
 - Five-layer architecture with clear separation of concerns
-- 81 tests using Google Test v1.14.0
+- 81+ tests using Google Test v1.14.0
+- v1.0 shipped: FFT, Ray Tracing, Graph Algorithms, Neural Net Primitives, Async/Streaming
+- **v1.1 focus:** Multi-GPU support (device mesh, data parallelism, distributed memory pool, multi-GPU matmul)
 
 **Known limitations from codebase map:**
-- Hardcoded block sizes (256) — not device-aware
-- No memory usage metrics
-- No async/streaming operations
-- No benchmark suite
-- Memory pool lacks defragmentation
+- No multi-GPU support (v1.1 target)
+- No peer memory access between devices
+- No distributed memory pool across GPUs
 
 ## Constraints
 
@@ -68,10 +76,12 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Foundation-first phasing | Quality foundations enable reliable feature work | — Pending |
-| Streams for async | Native CUDA streams, not abstraction layer | — Pending |
-| FFTW-style API | Familiar interface for signal processing users | — Pending |
-| BVH helpers over full ray tracer | Focus on GPU compute primitives | — Pending |
+| Foundation-first phasing | Quality foundations enable reliable feature work | ✓ v1.0 shipped |
+| Streams for async | Native CUDA streams, not abstraction layer | ✓ Implemented |
+| FFTW-style API | Familiar interface for signal processing users | ✓ Implemented |
+| BVH helpers over full ray tracer | Focus on GPU compute primitives | ✓ Implemented |
+| CUDA MPS for multi-GPU shared memory | Native, low-overhead GPU sharing | — TBD |
+| Multi-GPU matmul approach | Tensor vs pipeline vs hybrid parallelism | — Research in v1.1 |
 
 ## Evolution
 
@@ -91,4 +101,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state (users, feedback, metrics)
 
 ---
-*Last updated: 2026-04-23 after initialization*
+*Last updated: 2026-04-24 — Milestone v1.1 started*
