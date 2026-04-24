@@ -186,6 +186,10 @@ set(NCCL_SOURCES
         ${SRC_CUDA_NCCL}/nccl_all_reduce.cpp
         ${SRC_CUDA_NCCL}/nccl_broadcast.cpp
         ${SRC_CUDA_NCCL}/nccl_barrier.cpp
+        ${SRC_CUDA_NCCL}/nccl_all_gather.cpp
+        ${SRC_CUDA_NCCL}/nccl_reduce_scatter.cpp
+        ${SRC_CUDA_NCCL}/nccl_group.cpp
+        ${SRC_CUDA_NCCL}/nccl_ops.cpp
 )
 
 set(DISTRIBUTED_SOURCES

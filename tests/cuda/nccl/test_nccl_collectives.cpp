@@ -12,6 +12,10 @@
 #include "cuda/nccl/nccl_all_reduce.h"
 #include "cuda/nccl/nccl_broadcast.h"
 #include "cuda/nccl/nccl_barrier.h"
+#include "cuda/nccl/nccl_all_gather.h"
+#include "cuda/nccl/nccl_reduce_scatter.h"
+#include "cuda/nccl/nccl_group.h"
+#include "cuda/nccl/nccl_ops.h"
 
 #include "cuda/memory/buffer.h"
 
@@ -205,6 +209,144 @@ TEST_F(NcclCollectivesTest, TypeConversion) {
     EXPECT_EQ(NcclAllReduce::to_nccl_op(RedOp::Product), ncclProd);
 }
 
+// ============================================================================
+// All-Gather Tests
+// ============================================================================
+
+TEST_F(NcclCollectivesTest, AllGatherBasic) {
+    NcclAllGather gather(*context_);
+
+    int device_count = context_->device_count();
+    size_t send_count = 1024;
+    size_t recv_count = send_count * device_count;
+
+    cuda::memory::Buffer<float> send(send_count);
+    cuda::memory::Buffer<float> recv(recv_count);
+
+    float* send_ptr = send.data();
+    for (size_t i = 0; i < send_count; ++i) {
+        send_ptr[i] = static_cast<float>(i + 1);
+    }
+
+    cudaStream_t stream;
+    cudaStreamCreate(&stream);
+
+    auto result = gather.all_gather_async(
+        send.data(), recv.data(), send_count,
+        ncclFloat32, stream);
+
+    cudaStreamSynchronize(stream);
+    cudaStreamDestroy(stream);
+
+    EXPECT_TRUE(result.ok()) << result.error_message;
+}
+
+TEST_F(NcclCollectivesTest, AllGatherBufferSize) {
+    size_t send_count = 100;
+    int device_count = 2;
+    size_t expected_recv = NcclAllGather::required_recv_buffer_size(send_count, device_count);
+    EXPECT_EQ(expected_recv, 200u);
+}
+
+// ============================================================================
+// Reduce-Scatter Tests
+// ============================================================================
+
+TEST_F(NcclCollectivesTest, ReduceScatterBasic) {
+    NcclReduceScatter reduce_scatter(*context_);
+
+    int device_count = context_->device_count();
+    size_t recv_count = 1024;
+    size_t send_count = recv_count * device_count;
+
+    cuda::memory::Buffer<float> send(send_count);
+    cuda::memory::Buffer<float> recv(recv_count);
+
+    float* send_ptr = send.data();
+    for (size_t i = 0; i < send_count; ++i) {
+        send_ptr[i] = 1.0f;
+    }
+
+    cudaStream_t stream;
+    cudaStreamCreate(&stream);
+
+    auto result = reduce_scatter.reduce_scatter_async(
+        send.data(), recv.data(), recv_count,
+        ncclFloat32, ncclSum, stream);
+
+    cudaStreamSynchronize(stream);
+    cudaStreamDestroy(stream);
+
+    EXPECT_TRUE(result.ok()) << result.error_message;
+}
+
+TEST_F(NcclCollectivesTest, ReduceScatterBufferSize) {
+    size_t recv_count = 100;
+    int device_count = 2;
+    size_t expected_send = NcclReduceScatter::required_send_buffer_size(recv_count, device_count);
+    EXPECT_EQ(expected_send, 200u);
+}
+
+// ============================================================================
+// Group Operations Tests
+// ============================================================================
+
+TEST_F(NcclCollectivesTest, GroupHandleBatched) {
+    cudaStream_t stream;
+    cudaStreamCreate(&stream);
+
+    {
+        NcclGroupHandle group(*context_, stream);
+
+        cuda::memory::Buffer<float> send1(1024);
+        cuda::memory::Buffer<float> recv1(1024);
+        float* send1_ptr = send1.data();
+        for (size_t i = 0; i < 1024; ++i) {
+            send1_ptr[i] = 1.0f;
+        }
+
+        group.add_all_reduce(send1.data(), recv1.data(), 1024, ncclFloat32, ncclSum);
+        EXPECT_EQ(group.operation_count(), 1u);
+    }
+
+    cudaStreamDestroy(stream);
+}
+
+TEST_F(NcclCollectivesTest, GroupHandleExplicitExecute) {
+    cudaStream_t stream;
+    cudaStreamCreate(&stream);
+
+    {
+        NcclGroupHandle group(*context_, stream);
+
+        cuda::memory::Buffer<float> send(1024);
+        cuda::memory::Buffer<float> recv(1024);
+        for (size_t i = 0; i < 1024; ++i) {
+            send.data()[i] = 1.0f;
+        }
+
+        group.add_all_reduce(send.data(), recv.data(), 1024, ncclFloat32, ncclSum);
+        auto result = group.execute();
+        EXPECT_TRUE(result.ok() || !context_->has_nccl());
+    }
+
+    cudaStreamDestroy(stream);
+}
+
+// ============================================================================
+// Unified Ops API Tests
+// ============================================================================
+
+TEST_F(NcclCollectivesTest, UnifiedOpsHasNccl) {
+    NcclOps ops(*context_);
+    EXPECT_EQ(ops.has_nccl(), context_->has_nccl());
+}
+
+TEST_F(NcclCollectivesTest, UnifiedOpsDeviceCount) {
+    NcclOps ops(*context_);
+    EXPECT_EQ(ops.device_count(), context_->device_count());
+}
+
 }  // namespace cuda::nccl
 
 #else  // NOVA_NCCL_ENABLED
@@ -224,6 +366,22 @@ TEST(NcclCollectivesTest, DISABLED_BarrierSync) {
 }
 
 TEST(NcclCollectivesTest, DISABLED_TypeConversion) {
+    GTEST_SKIP() << "NCCL not enabled";
+}
+
+TEST(NcclCollectivesTest, DISABLED_AllGatherBasic) {
+    GTEST_SKIP() << "NCCL not enabled";
+}
+
+TEST(NcclCollectivesTest, DISABLED_ReduceScatterBasic) {
+    GTEST_SKIP() << "NCCL not enabled";
+}
+
+TEST(NcclCollectivesTest, DISABLED_GroupHandleBatched) {
+    GTEST_SKIP() << "NCCL not enabled";
+}
+
+TEST(NcclCollectivesTest, DISABLED_UnifiedOpsHasNccl) {
     GTEST_SKIP() << "NCCL not enabled";
 }
 

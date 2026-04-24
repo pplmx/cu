@@ -39,6 +39,8 @@ using ncclResult_t = int;
 constexpr int ncclSuccess = 0;
 constexpr int ncclSystemError = 1;
 constexpr int ncclInternalError = 3;
+constexpr int ncclInProgress = 2;
+constexpr int ncclTimeout = 9;
 
 // Stub values for common types
 constexpr int ncclFloat32 = 0;
@@ -71,6 +73,22 @@ inline ncclResult_t ncclBroadcast(const void*, void*, size_t,
 }
 inline ncclResult_t ncclBarrier(ncclComm_t, cudaStream_t) {
     return ncclResult_t(0);
+}
+inline ncclResult_t ncclAllGather(const void*, void*, size_t,
+                                   ncclDataType_t,
+                                   ncclComm_t, cudaStream_t) {
+    return ncclResult_t(0);
+}
+inline ncclResult_t ncclReduceScatter(const void*, void*, size_t,
+                                      ncclDataType_t, ncclRedOp_t,
+                                      ncclComm_t, cudaStream_t) {
+    return ncclResult_t(0);
+}
+inline int ncclGroupStart() {
+    return 0;
+}
+inline int ncclGroupEnd() {
+    return 0;
 }
 #endif
 

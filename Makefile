@@ -25,7 +25,7 @@ run: build
 
 # run all tests (parallel)
 test: build
-	@ctest --test-dir build --parallel 4 --output-on-failure
+	@ctest --test-dir build --parallel 8 --output-on-failure
 
 # run unit tests only
 test-unit: build
