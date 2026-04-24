@@ -53,50 +53,57 @@
 
 ## v1.3 NCCL Integration, Tensor & Pipeline Parallelism
 
-**Status:** Ready to execute
+**Status:** Phase 13 Complete - 1/5 phases
 
 **Goal:** Enable efficient multi-GPU training with NCCL-based collectives, tensor parallelism for large layers, and pipeline parallelism for deep models.
 
 ### Phase Overview
 
-| # | Phase | Goal | Requirements | Plans | Success Criteria |
-|---|-------|------|--------------|-------|------------------|
-| 13 | NCCL Foundation | Library detection, NcclContext, communicator init, error handling | NCCL-01 to NCCL-05 | 3 plans | 5 criteria |
-| 14 | Core Collectives | AllReduce, Broadcast, Barrier with async stream-based operations | COLL-01 to COLL-05 | Pending | 5 criteria |
-| 15 | Extended Collectives | AllGather, ReduceScatter, group ops, unified fallback | EXTD-01 to EXTD-05 | Pending | 5 criteria |
-| 16 | Tensor Parallelism | Column/row parallel matmul, transformer layer patterns | TENS-01 to TENS-06 | Pending | 6 criteria |
-| 17 | Pipeline Parallelism | 1F1B scheduler, P2P primitives, activation buffer management | PIPE-01 to PIPE-06 | Pending | 6 criteria |
+| # | Phase | Goal | Requirements | Plans | Status |
+|---|-------|------|--------------|-------|--------|
+| 13 | NCCL Foundation | Library detection, NcclContext, communicator init, error handling | NCCL-01 to NCCL-05 | 3/3 | ✅ Complete |
+| 14 | Core Collectives | AllReduce, Broadcast, Barrier with async stream-based operations | COLL-01 to COLL-05 | Pending | 🔄 Pending |
+| 15 | Extended Collectives | AllGather, ReduceScatter, group ops, unified fallback | EXTD-01 to EXTD-05 | Pending | 🔄 Pending |
+| 16 | Tensor Parallelism | Column/row parallel matmul, transformer layer patterns | TENS-01 to TENS-06 | Pending | 🔄 Pending |
+| 17 | Pipeline Parallelism | 1F1B scheduler, P2P primitives, activation buffer management | PIPE-01 to PIPE-06 | Pending | 🔄 Pending |
 
 ### Phase Details
 
 <details>
-<summary>Phase 13: NCCL Foundation</summary>
+<summary>Phase 13: NCCL Foundation ✅ COMPLETE</summary>
 
 **Goal:** Set up NCCL integration infrastructure with proper error handling.
 
+**Commits:** 098fa79, ed9176d, b80a747
+
+**Files Created:**
+- `cmake/FindNCCL.cmake` - Version validation, NCCL 2.25+ required
+- `include/cuda/nccl/nccl_types.h` - CUDA to NCCL dtype mapping
+- `include/cuda/nccl/nccl_context.h` - NcclContext with DI + singleton
+- `include/cuda/nccl/nccl_error.h` - safe_nccl_call() wrapper
+- `include/cuda/nccl/nccl_validation.h` - Shared memory & version validation
+- `src/cuda/nccl/nccl_context.cpp` - Full NcclContext implementation
+- `src/cuda/nccl/nccl_error.cpp` - safe_stream_wait() implementation
+- `src/cuda/nccl/nccl_validation.cpp` - Validation implementations
+- Updated `CMakeLists.txt` - NOVA_ENABLE_NCCL option, cuda_nccl library
+
 **Requirements:**
-- NCCL-01: Library detection and version validation via CMake find module
-- NCCL-02: NcclContext with dependency injection pattern and DeviceMesh integration
-- NCCL-03: Communicator initialization and lifecycle management per device
-- NCCL-04: Shared memory validation (require 512MB+) with clear error messages
-- NCCL-05: Async error polling infrastructure with ncclCommGetAsyncError
+- NCCL-01: Library detection and version validation via CMake find module ✅
+- NCCL-02: NcclContext with dependency injection pattern and DeviceMesh integration ✅
+- NCCL-03: Communicator initialization and lifecycle management per device ✅
+- NCCL-04: Shared memory validation (require 512MB+) with clear error messages ✅
+- NCCL-05: Async error polling infrastructure with ncclCommGetAsyncError ✅
 
-**Success Criteria:**
-1. CMake successfully detects NCCL 2.25+ and fails gracefully if missing
-2. NcclContext integrates with existing DeviceMesh without breaking single-GPU fallback
-3. Communicators properly initialized for each device in mesh
-4. Clear error messages when /dev/shm < 512MB or NCCL version incompatible
-5. Async error polling catches NCCL failures before cudaStreamSynchronize hangs
-
-**Pitfalls Addressed:**
-- Shared memory exhaustion (NCCL-04)
-- Version mismatch detection (NCCL-01)
-- Async error timeout hangs (NCCL-05)
+**Decisions Applied:**
+- D-01: DI with singleton fallback (NcclContext::instance())
+- D-02: safe_nccl_call() wrapper with automatic polling
+- D-03: Optional NCCL with P2P fallback (NCCL_ENABLE option)
+- D-04: Per-device singleton caching (get_comm(device))
 
 **Plans:**
-- `13-01-PLAN.md` — CMake integration and version validation
-- `13-02-PLAN.md` — NcclContext implementation
-- `13-03-PLAN.md` — Error handling and validation
+- `13-01-PLAN.md` — CMake integration and version validation ✅
+- `13-02-PLAN.md` — NcclContext implementation ✅
+- `13-03-PLAN.md` — Error handling and validation ✅
 
 </details>
 
