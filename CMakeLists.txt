@@ -171,6 +171,9 @@ set(NEURAL_SOURCES
         ${CUDA_NEURAL_DIR}/softmax.cu
         ${CUDA_NEURAL_DIR}/activations.cu
         ${CUDA_NEURAL_DIR}/layer_norm.cu
+        ${CUDA_NEURAL_DIR}/tensor_parallel_matmul.cpp
+        ${CUDA_NEURAL_DIR}/tensor_parallel_layers.cpp
+        ${CUDA_NEURAL_DIR}/tensor_parallel_profile.cpp
 )
 
 set(MESH_SOURCES

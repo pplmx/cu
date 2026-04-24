@@ -47,6 +47,7 @@ add_executable(nova-tests
     neural/softmax_test.cpp
     neural/activations_test.cpp
     neural/layer_norm_test.cpp
+    neural/tensor_parallel_test.cpp
     mesh/device_mesh_test.cu
     cuda/nccl/test_nccl_collectives.cpp
     distributed/distributed_ops_test.cu
