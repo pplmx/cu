@@ -14,6 +14,11 @@ protected:
         }
     }
 
+    void TearDown() override {
+        cudaDeviceSynchronize();
+        cudaGetLastError();
+    }
+
     std::vector<std::vector<int>> create_simple_graph() {
         return {
             {1, 2},
