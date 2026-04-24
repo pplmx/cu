@@ -58,10 +58,19 @@ The following are identified but deferred to v1.2+:
 
 | Requirement | Phase | Plan | Verified |
 |-------------|-------|------|----------|
-| MGPU-01 — MGPU-04 | Phase 1 | TBD | No |
-| MGPU-05 — MGPU-08 | Phase 2 | TBD | No |
-| MGPU-09 — MGPU-11 | Phase 3 | TBD | No |
-| MGPU-12 — MGPU-13 | Phase 4 | TBD | No |
+| MGPU-01 | Phase 7 | 07-01-PLAN.md | No |
+| MGPU-02 | Phase 7 | 07-01-PLAN.md | No |
+| MGPU-03 | Phase 7 | 07-01-PLAN.md | No |
+| MGPU-04 | Phase 7 | 07-01-PLAN.md | No |
+| MGPU-05 | Phase 8 | 08-01-PLAN.md | No |
+| MGPU-06 | Phase 8 | 08-01-PLAN.md | No |
+| MGPU-07 | Phase 8 | 08-01-PLAN.md | No |
+| MGPU-08 | Phase 8 | 08-01-PLAN.md | No |
+| MGPU-09 | Phase 9 | 09-01-PLAN.md | No |
+| MGPU-10 | Phase 9 | 09-01-PLAN.md | No |
+| MGPU-11 | Phase 9 | 09-01-PLAN.md | No |
+| MGPU-12 | Phase 10 | 10-01-PLAN.md | No |
+| MGPU-13 | Phase 10 | 10-01-PLAN.md | No |
 
 ---
 

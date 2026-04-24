@@ -1,7 +1,8 @@
 # Roadmap: Nova CUDA Library Enhancement
 
 **Created:** 2026-04-23
-**Granularity:** Standard (6 phases, 3-5 plans each)
+**Updated:** 2026-04-24
+**Granularity:** Standard (10 phases, 1-3 plans each)
 
 ## Phase Summary
 
@@ -10,233 +11,125 @@
 | 1 | Performance Foundations | Device-aware kernels, memory metrics, validation, benchmarks | PERF-01 to PERF-06, BMCH-01 to BMCH-04 | 10 criteria |
 | 2 | Async & Streaming | CUDA streams, pinned memory, pool improvements | ASYNC-01 to ASYNC-04, POOL-01 to POOL-04 | 8 criteria |
 | 3 | FFT Module | Fast Fourier Transform implementation | FFT-01 to FFT-04 | 4 criteria |
-| 4 | Ray Tracing Primitives | Intersection tests and BVH helpers | RAY-01 to RAY-04 | 4 criteria | 1 plan |
+| 4 | Ray Tracing Primitives | Intersection tests and BVH helpers | RAY-01 to RAY-04 | 4 criteria |
 | 5 | Graph Algorithms | BFS and PageRank on GPU | GRAPH-01 to GRAPH-04 | 4 criteria |
-| 6 | Neural Net Primitives | Matmul, softmax, ReLU, layer norm | NN-01 to NN-04 | 4 criteria | 1 plan |
+| 6 | Neural Net Primitives | Matmul, softmax, ReLU, layer norm | NN-01 to NN-04 | 4 criteria |
+| 7 | Device Mesh Detection | GPU enumeration, peer access matrix, async P2P copy | MGPU-01 to MGPU-04 | 4 criteria |
+| 8 | Multi-GPU Data Parallelism | All-reduce, broadcast, all-gather, barrier sync | MGPU-05 to MGPU-08 | 4 criteria |
+| 9 | Distributed Memory Pool | Per-device pools, auto-allocation, cross-device tracking | MGPU-09 to MGPU-11 | 4 criteria |
+| 10 | Multi-GPU Matmul | Row-wise split matmul, single-GPU fallback | MGPU-12 to MGPU-13 | 3 criteria |
 
 ---
 
-## Phase 1: Performance Foundations
+## Phase 7: Device Mesh Detection
 
-**Goal:** Make the library device-aware, measurable, and production-ready
-
-**Requirements:**
-- PERF-01: Device capability queries
-- PERF-02: Auto block size selection
-- PERF-03: Memory pool statistics
-- PERF-04: Memory usage interface
-- PERF-05: Input validation
-- PERF-06: Enhanced error messages
-- BMCH-01: Warm-up benchmark runs
-- BMCH-02: Variance reporting
-- BMCH-03: Throughput/latency metrics
-- BMCH-04: Regression detection
-
-**Success Criteria:**
-1. Device info service queries compute capability and memory bandwidth
-2. Kernel launcher accepts device-aware block size parameter
-3. Memory pool exposes hits/misses/fragmentation via metrics interface
-4. `cuda::memory::available()` and `cuda::memory::used()` functions work
-5. Public APIs assert valid input ranges with clear error messages
-6. Exceptions include operation name, dimensions, and device info
-7. Benchmark runner executes warm-up iterations before measurement
-8. Benchmark results include mean ± stddev
-9. Throughput reported in GB/s for memory operations
-10. New benchmark run compares against baseline, reports delta %
-
-**Key Files:**
-- `include/cuda/performance/device_info.h` (new)
-- `include/cuda/performance/memory_metrics.h` (new)
-- `include/cuda/benchmark/benchmark.h` (new)
-- `include/cuda/device/error.h` (modify)
-- `include/cuda/algo/kernel_launcher.h` (modify)
-- `include/cuda/memory/memory_pool.h` (modify)
-- `tests/benchmark/*.cpp` (new)
-
-**Plans:** 3 plans
-Plans:
-- [ ] 01-01-PLAN.md — Device Info and Kernel Launcher Enhancement (PERF-01, PERF-02)
-- [ ] 01-02-PLAN.md — Memory Metrics and Error Enhancement (PERF-03, PERF-04, PERF-05, PERF-06)
-- [ ] 01-03-PLAN.md — Benchmark Suite (BMCH-01, BMCH-02, BMCH-03, BMCH-04)
-
----
-
-## Phase 2: Async & Streaming
-
-**Goal:** Enable non-blocking GPU operations and efficient memory transfers
+**Goal:** Enable GPU topology discovery and peer memory access between devices
 
 **Requirements:**
-- ASYNC-01: Stream manager with priorities
-- ASYNC-02: Pinned memory allocator
-- ASYNC-03: Async copy primitives
-- ASYNC-04: Event-based synchronization
-- POOL-01: Pool defragmentation
-- POOL-02: Fragmentation percentage reporting
-- POOL-03: Multi-stream pool integration
-- POOL-04: Graceful pool limits
+- MGPU-01: Device enumeration and properties query
+- MGPU-02: Peer access capability between GPU pairs
+- MGPU-03: Peer access matrix with cached lookup
+- MGPU-04: Async peer-to-peer copy primitives
 
 **Success Criteria:**
-1. Stream manager creates streams with configurable priority
-2. Pinned memory allocator returns page-locked host pointers
-3. Async copy accepts stream parameter, returns immediately
-4. Events record and synchronize between operations
-5. Memory pool defrag() compacts free blocks
-6. Pool reports fragmentation % via metrics interface
-7. Pool tracks allocations per-stream
-8. Pool allocation returns null/throws when limit reached
+1. User can enumerate all CUDA devices and query properties (memory, compute capability, clock rates)
+2. User can query peer access capability between any GPU pair with validation (cudaDeviceCanAccessPeer)
+3. User can access a cached peer access matrix for O(1) topology lookups
+4. Async peer-to-peer copy works with existing StreamManager streams on peer-capable GPUs
 
 **Key Files:**
-- `include/cuda/async/stream_manager.h` (new)
-- `include/cuda/async/pinned_memory.h` (new)
-- `include/cuda/async/async_copy.h` (new)
-- `include/cuda/memory/memory_pool.h` (modify)
-- `tests/async/*.cpp` (new)
-
-**Plans:** 2 plans
-Plans:
-- [ ] 02-01-PLAN.md — Stream Manager and Pinned Memory (ASYNC-01, ASYNC-02)
-- [ ] 02-02-PLAN.md — Async Copy and Memory Pool v2 (ASYNC-03, POOL-03, POOL-04)
-
----
-
-## Phase 3: FFT Module
-
-**Goal:** Fast Fourier Transform for signal and image processing
-
-**Requirements:**
-- FFT-01: FFT plan creation
-- FFT-02: Forward transform
-- FFT-03: Inverse transform
-- FFT-04: Plan destruction
-
-**Success Criteria:**
-1. `FFTPlan` constructor accepts size and direction parameters
-2. Forward FFT produces correct frequency domain output (verified against reference)
-3. Inverse FFT recovers original signal within numerical tolerance (1e-5)
-4. FFTPlan destructor frees all associated resources
-
-**Key Files:**
-- `include/cuda/fft/fft.h` (new)
-- `include/cuda/fft/fft_types.h` (new)
-- `src/cuda/fft/fft.cu` (new)
-- `tests/fft/*_test.cu` (new)
+- `include/cuda/mesh/device_mesh.h` (new)
+- `include/cuda/mesh/peer_copy.h` (new)
+- `include/cuda/mesh/scoped_device.h` (new)
+- `src/cuda/mesh/device_mesh.cu` (new)
+- `src/cuda/mesh/peer_copy.cu` (new)
+- `tests/mesh/*_test.cu` (new)
 
 **Plans:** 1 plan
 Plans:
-- [ ] 03-01-PLAN.md — FFT Module Implementation (FFT-01, FFT-02, FFT-03, FFT-04)
+- [ ] 07-01-PLAN.md — Device Mesh Detection (MGPU-01, MGPU-02, MGPU-03, MGPU-04)
 
 ---
 
-## Phase 4: Ray Tracing Primitives
+## Phase 8: Multi-GPU Data Parallelism Primitives
 
-**Goal:** GPU-accelerated ray intersection and BVH construction
+**Goal:** Provide collective operations for multi-GPU synchronization and data movement
 
 **Requirements:**
-- RAY-01: Ray-box intersection
-- RAY-02: Ray-sphere intersection
-- RAY-03: BVH construction
-- RAY-04: Ray-BVH traversal
+- MGPU-05: Multi-GPU all-reduce (ring algorithm, 2+ GPUs)
+- MGPU-06: Multi-GPU broadcast
+- MGPU-07: Multi-GPU all-gather
+- MGPU-08: Multi-GPU barrier synchronization
 
 **Success Criteria:**
-1. Ray-box intersection returns tNear, tFar, and hit normal
-2. Ray-sphere intersection handles miss, hit, and inside cases
-3. BVH construction reduces primitive tests by >50% vs linear search
-4. Ray-BVH traversal visits only nodes along ray path
+1. Multi-GPU all-reduce produces correct sum across 2+ GPUs using ring algorithm
+2. Broadcast correctly distributes data from source GPU to all other GPUs
+3. All-gather correctly gathers data from all GPUs to all GPUs
+4. Multi-GPU barrier synchronizes all devices before proceeding (no deadlock)
 
 **Key Files:**
-- `include/cuda/raytrace/primitives.h` (new)
-- `include/cuda/raytrace/bvh.h` (new)
-- `src/cuda/raytrace/*.cu` (new)
-- `tests/raytrace/*_test.cu` (new)
+- `include/cuda/distributed/reduce.h` (new)
+- `include/cuda/distributed/broadcast.h` (new)
+- `include/cuda/distributed/all_gather.h` (new)
+- `include/cuda/distributed/barrier.h` (new)
+- `src/cuda/distributed/reduce.cu` (new)
+- `src/cuda/distributed/broadcast.cu` (new)
+- `src/cuda/distributed/all_gather.cu` (new)
+- `tests/distributed/*_test.cu` (new)
 
 **Plans:** 1 plan
 Plans:
-- [ ] 04-01-PLAN.md — Ray Tracing Primitives (RAY-01, RAY-02, RAY-03, RAY-04)
+- [ ] 08-01-PLAN.md — Multi-GPU Data Parallelism Primitives (MGPU-05, MGPU-06, MGPU-07, MGPU-08)
 
 ---
 
-## Phase 5: Graph Algorithms
+## Phase 9: Distributed Memory Pool
 
-**Goal:** GPU-accelerated graph processing with BFS and PageRank
+**Goal:** Extend memory management to span multiple GPUs with coherent allocation
 
 **Requirements:**
-- GRAPH-01: BFS distance computation
-- GRAPH-02: Disconnected component handling
-- GRAPH-03: PageRank convergence
-- GRAPH-04: CSR format storage
+- MGPU-09: Distributed memory pool with per-device pools
+- MGPU-10: Auto-device allocation (select device with most memory)
+- MGPU-11: Cross-device pointer ownership tracking
 
 **Success Criteria:**
-1. BFS correctly computes distance from source to all reachable vertices
-2. BFS terminates early on disconnected components, marks unreachable as -1
-3. PageRank converges to 1e-6 tolerance within 50 iterations
-4. CSR format stores graph with O(V+E) memory for V vertices, E edges
+1. Distributed memory pool maintains separate sub-pools per device
+2. Auto-device allocation selects device with most available memory
+3. Memory pool tracks device ownership for each pointer (correct deallocation)
+4. Memory pool reports per-device and aggregate statistics
 
 **Key Files:**
-- `include/cuda/graph/csr_graph.h` (new)
-- `include/cuda/graph/bfs.h` (new)
-- `include/cuda/graph/pagerank.h` (new)
-- `src/cuda/graph/*.cu` (new)
-- `tests/graph/*_test.cpp` (new)
+- `include/cuda/memory/distributed_pool.h` (new)
+- `src/cuda/memory/distributed_pool.cpp` (new)
+- `tests/distributed/*_pool_test.cu` (new)
 
 **Plans:** 1 plan
 Plans:
-- [x] 05-01-PLAN.md — Graph Algorithms (GRAPH-01, GRAPH-02, GRAPH-03, GRAPH-04)
+- [ ] 09-01-PLAN.md — Distributed Memory Pool (MGPU-09, MGPU-10, MGPU-11)
 
 ---
 
-## Phase 6: Neural Net Primitives
+## Phase 10: Multi-GPU Matmul
 
-**Goal:** GPU kernels for common deep learning operations
-
-**Requirements:**
-- NN-01: Matrix multiply correctness
-- NN-02: Numerically stable softmax
-- NN-03: Leaky ReLU
-- NN-04: Layer normalization
-
-**Success Criteria:**
-1. Matmul output matches cuBLAS reference within 1e-3 absolute error
-2. Softmax produces no NaN values for any input range
-3. Leaky ReLU supports configurable alpha (default 0.01)
-4. Layer normalization produces correct mean (≈0) and variance (≈1)
-
-**Key Files:**
-- `include/cuda/neural/matmul.h` (new)
-- `include/cuda/neural/softmax.h` (new)
-- `include/cuda/neural/activations.h` (new)
-- `include/cuda/neural/layer_norm.h` (new)
-- `src/cuda/neural/*.cu` (new)
-- `tests/neural/*_test.cu` (new)
-
----
-
-## Phase 6: Neural Net Primitives
-
-**Goal:** GPU kernels for common deep learning operations
+**Goal:** Enable large-matrix operations across multiple GPUs with data parallelism
 
 **Requirements:**
-- NN-01: Matrix multiply matches cuBLAS reference for correctness
-- NN-02: Softmax computes numerically stable results (no NaN)
-- NN-03: Leaky ReLU supports configurable negative slope
-- NN-04: Layer normalization produces correct mean and variance
+- MGPU-12: Row-wise split multi-GPU matmul (numerically correct)
+- MGPU-13: Single-GPU fallback for multi-GPU matmul
 
 **Success Criteria:**
-1. Matmul output matches cuBLAS reference within 1e-3 absolute error
-2. Softmax produces no NaN values for any input range
-3. Leaky ReLU supports configurable alpha (default 0.01)
-4. Layer normalization produces correct mean (approx 0) and variance (approx 1)
+1. Row-wise split multi-GPU matmul produces numerically correct results (within 1e-3 of single-GPU reference)
+2. Single-GPU fallback bypasses all multi-GPU code paths (no dependency on peer access)
+3. Multi-GPU matmul accepts configurable number of GPUs with graceful handling of non-peer-capable pairs
 
 **Key Files:**
-- `include/cuda/neural/matmul.h` (new)
-- `include/cuda/neural/softmax.h` (new)
-- `include/cuda/neural/activations.h` (new)
-- `include/cuda/neural/layer_norm.h` (new)
-- `src/cuda/neural/*.cu` (new)
-- `tests/neural/*_test.cpp` (new)
+- `include/cuda/distributed/matmul.h` (new)
+- `src/cuda/distributed/matmul.cu` (new)
+- `tests/distributed/*_matmul_test.cu` (new)
 
 **Plans:** 1 plan
 Plans:
-- [x] 06-01-PLAN.md — Neural Net Primitives (NN-01, NN-02, NN-03, NN-04)
+- [ ] 10-01-PLAN.md — Multi-GPU Matmul (MGPU-12, MGPU-13)
 
 ---
 
@@ -246,8 +139,9 @@ Plans:
 |-----------|--------|--------|
 | Production Ready | 1-2 | Core infrastructure complete |
 | Feature Complete | 1-6 | All algorithms implemented |
-| Stable Release | 1-6 + testing | Full test suite passing |
+| v1.0 Production Release | 1-6 | Shipped 2026-04-24 |
+| v1.1 Multi-GPU Support | 7-10 | Single-node multi-GPU data parallelism |
 
 ---
 
-*Roadmap created: 2026-04-23*
+*Roadmap updated: 2026-04-24*
