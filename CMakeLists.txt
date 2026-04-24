@@ -180,6 +180,8 @@ set(MESH_SOURCES
 
 set(NCCL_SOURCES
         ${SRC_CUDA_NCCL}/nccl_context.cpp
+        ${SRC_CUDA_NCCL}/nccl_error.cpp
+        ${SRC_CUDA_NCCL}/nccl_validation.cpp
 )
 
 set(DISTRIBUTED_SOURCES
