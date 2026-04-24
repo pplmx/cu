@@ -53,19 +53,19 @@
 
 ## v1.3 NCCL Integration, Tensor & Pipeline Parallelism
 
-**Status:** Planning complete, ready to build
+**Status:** Ready to execute
 
 **Goal:** Enable efficient multi-GPU training with NCCL-based collectives, tensor parallelism for large layers, and pipeline parallelism for deep models.
 
 ### Phase Overview
 
-| # | Phase | Goal | Requirements | Success Criteria |
-|---|-------|------|--------------|------------------|
-| 13 | NCCL Foundation | Library detection, NcclContext, communicator init, error handling | NCCL-01 to NCCL-05 | 5 criteria |
-| 14 | Core Collectives | AllReduce, Broadcast, Barrier with async stream-based operations | COLL-01 to COLL-05 | 5 criteria |
-| 15 | Extended Collectives | AllGather, ReduceScatter, group ops, unified fallback | EXTD-01 to EXTD-05 | 5 criteria |
-| 16 | Tensor Parallelism | Column/row parallel matmul, transformer layer patterns | TENS-01 to TENS-06 | 6 criteria |
-| 17 | Pipeline Parallelism | 1F1B scheduler, P2P primitives, activation buffer management | PIPE-01 to PIPE-06 | 6 criteria |
+| # | Phase | Goal | Requirements | Plans | Success Criteria |
+|---|-------|------|--------------|-------|------------------|
+| 13 | NCCL Foundation | Library detection, NcclContext, communicator init, error handling | NCCL-01 to NCCL-05 | 3 plans | 5 criteria |
+| 14 | Core Collectives | AllReduce, Broadcast, Barrier with async stream-based operations | COLL-01 to COLL-05 | Pending | 5 criteria |
+| 15 | Extended Collectives | AllGather, ReduceScatter, group ops, unified fallback | EXTD-01 to EXTD-05 | Pending | 5 criteria |
+| 16 | Tensor Parallelism | Column/row parallel matmul, transformer layer patterns | TENS-01 to TENS-06 | Pending | 6 criteria |
+| 17 | Pipeline Parallelism | 1F1B scheduler, P2P primitives, activation buffer management | PIPE-01 to PIPE-06 | Pending | 6 criteria |
 
 ### Phase Details
 
@@ -92,6 +92,11 @@
 - Shared memory exhaustion (NCCL-04)
 - Version mismatch detection (NCCL-01)
 - Async error timeout hangs (NCCL-05)
+
+**Plans:**
+- `13-01-PLAN.md` — CMake integration and version validation
+- `13-02-PLAN.md` — NcclContext implementation
+- `13-03-PLAN.md` — Error handling and validation
 
 </details>
 
