@@ -1,367 +1,916 @@
-# Technology Stack: Multi-GPU Support for Nova CUDA Library
+# Technology Stack: NCCL Integration, Tensor & Pipeline Parallelism
 
-**Project:** Nova CUDA Library v1.1
+**Project:** Nova CUDA Library v1.2+ — Production NCCL and Parallelism Strategies
 **Researched:** 2026-04-24
-**Confidence:** HIGH (CUDA built-in), MEDIUM (NCCL ecosystem), LOW (NVSHMEM single-node — needs validation)
+**Confidence:** HIGH (NCCL docs), MEDIUM (tensor parallelism libraries), MEDIUM (pipeline parallelism)
 
-## Recommendation Summary
+## Executive Summary
 
-Build multi-GPU support in three tiers, adding dependencies only where necessary:
+Building on v1.1's foundational multi-GPU support (device mesh, P2P fallback collectives), v1.2 adds production-grade NCCL integration and parallelism strategies for large model support. Key decisions:
 
-| Tier | Technology | Dependency? | When to Use |
-|------|-----------|-------------|-------------|
-| 1 - Foundational | CUDA Peer Memory Access APIs | None (CUDA built-in) | MGPU-01: Device mesh, peer access |
-| 2 - Memory Pool | CUDA Stream-Ordered Allocator + IPC Pools | None (CUDA 11.2+) | MGPU-03: Distributed memory pool |
-| 3 - Collectives | NCCL 2.25+ | **Optional**, CNMEM-bundled | MGPU-02, MGPU-04: only if collectves needed |
+| Component | Recommendation | Rationale |
+|-----------|---------------|-----------|
+| **NCCL** | NCCL 2.25+ | CUDA 20 support, modern API (ncclCommInitRankConfig, ncclCommSplit) |
+| **Tensor Parallelism** | Custom implementation | Megatron-LM is too opinionated; implement split strategies directly |
+| **Pipeline Parallelism** | GPipe-style with async scheduling | Simpler than PipeDream, better throughput via micro-batching |
+| **Avoid** | DeepSpeed, Megatron-LM integration | Over-engineered for single-node, adds large dependencies |
 
-**Do NOT add NVSHMEM for single-node.** NVSHMEM targets GPU-initiated communication and InfiniBand/nvlink fabric. For single-node multi-GPU with CUDA IPC transport, it adds unnecessary complexity and external hardware dependencies. Revisit only if multi-node becomes a future requirement.
+---
 
-## Technology Analysis
+## 1. NCCL Library Integration
 
-### Tier 1: CUDA Peer Memory Access (No New Dependencies)
+### Version Compatibility
 
-**CUDA Version Requirement:** CUDA 6.0+ (cudaDeviceCanAccessPeer), fully compatible with CUDA 17.
+**Recommended: NCCL 2.25+ (bundled with CUDA 20)**
 
-These are native CUDA Runtime APIs, no extra libraries or daemons needed.
+| NCCL Version | CUDA Support | Key Features for Nova |
+|--------------|--------------|----------------------|
+| **2.25+** | CUDA 12.0-20 | `ncclCommInitRankConfig`, communicator split/shrink, async error handling |
+| 2.22-2.24 | CUDA 11.8-12.x | Good for transition, basic collectives |
+| 2.18-2.21 | CUDA 11.x | Minimum viable for modern features |
 
-#### APIs to Add
+**CUDA Compatibility Matrix:**
 
-| API | Purpose | Docs |
-|-----|---------|------|
-| `cudaDeviceCanAccessPeer()` | Query if two devices can P2P access | Programming Guide 6.2.9.4 |
-| `cudaEnablePeerAccess()` | Enable P2P memory access between devices | Programming Guide 6.2.9.4 |
-| `cudaDisablePeerAccess()` | Disable P2P access | Programming Guide 6.2.9.4 |
-| `cudaMemcpyAsync()` peer variant | Direct GPU-to-GPU copy | Programming Guide 6.2.9.5 |
-| `cudaIpcGetMemHandle()` | Export memory for cross-process sharing | Programming Guide 15.11 |
-| `cudaIpcOpenMemHandle()` | Import shared memory handle | Programming Guide 15.11 |
+| CUDA Version | NCCL 2.25 | NCCL 2.30 |
+|--------------|-----------|-----------|
+| CUDA 12.x | Supported | Supported |
+| CUDA 17+ | Supported | Supported |
+| SM 90 (H100) | Supported | Supported |
+| SM 100 (B100/B200) | Supported | Supported |
 
-#### Integration with Existing Layers
+**Source:** [NCCL 2.30 Documentation](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/)
 
-Fits cleanly into the existing `device` layer as a new `DeviceMesh` class:
-
-```cpp
-// New: include/cuda/device/device_mesh.h
-// Fits existing namespace: cuda::device
-
-class DeviceMesh {
-public:
-    struct PeerInfo {
-        int device_id;
-        bool can_access_peer;
-        int access_direction;  // 0=none, 1=to, 2=from, 3=bidirectional
-    };
-
-    // Detects all GPUs and builds peer access graph
-    static std::vector<PeerInfo> detect_mesh();
-    
-    // Enable P2P access for all mutually-accessible device pairs
-    static void enable_peer_access();
-    
-    // Check if two specific devices can P2P
-    static bool can_access(int src_device, int dst_device);
-};
-```
-
-**Integration point with existing stream layer:** The existing `cuda::async::StreamManager` can spawn per-device streams. After enabling peer access, the existing `cudaStream_t` handles can be used for `cudaMemcpyAsync` peer copies — no changes to the stream abstraction needed.
-
-**Existing error handling:** Extend `cuda/device/error.h` with a `CUDA_PEER_CHECK` macro mirroring the existing `CUDA_CHECK`.
-
-#### What This Enables
-
-- MGPU-01: Device mesh detection and peer memory access
-- MGPU-03: Peer-aware memory pool allocation (allocate on device with most free memory)
-- The foundation for all multi-GPU communication
-
-### Tier 2: Stream-Ordered Memory Allocator (CUDA Native)
-
-**CUDA Version Requirement:** CUDA 11.2+ for `cudaMallocAsync` / `cudaMemPool_t`
-
-No new dependencies. The existing `MemoryPool` class (`include/cuda/memory/memory_pool.h`) wraps CUDA device memory, not stream-ordered allocator. A separate `DistributedMemoryPool` layer is needed for multi-GPU.
-
-#### Key APIs
-
-| API | Purpose | Docs |
-|-----|---------|------|
-| `cudaMallocAsync()` | Stream-ordered allocation | Programming Guide 15.3 |
-| `cudaFreeAsync()` | Stream-ordered deallocation | Programming Guide 15.3 |
-| `cudaMemPoolSetAccess()` | Set device accessibility for pool | Programming Guide 15.10 |
-| `cudaMemPoolGetAccess()` | Query device access to a pool | Programming Guide 15.10 |
-| `cudaMemPoolExportToShareableHandle()` | Export pool for IPC | Programming Guide 15.11.1 |
-| `cudaMemPoolImportFromShareableHandle()` | Import shared pool | Programming Guide 15.11.2 |
-| `cudaMemPoolSetAttribute()` | Configure reuse policies | Programming Guide 15.9 |
-
-#### New Layer: Multi-GPU Memory Pool
+### NCCL Header Integration
 
 ```cpp
-// New: include/cuda/memory/distributed_memory_pool.h
-// Fits existing memory layer namespace: cuda::memory
+// include/cuda/collective/nccl_context.h
+#include <nccl.h>
+#include <cuda_runtime.h>
+#include <mutex>
+#include <vector>
+#include <optional>
 
-class DistributedMemoryPool {
+namespace cuda::collective {
+
+// NCCL-specific error checking
+#define NCCL_CHECK(call) \
+  do { \
+    ncclResult_t err = call; \
+    if (err != ncclSuccess) { \
+      throw NcclException( \
+        ncclGetErrorString(err), \
+        err, \
+        #call, \
+        __FILE__, \
+        __LINE__ \
+      ); \
+    } \
+  } while (0)
+
+// Exception for NCCL errors
+class NcclException : public std::runtime_error {
 public:
-    struct Config {
-        size_t block_size = 1 << 20;
-        size_t max_blocks_per_device = 16;
-        bool enable_peer_access = true;
-        bool share_across_devices = true;  // via cudaMemPoolSetAccess
-    };
-
-    // Initialize pools on all detected GPUs
-    void initialize(const Config& config);
-    
-    // Allocate on specific device
-    void* allocate(size_t bytes, int device_id, int stream_id = -1);
-    
-    // Allocate on device with most available memory
-    void* allocate_auto(size_t bytes, int stream_id = -1);
-    
-    // Per-device pool metrics
-    struct DevicePoolMetrics {
-        int device_id;
-        size_t allocated_bytes;
-        size_t available_bytes;
-        PoolMetrics local_pool;
-    };
-    std::vector<DevicePoolMetrics> get_all_metrics() const;
+  ncclResult_t error_code;
+  const char* expression;
+  const char* file;
+  int line;
+  
+  NcclException(const char* msg, ncclResult_t code, 
+                const char* expr, const char* f, int l)
+    : std::runtime_error(msg), error_code(code), 
+      expression(expr), file(f), line(l) {}
 };
+
+// NCCL communicator wrapper
+class NcclContext {
+public:
+  // Singleton pattern for single-process multi-GPU
+  static NcclContext& instance() {
+    static NcclContext ctx;
+    return ctx;
+  }
+  
+  // Initialize communicators for specified devices
+  void initialize(const std::vector<int>& devices);
+  
+  // Get communicator for specific device rank
+  ncclComm_t comm(int rank) const { 
+    return communicators_.at(rank); 
+  }
+  
+  // Get rank count
+  int rank_count() const { return static_cast<int>(communicators_.size()); }
+  
+  // Cleanup - must be called before CUDA context destruction
+  void destroy();
+  
+  ~NcclContext() { destroy(); }
+
+private:
+  NcclContext() = default;
+  
+  std::vector<ncclComm_t> communicators_;
+  std::mutex init_mutex_;
+  bool initialized_ = false;
+};
+
+// Key collective operations wrapper
+class NcclCollectives {
+public:
+  explicit NcclCollectives(ncclComm_t comm) : comm_(comm) {}
+  
+  // AllReduce: sum across all ranks
+  void all_reduce(const void* sendbuff, void* recvbuff, size_t count,
+                  ncclDataType_t datatype, ncclRedOp_t op, 
+                  cudaStream_t stream) {
+    NCCL_CHECK(ncclAllReduce(sendbuff, recvbuff, count, datatype, 
+                             op, comm_, stream));
+  }
+  
+  // Broadcast: send from root to all
+  void broadcast(const void* sendbuff, void* recvbuff, size_t count,
+                 ncclDataType_t datatype, int root, cudaStream_t stream) {
+    NCCL_CHECK(ncclBroadcast(sendbuff, recvbuff, count, datatype,
+                             root, comm_, stream));
+  }
+  
+  // AllGather: gather from all, broadcast to all
+  void all_gather(const void* sendbuff, void* recvbuff, size_t sendcount,
+                  ncclDataType_t datatype, cudaStream_t stream) {
+    NCCL_CHECK(ncclAllGather(sendbuff, recvbuff, sendcount, datatype,
+                             comm_, stream));
+  }
+  
+  // ReduceScatter: reduce across all, scatter to ranks
+  void reduce_scatter(const void* sendbuff, void* recvbuff, size_t recvcount,
+                      ncclDataType_t datatype, ncclRedOp_t op, 
+                      cudaStream_t stream) {
+    NCCL_CHECK(ncclReduceScatter(sendbuff, recvbuff, recvcount, datatype,
+                                 op, comm_, stream));
+  }
+  
+  // Point-to-point send/recv
+  void send(const void* sendbuff, size_t count, ncclDataType_t datatype,
+            int peer, cudaStream_t stream) {
+    NCCL_CHECK(ncclSend(sendbuff, count, datatype, peer, comm_, stream));
+  }
+  
+  void recv(void* recvbuff, size_t count, ncclDataType_t datatype,
+            int peer, cudaStream_t stream) {
+    NCCL_CHECK(ncclRecv(recvbuff, count, datatype, peer, comm_, stream));
+  }
+
+private:
+  ncclComm_t comm_;
+};
+
+}  // namespace cuda::collective
 ```
 
-**Integration with existing layer:** The existing `MemoryPool` remains single-device. The new `DistributedMemoryPool` wraps per-device pools and exposes cross-device allocation. The existing `Buffer` and `unique_ptr` abstractions can be extended to support multi-device buffers.
+### Initialization Patterns
 
-**Integration with stream layer:** Stream-ordered allocation (`cudaMallocAsync`) uses the same `cudaStream_t` type as existing stream abstractions. Pass the stream from `cuda::async::StreamManager` directly.
-
-**Key insight:** Set `cudaMemPoolAttr` `crossDevice` to allow allocations from one device's pool to be accessible from another. This handles the "distributed memory pool" requirement without any new libraries.
-
-### Tier 3: NCCL — Only If Collectives Are Required
-
-**NCCL Version:** NCCL 2.25+ (current stable), bundled with CUDA 17 as `libnccl.so`
-
-**Dependency Decision: OPTIONAL, not required for v1.1 core.**
-
-#### When NCCL Is Required
-
-NCCL provides optimized implementations of:
-
-| Operation | Use Case |
-|-----------|----------|
-| `ncclAllReduce` | Distributed gradient reduction, distributed batch norm |
-| `ncclBroadcast` | Parameter broadcast, data parallel broadcast |
-| `ncclAllGather` | Multi-GPU model output gathering |
-| `ncclReduceScatter` | Ring-reduce patterns |
-| `ncclSend`/`ncclRecv` | Point-to-point tensor exchange |
-| `ncclGroupStart/End` | Batched collective launches |
-
-NCCL uses CUDA Graph node APIs internally (`ncclRedOpCreatePreMulSum`, etc.) and integrates with CUDA streams natively.
-
-#### When to Use NCCL vs. DIY
-
-| Approach | Best For | Not Best For |
-|----------|----------|--------------|
-| **DIY with P2P** | 2-GPU data parallelism, simple reduce | 4+ GPUs, complex topologies |
-| **NCCL** | 2-8 GPUs, all-reduce, broadcast, all-gather | Single GPU, trivial local-only |
-| **NVSHMEM** | GPU-initiated RDMA, InfiniBand, multi-node | Single-node, no InfiniBand |
-
-For MGPU-02 (multi-GPU data parallelism primitives) and MGPU-04 (multi-GPU matmul), NCCL is the industry-standard choice. However:
-
-1. **For v1.1 initial release:** Ship with DIY P2P-based collectives (simple ring all-reduce via `cudaMemcpyAsyncPeer`) as a proof of concept. This avoids adding NCCL as a hard dependency.
-2. **For v1.2:** Add NCCL as an optional dependency with a fallback to DIY implementations.
-
-#### NCCL Integration
+**Simple Initialization (Single Process, All GPUs):**
 
 ```cpp
-// New: include/cuda/collective/multi_gpu_collectives.h
-// New layer under algo: cuda::collective
-
-class NCCLComm {
-public:
-    static void initialize(int ndevices);
-    static void all_reduce(const void* send_buf, void* recv_buf, size_t count,
-                           ncclDataType_t dtype, ncclRedOp_t op, cudaStream_t stream);
-    static void broadcast(const void* send_buf, void* recv_buf, size_t count,
-                          int root, cudaStream_t stream);
-    // ... etc
-};
+// Single-threaded initialization using ncclCommInitAll
+void init_simple() {
+  int device_count;
+  CUDA_CHECK(cudaGetDeviceCount(&device_count));
+  
+  std::vector<int> devices(device_count);
+  std::iota(devices.begin(), devices.end(), 0);
+  
+  NcclContext::instance().initialize(devices);
+}
 ```
 
-**CMake integration:**
+**Advanced Initialization (With Config):**
+
+```cpp
+// Multi-process or custom topology using ncclCommInitRankConfig
+void init_advanced(const std::vector<int>& devices) {
+  ncclConfig_t config = NCCL_CONFIG_INITIALIZER;
+  config.blocking = 0;  // Non-blocking for async error handling
+  config.minCTAs = 1;
+  config.maxCTAs = 32;
+  config.commName = "nova_collective";
+  
+  ncclUniqueId unique_id;
+  NCCL_CHECK(ncclGetUniqueId(&unique_id));
+  
+  // In multi-process: broadcast unique_id to all ranks
+  // Here: single-process, ranks match device indices
+  
+  for (int rank = 0; rank < devices.size(); ++rank) {
+    CUDA_CHECK(cudaSetDevice(devices[rank]));
+    ncclComm_t comm;
+    NCCL_CHECK(ncclCommInitRankConfig(&comm, devices.size(), 
+                                      unique_id, rank, &config));
+    // Store comm in context
+  }
+}
+```
+
+**Communicator Split (For Sub-Groups):**
+
+```cpp
+// Split communicator by "pipeline stage" for pipeline parallelism
+ncclComm_t split_by_stage(ncclComm_t parent_comm, int color, int key) {
+  ncclConfig_t config = NCCL_CONFIG_INITIALIZER;
+  ncclComm_t new_comm;
+  
+  NCCL_CHECK(ncclCommSplit(parent_comm, color, key, &new_comm, &config));
+  return new_comm;
+}
+```
+
+### CMake Integration
 
 ```cmake
-# In CMakeLists.txt, add as optional:
-find_library(NCCL_LIBRARY NAMES nccl)
-if(NCCL_LIBRARY)
-    set(NCCL_FOUND TRUE)
-    set(NCCL_INCLUDE_DIRS ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}/nccl)
+# In CMakeLists.txt
+find_package(NCCL 2.25 QUIET)
+if(NCCL_FOUND)
+  message(STATUS "NCCL ${NCCL_VERSION} found")
+  
+  # NCCL include path (often in CUDA toolkit)
+  set(NCCL_INCLUDE_DIRS 
+    ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}/nccl
+    CACHE PATH "NCCL include directories")
+  
+  # Create imported target
+  add_library(NCCL::nccl SHARED IMPORTED)
+  set_target_properties(NCCL::nccl PROPERTIES
+    IMPORTED_LOCATION ${NCCL_LIBRARY}
+    INTERFACE_INCLUDE_DIRECTORIES "${NCCL_INCLUDE_DIRS}")
+  
+  set(NOVA_NCCL_ENABLED TRUE)
 else()
-    message(STATUS "NCCL not found — multi-GPU collectives will use fallback P2P implementation")
-    set(NCCL_FOUND FALSE)
+  message(STATUS "NCCL not found — using P2P fallback")
+  set(NOVA_NCCL_ENABLED FALSE)
 endif()
-```
 
-**NCCL and existing stream layer:** NCCL collective calls take a `cudaStream_t` parameter. Pass streams directly from `cuda::async::StreamManager`. NCCL's internal CUDA Graph integration is transparent to the caller.
+# New collective library
+add_library(cuda_collective STATIC
+  ${CMAKE_SOURCE_DIR}/src/cuda/collective/nccl_ops.cu
+  ${CMAKE_SOURCE_DIR}/src/cuda/collective/nccl_context.cpp
+)
 
-### What NOT to Add
-
-| Technology | Why Avoid for v1.1 |
-|------------|-------------------|
-| **NVSHMEM** | Targets GPU-initiated RDMA over InfiniBand/NVLink fabric. For single-node with CUDA IPC transport, NVSHMEM adds unnecessary daemon dependency, InfiniBand hardware requirement, and complexity. Revisit only for multi-node. |
-| **CUDA MPS** | A system-level daemon for multi-process GPU sharing (e.g., MPI jobs). Not a library-level feature — it's a deployment configuration. The PROJECT.md explicitly says "single-node, not distributed multi-node." Not needed. |
-| **GDRCopy** | For direct GPU-to-network RDMA. Requires specific hardware and kernel modules. Out of scope. |
-| **UCX** | Communication framework for heterogeneous systems. Overkill for single-node multi-GPU with CUDA IPC. |
-
-## Recommended Stack Additions
-
-### New CMake Dependencies
-
-```cmake
-# CMakeLists.txt additions:
-
-# 1. Already present — no change needed:
-find_package(CUDAToolkit REQUIRED)
-
-# 2. Optional NCCL (deferred to v1.2):
-find_library(NCCL_LIBRARY NAMES nccl)
-if(NCCL_LIBRARY)
-    target_link_libraries(cuda_impl PUBLIC ${NCCL_LIBRARY})
-    target_compile_definitions(cuda_impl PUBLIC NOVA_NCCL_ENABLED=1)
-endif()
-```
-
-### New Directory Structure
-
-```
-include/cuda/
-  +-- device/
-  |     device_mesh.h          # NEW: DeviceMesh, peer detection
-  |     device_utils.h         # existing
-  +-- memory/
-  |     distributed_memory_pool.h  # NEW: Multi-GPU pool
-  |     memory_pool.h          # existing (single-device)
-  +-- collective/              # NEW: Optional collective ops
-        multi_gpu_collectives.h    # NCCL wrapper + P2P fallback
-        reduce.h                     # multi-GPU reduce
-        broadcast.h                  # multi-GPU broadcast
-
-src/cuda/
-  +-- device/
-  |     device_mesh.cu         # NEW
-  +-- collective/
-  |     collective_ops.cu      # NEW: P2P fallback implementations
-  |     nccl_ops.cu            # NEW: NCCL implementations (if enabled)
-```
-
-### New Targets in CMakeLists.txt
-
-```cmake
-set(MULTI_GPU_SOURCES
-    ${CMAKE_SOURCE_DIR}/src/cuda/device/device_mesh.cu
-    ${CMAKE_SOURCE_DIR}/src/cuda/collective/collective_ops.cu
+target_include_directories(cuda_collective PUBLIC
+  ${CMAKE_SOURCE_DIR}/include/cuda/collective
 )
 
 if(NCCL_FOUND)
-    list(APPEND MULTI_GPU_SOURCES
-        ${CMAKE_SOURCE_DIR}/src/cuda/collective/nccl_ops.cu
-    )
+  target_link_libraries(cuda_collective PUBLIC 
+    NCCL::nccl
+    CUDA::cudart
+  )
+  target_compile_definitions(cuda_collective PUBLIC NOVA_NCCL_ENABLED=1)
+else()
+  target_compile_definitions(cuda_collective PUBLIC NOVA_NCCL_ENABLED=0)
 endif()
 
-# Add to cuda_impl sources:
-set(ALL_CUDA_SOURCES
-    ${DEVICE_SOURCES}
-    ${ALGO_SOURCES}
-    # ... existing
-    ${MULTI_GPU_SOURCES}       # ADD THIS
+set_target_properties(cuda_collective PROPERTIES
+  CUDA_SEPARABLE_COMPILATION ON
+  POSITION_INDEPENDENT_CODE ON
 )
 ```
 
-## Integration Points with Existing Architecture
-
-### Layer: Device (MGPU-01: Device Mesh)
-
-The `DeviceMesh` class extends the existing `device` layer:
-
-```
-Existing: cuda::device namespace
-  - ReduceOp, warp_reduce, block_reduce
-  - Error handling (CUDA_CHECK, CudaException)
-
-New additions:
-  - DeviceMesh class: detect_mesh(), enable_peer_access(), can_access()
-  - Peer memory copy helpers
-```
-
-### Layer: Memory (MGPU-03: Distributed Memory Pool)
-
-The `DistributedMemoryPool` extends the existing `memory` layer:
-
-```
-Existing: cuda::memory namespace
-  - Buffer, unique_ptr, MemoryPool
-  - PoolMetrics, defragment()
-
-New additions:
-  - DistributedMemoryPool: per-device pools with cross-device visibility
-  - DevicePoolMetrics for per-GPU reporting
-  - Auto-allocation based on device memory availability
-```
-
-### Layer: Algo (MGPU-02, MGPU-04)
-
-New `cuda::collective` sub-namespace under `algo`:
-
-```
-Existing: cuda::algo namespace
-  - KernelLauncher, reduce()
-
-New additions:
-  - cuda::collective::multi_gpu_reduce (all-reduce, ring-reduce)
-  - cuda::collective::multi_gpu_broadcast
-  - cuda::collective::multi_gpu_all_gather
-  - cuda::collective::distributed_matmul (uses above primitives)
-```
-
-### Integration with Async/Stream Layer
-
-The existing `cuda::async::StreamManager` works unchanged. Multi-GPU operations accept `cudaStream_t`:
+### Data Types Mapping
 
 ```cpp
-// Existing API works as-is:
-auto stream = cuda::async::global_stream_manager().get_stream(0);
-
-// New multi-GPU ops accept the same stream:
-cuda::collective::all_reduce(send, recv, count, dtype, op, stream);
-distributed_pool.allocate(bytes, device_id, stream);  // stream optional
+// Map CUDA dtype to NCCL dtype
+ncclDataType_t to_nccl_dtype(cudaDataType_t cuda_dtype) {
+  switch (cuda_dtype) {
+    case CUDA_R_8I:   return ncclInt8;
+    case CUDA_R_32I:  return ncclInt32;
+    case CUDA_R_32F:  return ncclFloat32;
+    case CUDA_R_64F:  return ncclFloat64;
+    case CUDA_R_16F:  return ncclFloat16;
+    case CUDA_R_16BF: return ncclBfloat16;
+    // FP8 support (CUDA 11.8+, SM 90+)
+    case CUDA_R_8F_E4M3: return ncclFloat8e4m3;
+    case CUDA_R_8F_E5M2: return ncclFloat8e5m2;
+    default:          return ncclFloat32;
+  }
+}
 ```
 
-No changes to the stream abstraction layer are needed.
+---
 
-## Memory Pool Changes Summary
+## 2. Tensor Parallelism Implementation
 
-| Change | Location | What to Modify |
-|--------|----------|----------------|
-| Stream-ordered allocation | `memory/memory_pool.h` | Add `StreamOrderedPool` wrapper class |
-| Multi-device pool | New `memory/distributed_memory_pool.h` | New class, wraps per-device pools |
-| Peer-access config | `memory/buffer.h` | Add `device_id` field, peer-aware copy ctor |
-| Metrics extension | `memory/memory_pool.h` `PoolMetrics` | Add `device_id`, `peer_access_bytes` |
-| `unique_ptr` extension | `memory/unique_ptr.h` | Add `DeviceBuffer` variant with device_id |
+### Strategy Overview
 
-## Testing Implications
+**Recommendation: Custom implementation, NOT Megatron-LM integration**
 
-| New Component | Test Coverage Needed |
-|---------------|---------------------|
-| `DeviceMesh::detect_mesh()` | Test on 1, 2, 4, 8 GPU configurations |
-| `DeviceMesh::enable_peer_access()` | Test enable/disable cycles, error on unsupported P2P |
-| `DistributedMemoryPool` | Allocate from each device, cross-device access |
-| Collective ops | Numerical correctness vs. single-GPU reference |
-| Multi-GPU matmul | Accuracy vs. single-GPU matmul (existing tests) |
+| Approach | Pros | Cons |
+|----------|------|------|
+| **Custom Implementation** | Full control, no external dep, matches Nova API | More code to write |
+| **Megatron-LM Integration** | Battle-tested, optimized | Opinionated API, large dependency, overkill for single-node |
+| **DeepSpeed ZeRO** | Memory efficient | Designed for multi-node, complex integration |
 
-Existing 81+ tests should not regress. Multi-GPU tests require multi-GPU hardware — use Google Test's `TYPED_TEST` with a `__CUDA_ARCH__` or device-count skip.
+**Why Custom:**
+- Nova has existing matmul with cuBLAS handles — wrap, not replace
+- Single-node scope means simpler communication patterns (no network)
+- Tensor parallelism is additive to existing data parallelism
 
-## Source Confidence
+### Tensor Split Strategies
 
-| Technology | Confidence | Notes |
-|------------|------------|-------|
-| CUDA Peer APIs | HIGH | CUDA Programming Guide 6.2.9, 15.10-15.11 |
-| Stream-ordered allocator | HIGH | CUDA Programming Guide 15, available since CUDA 11.2 |
-| IPC Memory Pools | HIGH | CUDA Programming Guide 15.11 |
-| NCCL | MEDIUM | NVIDIA official docs; CNMEM-bundled with CUDA 17 |
-| DIY P2P collectives | MEDIUM | Standard ring-allreduce pattern, well-documented |
-| NVSHMEM exclusion | HIGH | Docs confirm hardware/transport requirements |
-| CUDA MPS exclusion | HIGH | Project constraint, single-node only |
+```cpp
+// include/cuda/distributed/tensor_parallel.h
+
+namespace cuda::distributed {
+
+enum class TensorParallelStrategy {
+  RowParallel,    // Split along rows (input dimension)
+  ColumnParallel, // Split along columns (output dimension)  
+  SequenceParallel // Split sequence dimension (for transformers)
+};
+
+// Configuration for tensor-parallel matmul
+struct TensorParallelConfig {
+  int num_stages = 1;  // Number of stages in pipeline parallel
+  int num_partitions = 1;  // Number of tensor partitions
+  TensorParallelStrategy strategy = TensorParallelStrategy::RowParallel;
+  bool reduce_output = true;  // All-reduce final result?
+};
+
+}  // namespace cuda::distributed
+```
+
+### Column-Parallel Matmul
+
+**Pattern:** Weight matrix W is column-partitioned across GPUs. Each GPU computes partial output columns.
+
+```
+GPU 0: W[:, 0:k/2] → Y[:, 0:k/2]
+GPU 1: W[:, k/2:k] → Y[:, k/2:k]
+
+Required: All-reduce at output to combine partial results
+```
+
+```cpp
+// Column-parallel: Y = X @ W, where W is column-partitioned
+template<typename T>
+void column_parallel_matmul(
+    const T* X,           // Full input [m, k]
+    const T* W_partial,   // Partitioned weight [k, n/num_gpus]
+    T* Y_partial,         // Partial output [m, n/num_gpus]
+    int m, int k, int n,
+    const TensorParallelConfig& config,
+    cudaStream_t stream
+) {
+  int num_gpus = config.num_partitions;
+  int rank = get_current_rank();
+  
+  // Each GPU does local matmul
+  cublasHandle_t handle = get_cublas_handle(rank);
+  int local_n = n / num_gpus;
+  
+  cuda::neural::matmul_impl(
+    X, W_partial, Y_partial,
+    m, local_n, k,
+    handle, stream
+  );
+  
+  // All-reduce to combine partial results
+  if (config.reduce_output) {
+    std::vector<T*> recv_buffers(num_gpus);
+    std::vector<cuda::memory::unique_ptr<T>> temp_buffers;
+    
+    for (int i = 0; i < num_gpus; ++i) {
+      temp_buffers.push_back(cuda::memory::make_unique<T>(m * local_n, rank));
+      recv_buffers[i] = temp_buffers[i].get();
+    }
+    
+    NCCL_CHECK(ncclAllReduce(
+      Y_partial, recv_buffers[rank],
+      m * local_n, to_nccl_dtype<T>(),
+      ncclSum, comm_, stream
+    ));
+    
+    // Copy result back
+    CUDA_CHECK(cudaMemcpyAsync(
+      Y_partial, recv_buffers[rank],
+      m * local_n * sizeof(T),
+      cudaMemcpyDeviceToDevice, stream
+    ));
+  }
+}
+```
+
+### Row-Parallel Matmul
+
+**Pattern:** Input matrix X is row-partitioned. Each GPU computes partial rows of output.
+
+```
+GPU 0: X[0:m/2, :] @ W → Y[0:m/2, :]
+GPU 1: X[m/2:m, :] @ W → Y[m/2:m, :]
+
+Required: All-gather before computation (each GPU needs full W)
+```
+
+```cpp
+// Row-parallel: Y = X @ W, where X is row-partitioned
+template<typename T>
+void row_parallel_matmul(
+    const T* X_partial,   // Partitioned input [m/num_gpus, k]
+    const T* W,           // Full weight [k, n]
+    T* Y_out,             // Output [m, n] (full)
+    int m, int k, int n,
+    const TensorParallelConfig& config,
+    cudaStream_t stream
+) {
+  int num_gpus = config.num_partitions;
+  int rank = get_current_rank();
+  int local_m = m / num_gpus;
+  
+  // All-gather to get full input on each GPU
+  std::vector<T> X_full(m * k);
+  std::vector<T*> recv_buffers(num_gpus);
+  for (int i = 0; i < num_gpus; ++i) {
+    recv_buffers[i] = X_full.data() + i * local_m * k;
+  }
+  
+  NCCL_CHECK(ncclAllGather(
+    X_partial, recv_buffers[rank],
+    local_m * k, to_nccl_dtype<T>(),
+    comm_, stream
+  ));
+  
+  // Wait for gather to complete
+  cudaStreamSynchronize(stream);
+  
+  // Local matmul with full X
+  cublasHandle_t handle = get_cublas_handle(rank);
+  T* local_output = Y_out + rank * local_m * n;
+  
+  cuda::neural::matmul_impl(
+    X_full.data(), W, local_output,
+    m, n, k, handle, stream
+  );
+}
+```
+
+### AllReduce Patterns for Tensor Parallelism
+
+```cpp
+// include/cuda/distributed/tensor_ops.h
+
+namespace cuda::distributed {
+
+// All-reduce for column-parallel outputs
+// Each GPU has [m, n/num_gpus] — combine to full [m, n]
+template<typename T>
+void all_reduce_column_output(
+    T* buffer,        // In/out: [m, n/num_gpus]
+    int m, int n,     // Local dimensions
+    int num_gpus,
+    ncclComm_t comm,
+    cudaStream_t stream
+) {
+  size_t local_count = m * n / num_gpus;
+  
+  NCCL_CHECK(ncclAllReduce(
+    buffer, buffer, local_count,
+    to_nccl_dtype<T>(), ncclSum,
+    comm, stream
+  ));
+}
+
+// All-gather for row-parallel inputs
+// Each GPU has [m/num_gpus, k] — gather to full [m, k]
+template<typename T>
+void all_gather_row_input(
+    const T* local_input,
+    T* full_output,   // [m, k]
+    int m, int k,
+    int num_gpus,
+    int rank,
+    ncclComm_t comm,
+    cudaStream_t stream
+) {
+  int local_m = m / num_gpus;
+  size_t send_count = local_m * k;
+  
+  std::vector<const T*> recv_buffers(num_gpus);
+  for (int i = 0; i < num_gpus; ++i) {
+    recv_buffers[i] = full_output + i * local_m * k;
+  }
+  
+  NCCL_CHECK(ncclAllGather(
+    local_input, recv_buffers[rank],
+    send_count, to_nccl_dtype<T>(),
+    comm, stream
+  ));
+}
+
+}  // namespace cuda::distributed
+```
+
+---
+
+## 3. Pipeline Parallelism Patterns
+
+### Strategy Comparison
+
+| Strategy | Throughput | Memory | Complexity | Best For |
+|----------|-----------|--------|------------|----------|
+| **GPipe** | High (with bubbles) | Moderate | Low | Simple implementation, large models |
+| **PipeDream** | Higher (1F1B) | Higher | Medium | Latency-sensitive training |
+| **PipeDream-2BW** | Higher | Lower | High | Memory-constrained scenarios |
+
+**Recommendation: GPipe-style with async micro-batch scheduling**
+
+- Simpler than PipeDream (no weight staleness tracking)
+- Effective throughput via large micro-batch sizes
+- Compatible with existing NCCL context
+
+### GPipe Implementation
+
+```cpp
+// include/cuda/distributed/pipeline.h
+
+namespace cuda::distributed {
+
+struct PipelineConfig {
+  int num_stages = 1;           // Number of pipeline stages (GPUs)
+  int num_micro_batches = 1;    // Number of micro-batches
+  int batch_size = 32;          // Global batch size
+  int micro_batch_size = 4;     // Size per micro-batch
+};
+
+enum class PipelineStage {
+  Forward,
+  Backward
+};
+
+// Pipeline context manages micro-batch scheduling
+class PipelineContext {
+public:
+  PipelineContext(int num_stages, int num_microbatches);
+  
+  // Get next micro-batch index and whether to do forward/backward
+  // Returns false when pipeline is complete
+  bool next_step(int* microbatch_idx, PipelineStage* stage);
+  
+  // Get which GPU owns this pipeline stage
+  int stage_owner(int stage) const { 
+    return stage % num_stages_; 
+  }
+  
+  // Check if current rank should execute this step
+  bool is_my_turn(int stage, int microbatch) const;
+  
+private:
+  int num_stages_;
+  int num_microbatches_;
+  int current_step_ = 0;
+};
+
+// GPipe barrier for pipeline stages
+void pipeline_barrier(int stage, ncclComm_t comm);
+
+// Forward pass for a micro-batch
+template<typename T>
+void forward_micro_batch(
+    const T* input,
+    T* output,
+    int microbatch_idx,
+    int stage,
+    cudaStream_t stream
+) {
+  // Execute layer(s) assigned to this stage
+  // For transformer: attention + FFN for middle stages
+  execute_stage_forward(input, output, stage, stream);
+}
+
+// Backward pass for a micro-batch  
+template<typename T>
+void backward_micro_batch(
+    const T* grad_output,
+    T* grad_input,
+    T* grad_weights,
+    int microbatch_idx,
+    int stage,
+    cudaStream_t stream
+) {
+  // Compute gradients through this stage
+  execute_stage_backward(grad_output, grad_input, grad_weights, 
+                         stage, stream);
+}
+
+}  // namespace cuda::distributed
+```
+
+### GPipe Scheduling (Interleaved)
+
+```cpp
+// src/cuda/distributed/pipeline.cpp
+
+namespace cuda::distributed {
+
+// Interleaved 1F1B scheduling
+// Reduces pipeline bubbles by overlapping forward/backward
+void run_interleaved_pipeline(
+    PipelineContext& ctx,
+    const std::vector<int>& devices,
+    std::function<void(int, cudaStream_t)>& forward_fn,
+    std::function<void(int, cudaStream_t)>& backward_fn
+) {
+  int num_stages = ctx.num_stages();
+  std::vector<cudaStream_t> streams(num_stages);
+  
+  // Create streams per stage
+  for (int i = 0; i < num_stages; ++i) {
+    CUDA_CHECK(cudaSetDevice(devices[i]));
+    CUDA_CHECK(cudaStreamCreate(&streams[i]));
+  }
+  
+  // Allocate activation/gradient buffers for each stage
+  std::vector<std::vector<void*>> activation_bufs(num_stages);
+  std::vector<std::vector<void*>> grad_bufs(num_stages);
+  
+  // Pipeline warmup: run forward passes
+  for (int b = 0; b < num_stages; ++b) {
+    int mb_idx, stage;
+    PipelineStage pstage;
+    if (ctx.next_step(&mb_idx, &pstage) && pstage == PipelineStage::Forward) {
+      forward_fn(mb_idx, streams[b]);
+    }
+  }
+  
+  // Steady state: 1F1B
+  bool done = false;
+  while (!done) {
+    done = true;
+    
+    for (int stage = 0; stage < num_stages; ++stage) {
+      int mb_idx, pstage_val;
+      PipelineStage pstage;
+      
+      if (ctx.next_step(&mb_idx, &pstage)) {
+        done = false;
+        
+        if (pstage == PipelineStage::Forward) {
+          forward_fn(mb_idx, streams[stage]);
+        } else {
+          backward_fn(mb_idx, streams[stage]);
+        }
+      }
+    }
+  }
+  
+  // Cleanup
+  for (auto& s : streams) {
+    cudaStreamDestroy(s);
+  }
+}
+
+}  // namespace cuda::distributed
+```
+
+### Integration with NCCL Communicator Split
+
+For multi-stage pipeline parallelism, split NCCL communicator:
+
+```cpp
+// Create pipeline-specific communicator group
+void init_pipeline_communicators(int num_stages) {
+  // Split by pipeline stage
+  for (int stage = 0; stage < num_stages; ++stage) {
+    ncclConfig_t config = NCCL_CONFIG_INITIALIZER;
+    
+    NCCL_CHECK(ncclCommSplit(
+      global_comm_,           // Parent communicator
+      stage,                  // Color = stage ID
+      stage,                  // Key = stage ID (preserve order)
+      &pipeline_comms_[stage],
+      &config
+    ));
+  }
+}
+```
+
+---
+
+## 4. Version Compatibility Matrix
+
+### NCCL + CUDA Version Requirements
+
+| NCCL | CUDA 12.x | CUDA 17+ | CUDA 20 | Notes |
+|------|-----------|----------|---------|-------|
+| **2.25** | Full | Full | Full | Recommended baseline |
+| **2.26** | Full | Full | Full | Bug fixes |
+| **2.27** | Full | Full | Full | Performance improvements |
+| **2.28** | Full | Full | Full | SHARP enhancements |
+| **2.29** | Full | Full | Full | New communicator APIs |
+| **2.30** | Full | Full | Full | Current latest, full support |
+
+### C++ Standard Compatibility
+
+| C++ Version | NCCL Headers | CUDA 20 | Nova Code |
+|-------------|--------------|---------|-----------|
+| C++17 | Supported | Supported | Not used |
+| **C++20** | Supported | Supported | `std::jthread`, concepts |
+| **C++23** | Supported | Supported | `std::expected`, constexpr |
+
+**NCCL Header C++ Compatibility:**
+```cpp
+// NCCL headers are C, but work with C++ compilers
+extern "C" {
+#include <nccl.h>
+}
+
+// Nova C++ wrappers use modern C++ features
+namespace cuda::collective {
+  using std::expected;  // C++23, use std::optional for C++20
+}
+```
+
+### NVLink / PCIe Detection
+
+```cpp
+// Utility to detect available bandwidth
+enum class LinkType {
+  NVLink,   // ~300 GB/s per link
+  PCIe,     // ~32 GB/s Gen4 x16
+  CPU,      // ~10 GB/s, host-mediated
+  None      // Not accessible
+};
+
+LinkType detect_link_type(int device_a, int device_b) {
+  // Check NVLink connections
+  int can_access;
+  CUDA_CHECK(cudaDeviceCanAccessPeer(&can_access, device_a, device_b));
+  
+  if (!can_access) return LinkType::None;
+  
+  // For detailed topology, use nvidia-smi or NVML
+  // nvmlDeviceGetCurrPcieLinkWidth() / nvmlDeviceGetPcieMaxLinkWidth()
+  
+  // Assume NVLink if peer access works (simplified)
+  // Real implementation: parse nvidia-smi topo output
+  return LinkType::NVLink;  // Conservative default
+}
+```
+
+---
+
+## 5. Integration with Existing Architecture
+
+### Updated Directory Structure
+
+```
+include/cuda/
+  collective/                   # NEW: NCCL integration
+  │   ├── nccl_context.h       # NCCL communicator management
+  │   ├── nccl_ops.h           # Collective operation wrappers
+  │   └── types.h              # NCCL type mappings
+  distributed/
+  │   ├── tensor_parallel.h    # ENHANCED: Full TP implementation
+  │   ├── pipeline.h           # NEW: Pipeline parallelism
+  │   └── common.h             # ENHANCED: Shared utilities
+
+src/cuda/
+  collective/
+  │   ├── nccl_context.cpp     # NCCL init/fini
+  │   └── nccl_ops.cu          # NCCL kernels
+  distributed/
+  │   ├── tensor_ops.cu        # Split strategies
+  │   └── pipeline.cu          # Pipeline scheduling
+```
+
+### CMake Integration Points
+
+```cmake
+# Extend existing cuda_multigpu with new components
+target_sources(cuda_multigpu PRIVATE
+  ${CMAKE_SOURCE_DIR}/src/cuda/collective/nccl_context.cpp
+  ${CMAKE_SOURCE_DIR}/src/cuda/collective/nccl_ops.cu
+  ${CMAKE_SOURCE_DIR}/src/cuda/distributed/tensor_ops.cu
+  ${CMAKE_SOURCE_DIR}/src/cuda/distributed/pipeline.cu
+)
+
+if(NCCL_FOUND)
+  target_link_libraries(cuda_multigpu PUBLIC NCCL::nccl)
+endif()
+```
+
+### API Extensions
+
+```cpp
+// Extended DistributedMatmulOptions
+struct DistributedMatmulOptions {
+  enum class Strategy {
+    DataParallel,       // Row-partition input (existing)
+    TensorParallelCol,  // Column-partition weight (NEW)
+    TensorParallelRow,  // Row-partition input (NEW)
+    PipelineParallel    // Pipeline stages (NEW)
+  };
+  
+  Strategy strategy = Strategy::DataParallel;
+  int num_partitions = 1;
+  
+  // Pipeline-specific
+  int num_micro_batches = 1;
+  int micro_batch_size = 4;
+  
+  // Communication
+  bool use_nccl = true;  // vs P2P fallback
+  bool profile_comm = false;
+};
+```
+
+---
+
+## 6. What NOT to Add
+
+| Technology | Why Avoid | When to Revisit |
+|------------|-----------|-----------------|
+| **Megatron-LM** | Over-engineered for single-node, PyTorch-centric API, large dependency | Multi-node training requirement |
+| **DeepSpeed ZeRO** | Designed for multi-node, complex integration, state management overhead | Multi-node with memory constraints |
+| **Horovod** | MPI-based, designed for TensorFlow/PyTorch, unnecessary for single-node | Multi-node, multiple frameworks |
+| **NCCL persistent collectives** | Requires InfiniBand/nvlink fabric, complex setup | Production multi-node cluster |
+| **GDRCopy** | GPU-to-network RDMA, specific hardware | InfiniBand deployment |
+
+---
+
+## 7. Testing Strategy
+
+### NCCL-Specific Tests
+
+```cpp
+// test/collective/nccl_tests.cpp
+
+TEST(NcclContext, InitializeAllDevices) {
+  auto& ctx = NcclContext::instance();
+  ctx.initialize({0, 1});  // Or all available devices
+  
+  EXPECT_EQ(ctx.rank_count(), 2);
+  EXPECT_NO_THROW(ctx.comm(0));
+  EXPECT_NO_THROW(ctx.comm(1));
+}
+
+TEST(NcclCollectives, AllReduce) {
+  auto& ctx = NcclContext::instance();
+  NcclCollectives coll(ctx.comm(0));
+  
+  std::vector<float> send(1024, 1.0f);
+  std::vector<float> recv(1024, 0.0f);
+  
+  cuda::memory::unique_ptr<float> d_send = 
+    cuda::memory::make_device_unique<float>(1024);
+  cuda::memory::unique_ptr<float> d_recv = 
+    cuda::memory::make_device_unique<float>(1024);
+  
+  CUDA_CHECK(cudaMemcpy(d_send.get(), send.data(), 
+                        1024 * sizeof(float), cudaMemcpyHostToDevice));
+  
+  // This requires multi-GPU setup
+  if (ctx.rank_count() > 1) {
+    coll.all_reduce(d_send.get(), d_recv.get(), 1024,
+                    ncclFloat32, ncclSum, 0);
+    
+    CUDA_CHECK(cudaMemcpy(recv.data(), d_recv.get(),
+                          1024 * sizeof(float), cudaMemcpyDeviceToHost));
+    
+    EXPECT_EQ(recv[0], ctx.rank_count());  // Sum of 1s * num_ranks
+  }
+}
+
+TEST(TensorParallel, ColumnSplit) {
+  // Verify column-parallel produces same result as single-GPU
+  constexpr int M = 128, K = 256, N = 512;
+  
+  auto single_gpu = reference_matmul(M, K, N);  // Single GPU result
+  auto multi_gpu = column_parallel_matmul(M, K, N, 2);  // 2-GPU split
+  
+  ASSERT_NEAR(single_gpu.norm(), multi_gpu.norm(), 1e-3f);
+}
+```
+
+---
+
+## Sources
+
+### NCCL Documentation (HIGH confidence)
+- [NCCL 2.30 API Reference](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/api/comms.html)
+- [NCCL Collective Operations](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/api/colls.html)
+- [NCCL Types and Data Types](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/api/types.html)
+- [CUDA Stream Semantics with NCCL](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/streams.html)
+
+### Tensor Parallelism (MEDIUM confidence)
+- Megatron-LM: Column-parallel and row-parallel linear layers
+- [NVIDIA Transformer Engine](https://github.com/NVIDIA/TransformerEngine) — TE has TP patterns
+- PyTorch DDP/FSDP patterns (for reference, not for integration)
+
+### Pipeline Parallelism (MEDIUM confidence)
+- [GPipe: Efficient Training of Giant Neural Networks via Pipeline Parallelism](https://arxiv.org/abs/1811.06965)
+- [PipeDream: Fast and Efficient Pipeline Parallel DNN Training](https://arxiv.org/abs/1806.03377)
+- DeepSpeed pipeline parallelism implementation
+
+---
+
+*Stack research for: Nova CUDA Library v1.2+ NCCL and Parallelism Support*
+*Researched: 2026-04-24*

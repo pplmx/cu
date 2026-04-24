@@ -1,169 +1,159 @@
-# Project Research Summary
+# Research Summary: Nova CUDA Library v1.3
 
-**Project:** Nova CUDA Library Enhancement — v1.1 Multi-GPU Support
-**Domain:** Single-node multi-GPU CUDA compute library
-**Researched:** 2026-04-24
-**Confidence:** HIGH
+**Project:** NCCL Integration, Tensor Parallelism, Pipeline Parallelism
+**Date:** 2026-04-24
+**Overall Confidence:** HIGH (NCCL docs), MEDIUM (TP/Pipeline patterns)
+
+---
 
 ## Executive Summary
 
-Multi-GPU support for the Nova CUDA library builds on three foundational tiers, each with increasing dependency complexity. The core insight from research: no new hard dependencies are required for foundational multi-GPU support. CUDA's native Peer Memory Access APIs (since CUDA 6.0) and Stream-Ordered Allocator with IPC pools (since CUDA 11.2) cover device mesh detection, peer memory access, and distributed memory pooling without any external libraries. NCCL is valuable for optimized collectives but is optional for v1.1 — a CUDA-native P2P fallback works for 2-4 GPU configurations.
+Nova v1.3 adds production-grade NCCL collective operations and distributed parallelism strategies for large model support. The core insight: NCCL provides hardware-aware communication (ring, tree, collnet) that automatically adapts to topology—a strict superset of existing P2P fallbacks. Key decisions: (1) NCCL 2.25+ with optional fallback, (2) custom tensor parallelism (avoid Megatron-LM/DeepSpeed complexity), (3) GPipe-style pipeline scheduling with 1F1B overlap.
 
-The implementation follows a strict layer ordering: device mesh → peer memory → collectives → distributed matmul. Each layer enables the next, and no layer requires features from later phases. The design is additive — all existing single-GPU code remains unchanged, and all multi-GPU operations integrate with the existing `cuda::async::StreamManager` without modifications.
+The most critical engineering challenge is async error handling. Unlike CUDA API calls that fail immediately, NCCL collective errors surface asynchronously via `ncclCommGetAsyncError()` and can corrupt communicators permanently if not handled defensively. This requires polling-based health checks instead of blocking waits on every collective operation.
 
-Critical pitfalls to address in each phase: peer access validation (Phase 1), cross-GPU synchronization deadlocks (Phase 2), distributed memory pool coherency (Phase 3), and tensor parallelism communication patterns (Phase 4). Single-GPU fallback testing is a cross-cutting concern tested throughout all phases.
+---
 
 ## Key Findings
 
-### Recommended Stack
+### From STACK.md
 
-**No new hard dependencies for v1.1.** CUDA-native APIs cover all foundational requirements.
+| Component | Recommendation | Rationale |
+|-----------|---------------|-----------|
+| **NCCL** | 2.25+ | CUDA 20 support, `ncclCommInitRankConfig`, `ncclCommSplit`, async error handling |
+| **Tensor Parallelism** | Custom implementation | Megatron-LM too opinionated; single-node scope simplifies communication |
+| **Pipeline Parallelism** | GPipe-style with async micro-batching | Simpler than PipeDream, effective throughput via micro-batching |
+| **Avoid** | DeepSpeed, Megatron-LM integration | Over-engineered for single-node, large dependencies |
 
-**Core technologies (no new deps):**
-- `cudaDeviceCanAccessPeer()` — peer capability queries (CUDA 6.0+)
-- `cudaMemcpyAsync()` peer variant — direct GPU-to-GPU copy
-- `cudaMemPool_t` with `cudaMemPoolSetAccess` — cross-device memory pool (CUDA 11.2+)
-- P2P ring-allreduce as fallback for collectives (no NCCL required)
+**Key APIs:** `ncclCommInitRank`, `ncclCommSplit`, `ncclGroupStart/End`, `ncclCommGetAsyncError`
 
-**Optional (v1.2+):**
-- NCCL 2.25+ — optimized collectives for 4+ GPUs, NVLink-aware communication
+### From FEATURES.md
 
-**Explicitly excluded for single-node scope:**
-- NVSHMEM — targets InfiniBand/RDMA fabric, overkill for CUDA IPC
-- CUDA MPS — system-level daemon for multi-process workloads, not library-level
-- GDRCopy — GPU-to-network RDMA, requires specific hardware
+**Table Stakes (implement first):**
+- NCCL communicator initialization via DeviceMesh
+- All-reduce, broadcast, barrier wrappers
+- Stream-based async collectives
+- Error handling with async error polling
 
-### Expected Features
+**Differentiators (implement second):**
+- Unified NCCL/CUDA fallback path
+- Automatic device mesh configuration derivation
+- Communicator caching
+- NVTX profiling integration
+- Multi-communicator support for TP+DP parallelism
 
-**Must have (table stakes — v1.1 deliverable):**
-- GPU enumeration and device mesh detection — users need to know what hardware exists
-- Peer access capability queries — foundation for all peer memory operations
-- Async peer-to-peer copy primitives — core data movement primitive
-- Multi-GPU reduce (all-reduce, reduce-scatter) — essential for gradient synchronization
-- Multi-GPU broadcast — required for weight synchronization
-- Multi-GPU all-gather — required for data parallel patterns
-- Distributed memory pool across GPUs — memory management for multi-device workloads
-- Multi-GPU matmul (row-wise split) — core v1.1 deliverable
+**Anti-features to never add:**
+- Hard NCCL dependency (always provide fallback)
+- Blocking operations without streams
+- Single-rank collective calls
 
-**Should have (v1.1 scope):**
-- Device mesh topology representation — enables optimal collective algorithm selection
-- Synchronization barriers — required for correctness in multi-GPU programs
-- Single-GPU fallback — all primitives must work on single-GPU systems
+### From ARCHITECTURE.md
 
-**Defer (v1.2+):**
-- Device mesh topology optimization — NVLink-aware scheduling
-- Tensor parallelism for very large layers — requires significant API design work
-- Pipeline parallelism — complex coordination, secondary priority
-- Distributed batch normalization — useful for deep learning, not core compute
-- NCCL as primary collective backend — implement DIY fallback first
+**Critical architectural decisions:**
 
-### Architecture Approach
+1. **Dependency injection over singleton for NcclContext** — Enables testing and explicit dependencies; provide `NcclContext::instance()` for convenience
+2. **Async collectives with explicit streams** — Pass `cudaStream_t` to all collective calls; never use `cudaStreamNull` in production
+3. **Extend DistributedMatmul with TP strategy** — Column-parallel for QKV projection, row-parallel for output projection
+4. **PipelineScheduler separates scheduling from computation** — Scheduling logic decoupled from layer execution
 
-The existing five-layer architecture extends to a six-layer model with one new layer inserted at 2.5:
-
+**New directory structure:**
 ```
-Layer 0: Device Abstraction (EXTENDED) — DeviceMesh, PeerCapabilityMap
-Layer 1: Memory Foundation (EXTENDED) — PeerAllocator, DistributedMemoryPool
-Layer 2: Device Kernels — unchanged
-Layer 2.5: Peer Transport (NEW) — PeerCopy, MeshBarrier
-Layer 3: Algorithm Wrappers — unchanged
-Layer 4: Distributed Operations (NEW) — DistributedReduce, DistributedBroadcast, DistributedMatmul
-Layer 5: High-Level Distributed API — cuda::distributed::reduce(), cuda::distributed::matmul()
+include/cuda/
+    nccl/                    # NEW: NCCL integration
+    tensor_parallel/         # NEW: TP implementation  
+    pipeline/                # NEW: Pipeline parallelism
+    distributed/             # EXTENDED: Add NCCL backend
 ```
 
-**New directories:**
-- `include/cuda/mesh/` — DeviceMesh, PeerCopy, MeshBarrier
-- `include/cuda/memory/` — PeerAllocator, DistributedMemoryPool (extends existing)
-- `include/cuda/distributed/` — DistributedReduce, DistributedBroadcast, DistributedMatmul
+### From PITFALLS.md
 
-**New CMake targets:** `cuda_mesh` (interface), `cuda_multigpu` (static library).
+**Top 5 pitfalls with prevention:**
 
-**Backward compatibility:** Additive design. No existing headers modified. All multi-GPU types in new namespaces. `cuda::distributed::*` is opt-in.
+| # | Pitfall | Prevention |
+|---|---------|------------|
+| 1 | **NCCL initialization failures** | Check `/dev/shm` size (require 512MB+), validate NCCL version, Docker: `--shm-size=1g` |
+| 2 | **TP memory explosions** | Profile memory per TP degree; replicated optimizer states = 2x model per GPU |
+| 3 | **Pipeline bubble overhead** | Balance stage compute within 10%; M >= 4*K microbatches for <10% bubbles |
+| 4 | **Cross-collective deadlocks** | Single-threaded dispatch or `NCCL_LAUNCH_ORDER_IMPLICIT=1` |
+| 5 | **NCCL timeout hangs** | Never use bare `cudaStreamSynchronize`; poll `ncclCommGetAsyncError()` |
 
-### Critical Pitfalls
+**Integration gotchas:**
+- cuFFT/cuBLAS version must match NCCL build
+- Default stream (`cudaStreamLegacy`) serializes incorrectly with NCCL
+- P2P and NCCL cannot coexist on same peer pair
+- CUDA Graphs + multiple communicators deadlock
 
-1. **Peer access without validation** — Always check `cudaDeviceCanAccessPeer()` before enabling. Crash on single-GPU systems and unsupported PCIe topologies.
-2. **Memory consistency across GPUs** — Stream dependencies are NOT sufficient for cross-GPU consistency. Use explicit events.
-3. **Synchronization deadlocks** — Circular dependencies cause hangs. Design as DAGs.
-4. **Single-GPU fallback broken** — Test on single-GPU CI runners. Design single-GPU fast path.
-5. **Tensor parallelism communication** — Column-parallel needs all-reduce after matmul. Row-parallel needs all-gather before. Easy to get backwards.
-6. **NCCL initialization races** — Mutex-protected singleton pattern, destroy before CUDA context cleanup.
-7. **Distributed memory pool coherency** — Track which device owns which memory. Prevent double-free.
-8. **Stream per device scope** — Streams are device-local. Maintain one stream per device.
+---
 
 ## Implications for Roadmap
 
-Based on research, four phases are recommended:
+### Recommended Phase Structure
 
-### Phase 1: Device Mesh Detection (MGPU-01)
-**Rationale:** Foundation for all multi-GPU work. Must be implemented before any peer communication.
-**Delivers:** `DeviceMesh` singleton, `PeerCapabilityMap`, `ScopedDevice` RAII guard, async peer copy primitive.
-**Addresses:** PITFALL-1 (peer validation), PITFALL-6 (single-GPU fallback), PITFALL-8 (stream per device).
-**Builds on:** Existing `cuda::performance::DeviceInfo`.
+**Phase 1: Foundation (NCCL Integration Basics)**
+- NCCL library detection and CMake integration
+- `NcclContext` with dependency injection pattern
+- Basic communicator initialization via DeviceMesh
+- **Pitfalls to avoid:** Shared memory exhaustion, version mismatch
 
-### Phase 2: Multi-GPU Data Parallelism Primitives (MGPU-02)
-**Rationale:** Collectives are required for multi-GPU matmul and gradient synchronization. Build P2P fallback first, add NCCL in v1.2.
-**Delivers:** `DistributedReduce` (ring all-reduce), `DistributedBroadcast`, `DistributedAllGather`, `MeshBarrier`.
-**Addresses:** PITFALL-3 (deadlocks), PITFALL-5 (NCCL races).
-**Uses:** `PeerCopy` from Phase 1.
+**Phase 2: Core Collectives (AllReduce, Broadcast, Barrier)**
+- Stream-based all-reduce replacing ring-allreduce
+- Broadcast wrapper for weight synchronization
+- Barrier implementation
+- Async error polling infrastructure (`safe_nccl_call`)
+- **Pitfalls to avoid:** Cross-collective deadlocks, timeout hangs
 
-### Phase 3: Distributed Memory Pool (MGPU-03)
-**Rationale:** Memory management must support multi-device workloads. Extends existing pool pattern.
-**Delivers:** `DistributedMemoryPool`, per-device pool coordination, cross-device allocation tracking.
-**Addresses:** PITFALL-9 (pool coherency).
-**Uses:** Phase 1 device mesh.
+**Phase 3: Extended Collectives (AllGather, ReduceScatter, Group Ops)**
+- All-gather for row-parallel activation gathering
+- Reduce-scatter for alternative gradient aggregation
+- Group operations (`ncclGroupStart/End`) for batching
+- Unified NCCL/legacy fallback path
+- **Pitfalls to avoid:** Single-rank collective calls, blocking operations
 
-### Phase 4: Multi-GPU Matmul (MGPU-04)
-**Rationale:** Core v1.1 deliverable. Start with row-wise split (simplest).
-**Delivers:** `DistributedMatmul` with `ParallelismStrategy` enum, single-GPU fallback, row-partitioned matmul.
-**Addresses:** PITFALL-7 (tensor parallelism patterns).
-**Uses:** All prior phases.
+**Phase 4: Tensor Parallelism**
+- `TensorParallelMatmul` with column/row parallel strategies
+- `ColumnParallelLayer` (QKV projection pattern)
+- `RowParallelLayer` (output projection pattern)
+- Integration with existing `DistributedMatmul`
+- **Pitfalls to avoid:** Memory explosions from replicated optimizer states
 
-### Phase Ordering Rationale
-
-- Phase 1 must precede all others — device mesh is prerequisite to peer communication.
-- Phase 2 and 3 can proceed in parallel after Phase 1 — they use the same peer access foundation but don't depend on each other.
-- Phase 4 requires Phases 1, 2, and 3 — needs device mesh, collectives, and memory pool.
+**Phase 5: Pipeline Parallelism**
+- `PipelineScheduler` with 1F1B and interleaved schedules
+- P2P send/recv primitives for inter-stage communication
+- Activation buffer management with ping-pong overlap
+- Communicator splitting via `ncclCommSplit`
+- **Pitfalls to avoid:** Unbalanced stage compute, bubble overhead
 
 ### Research Flags
 
-**Phases needing deeper research during planning:**
-- **Phase 2:** NCCL API surface design — which NCCL calls to wrap, how to expose both P2P fallback and NCCL backends
-- **Phase 4:** Row-wise vs column-wise split tradeoffs — which to implement first depends on target workload mix
+| Phase | Needs Deeper Research | Notes |
+|-------|----------------------|-------|
+| Phase 1 | NO | NCCL docs provide definitive patterns |
+| Phase 2 | NO | Error handling patterns well-documented |
+| Phase 3 | NO | Collective patterns standardized |
+| Phase 4 | MEDIUM | Memory profiling tooling needed |
+| Phase 5 | YES | Interleaved scheduling has implementation nuances |
 
-**Phases with standard patterns (skip research-phase):**
-- **Phase 1:** CUDA peer APIs are well-documented with clear error codes
-- **Phase 3:** Pool pattern already exists in codebase — extend, don't invent
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | CUDA native APIs are stable (CUDA 6.0-17+). NCCL exclusion validated. |
-| Features | HIGH | All features map to established CUDA/NCCL APIs. |
-| Architecture | HIGH | Additive design, existing patterns extended. |
-| Pitfalls | HIGH | Documented with prevention strategies. |
+| Stack | **HIGH** | Based on NVIDIA NCCL 2.30 documentation |
+| Features | **HIGH** | Direct API mapping, established ML patterns |
+| Architecture | **HIGH** | Megatron-LM patterns stable, well-documented |
+| Pitfalls | **HIGH** | Primary source is NVIDIA NCCL docs |
 
-**Overall confidence:** HIGH
-
-### Gaps to Address
-
-- **Multi-GPU matmul strategy:** Row-wise split confirmed as starting point. Tensor parallelism deferred to v1.2+.
-- **NCCL API choice:** v1.1 uses P2P fallback. NCCL integration in v1.2 needs decision on NCCL C API vs. wrapped communicator.
-- **Topology optimization:** Phase 1 covers basic topology detection. NVLink-aware scheduling is v1.2.
-
-## Sources
-
-### Primary (HIGH confidence)
-- NVIDIA CUDA C++ Programming Guide, Sections 6.2.9 (Multi-Device), 15 (Memory Allocator), 15.10-15.11 (IPC Pools)
-- NCCL 2.30 Documentation: Collectives, API Reference
-- Existing Nova codebase: `MemoryPool`, `StreamManager`, `DeviceInfo`, `Matmul` patterns
-
-### Secondary (MEDIUM confidence)
-- Community patterns for ring-allreduce P2P fallback
-- Phase-ordering from feature dependency analysis
+**Gaps to Address:**
+- Memory profiling infrastructure not yet built (needed for Phase 4)
+- P2P communication patterns for pipeline less standardized than collectives
+- Multi-communicator management edge cases with CUDA Graphs
 
 ---
 
-*Research completed: 2026-04-24*
-*Ready for roadmap: yes*
+## Sources
+
+- **NCCL 2.30 API:** NVIDIA NCCL Documentation (docs.nvidia.com/deeplearning/nccl)
+- **Tensor Parallelism:** Megatron-LM column/row parallel patterns, Transformer Engine
+- **Pipeline Parallelism:** GPipe, PipeDream papers; Megatron Core schedules
+- **Pitfalls:** NCCL Troubleshooting, GitHub issues #2117, #2119, #2106
