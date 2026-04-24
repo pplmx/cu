@@ -2,22 +2,24 @@
 gsd_state_version: 1.1
 milestone: v1.3
 milestone_name: NCCL Integration, Tensor & Pipeline Parallelism
-status: phase_complete
-last_updated: "2026-04-24T12:50:00.000Z"
+status: planned
+last_updated: "2026-04-24T13:00:00.000Z"
 progress:
   total_phases: 5
   completed_phases: 1
+  planned_phases: 1
   total_plans: 3
   completed_plans: 3
+  planned_plans: 3
   percent: 20
 milestone_complete: false
-current_phase: 13
+current_phase: 14
 ---
 
 # Project State
 
 **Project:** Nova CUDA Library Enhancement
-**Last Updated:** 2026-04-24
+**Last Updated:** 2026-04-24 (Phase 14 planned)
 
 ## Current Position
 
@@ -34,7 +36,7 @@ current_phase: 13
 | Phase | Status | Requirements | Commits |
 |-------|--------|--------------|---------|
 | 13: NCCL Foundation | ✅ **Complete** | NCCL-01 to NCCL-05 | 098fa79, ed9176d, b80a747 |
-| 14: Core Collectives | Pending | COLL-01 to COLL-05 | - |
+| 14: Core Collectives | Planning | COLL-01 to COLL-05 | - |
 | 15: Extended Collectives | Pending | EXTD-01 to EXTD-05 | - |
 | 16: Tensor Parallelism | Pending | TENS-01 to TENS-06 | - |
 | 17: Pipeline Parallelism | Pending | PIPE-01 to PIPE-06 | - |
@@ -78,7 +80,12 @@ Phase 13 completed with 3 plans:
 
 ## Next Action
 
-Execute Phase 14: Core Collectives for all-reduce, broadcast, all-gather implementations.
+Execute Phase 14: Core Collectives for all-reduce, broadcast, barrier implementations.
+
+Phase 14 planned with 3 plans:
+1. 14-01: NCCL AllReduce
+2. 14-02: NCCL Broadcast and Barrier
+3. 14-03: Integration and Tests
 
 ---
 
