@@ -70,6 +70,8 @@ set(CUDA_DISTRIBUTED_DIR ${CMAKE_SOURCE_DIR}/include/cuda/distributed)
 set(SRC_CUDA_DISTRIBUTED ${CMAKE_SOURCE_DIR}/src/cuda/distributed)
 set(CUDA_NCCL_DIR ${CMAKE_SOURCE_DIR}/include/cuda/nccl)
 set(SRC_CUDA_NCCL ${CMAKE_SOURCE_DIR}/src/cuda/nccl)
+set(CUDA_PIPELINE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/pipeline)
+set(SRC_CUDA_PIPELINE ${CMAKE_SOURCE_DIR}/src/cuda/pipeline)
 
 add_library(cuda_memory INTERFACE)
 target_include_directories(cuda_memory INTERFACE
@@ -195,6 +197,14 @@ set(NCCL_SOURCES
         ${SRC_CUDA_NCCL}/nccl_ops.cpp
 )
 
+set(PIPELINE_SOURCES
+        ${SRC_CUDA_PIPELINE}/pipeline_scheduler.cpp
+        ${SRC_CUDA_PIPELINE}/p2p_primitives.cpp
+        ${SRC_CUDA_PIPELINE}/activation_buffer.cpp
+        ${SRC_CUDA_PIPELINE}/pipeline_comm.cpp
+        ${SRC_CUDA_PIPELINE}/stage_balance.cpp
+)
+
 set(DISTRIBUTED_SOURCES
         ${SRC_CUDA_DISTRIBUTED}/common.cu
         ${SRC_CUDA_DISTRIBUTED}/reduce.cu
@@ -219,6 +229,7 @@ set(ALL_CUDA_SOURCES
         ${NEURAL_SOURCES}
         ${MESH_SOURCES}
         ${NCCL_SOURCES}
+        ${PIPELINE_SOURCES}
         ${DISTRIBUTED_SOURCES}
 )
 

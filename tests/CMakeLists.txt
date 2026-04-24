@@ -53,6 +53,7 @@ add_executable(nova-tests
     distributed/distributed_ops_test.cu
     distributed/distributed_pool_test.cu
     distributed/distributed_matmul_test.cu
+    pipeline/pipeline_test.cpp
 )
 
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)
@@ -68,6 +69,7 @@ set(CUDA_GRAPH_DIR ${CMAKE_SOURCE_DIR}/include/cuda/graph)
 set(CUDA_NEURAL_DIR ${CMAKE_SOURCE_DIR}/include/cuda/neural)
 set(CUDA_MESH_DIR ${CMAKE_SOURCE_DIR}/include/cuda/mesh)
 set(CUDA_NCCL_DIR ${CMAKE_SOURCE_DIR}/include/cuda/nccl)
+set(CUDA_PIPELINE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/pipeline)
 set(CUDA_DISTRIBUTED_DIR ${CMAKE_SOURCE_DIR}/include/cuda/distributed)
 set(DISTRIBUTED_TESTS_DIR ${CMAKE_SOURCE_DIR}/tests/distributed)
 
@@ -95,6 +97,7 @@ target_include_directories(nova-tests PRIVATE
     ${CUDA_NEURAL_DIR}
     ${CUDA_MESH_DIR}
     ${CUDA_NCCL_DIR}
+    ${CUDA_PIPELINE_DIR}
     ${CUDA_DISTRIBUTED_DIR}
     ${DISTRIBUTED_TESTS_DIR}
 )
