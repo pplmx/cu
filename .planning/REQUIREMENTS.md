@@ -1,70 +1,122 @@
-# Requirements: Nova CUDA Library
+# Requirements: Nova CUDA Library Enhancement
 
-**Last Updated:** 2026-04-24
-**Current Milestone:** v1.2 Complete
-**Next Milestone:** v1.3 Planning Needed
+**Defined:** 2026-04-24
+**Milestone:** v1.3 NCCL Integration, Tensor & Pipeline Parallelism
+**Core Value:** Enable efficient multi-GPU training with NCCL-based collectives, tensor parallelism for large layers, and pipeline parallelism for deep models.
 
-## Milestone Summary
+## v1 Requirements
 
-| Milestone | Status | Requirements | Notes |
-|-----------|--------|--------------|-------|
-| v1.0 Production Release | ✅ Shipped | 58 (PERF, BMCH, ASYNC, POOL, FFT, RAY, GRAPH, NN) | 2026-04-24 |
-| v1.1 Multi-GPU Support | ✅ Shipped | 13 (MGPU-01 to MGPU-13) | 2026-04-24 |
-| v1.2 Toolchain Upgrade | ✅ Shipped | 9 (TC-01 to TC-09) + 2 (TC-10, TC-11) | 2026-04-24 |
+Requirements for v1.3 milestone. Each maps to roadmap phases.
 
-See archived requirements in `.planning/milestones/` for full details.
+### NCCL Foundation (Phase 1)
 
----
+- [ ] **NCCL-01**: Library detection and version validation via CMake find module
+- [ ] **NCCL-02**: NcclContext with dependency injection pattern and DeviceMesh integration
+- [ ] **NCCL-03**: Communicator initialization and lifecycle management per device
+- [ ] **NCCL-04**: Shared memory validation (require 512MB+) with clear error messages
+- [ ] **NCCL-05**: Async error polling infrastructure with ncclCommGetAsyncError
 
-## v1.3 Candidates (Planning Needed)
+### Core Collectives (Phase 2)
 
-### NCCL Integration
+- [ ] **COLL-01**: Stream-based all-reduce replacing P2P ring-allreduce fallback
+- [ ] **COLL-02**: Broadcast wrapper for weight synchronization across devices
+- [ ] **COLL-03**: Barrier implementation for explicit synchronization points
+- [ ] **COLL-04**: Safe NCCL call wrapper with async error detection
+- [ ] **COLL-05**: Stream-ordered collectives passing cudaStream_t to all operations
 
-- [ ] **NCCL-01**: NCCL library detection and linking
-- [ ] **NCCL-02**: NCCL-based all-reduce (replaces P2P ring algorithm)
-- [ ] **NCCL-03**: NCCL-based broadcast and all-gather
-- [ ] **NCCL-04**: Multi-node NCCL communication (future)
+### Extended Collectives (Phase 3)
 
-### Tensor Parallelism
+- [ ] **EXTD-01**: All-gather for row-parallel activation gathering
+- [ ] **EXTD-02**: Reduce-scatter for alternative gradient aggregation
+- [ ] **EXTD-03**: Group operations with ncclGroupStart/End batching
+- [ ] **EXTD-04**: Unified NCCL/legacy fallback path for deployment flexibility
+- [ ] **EXTD-05**: Communicator caching for repeated collective operations
 
-- [ ] **TENS-01**: Column-parallel matmul with all-reduce
-- [ ] **TENS-02**: Row-parallel matmul with all-gather
-- [ ] **TENS-03**: Tensor parallelism utilities
+### Tensor Parallelism (Phase 4)
 
-### Pipeline Parallelism
+- [ ] **TENS-01**: TensorParallelMatmul with column-parallel strategy
+- [ ] **TENS-02**: TensorParallelMatmul with row-parallel strategy
+- [ ] **TENS-03**: ColumnParallelLayer for QKV projection pattern
+- [ ] **TENS-04**: RowParallelLayer for output projection pattern
+- [ ] **TENS-05**: Integration with existing DistributedMatmul infrastructure
+- [ ] **TENS-06**: Memory-aware TP degree selection with profiling
 
-- [ ] **PIPE-01**: Pipeline stage abstraction
-- [ ] **PIPE-02**: 1F1B (one-forward-one-backward) scheduling
-- [ ] **PIPE-03**: Micro-batch management
+### Pipeline Parallelism (Phase 5)
 
-### Additional
+- [ ] **PIPE-01**: PipelineScheduler with 1F1B schedule implementation
+- [ ] **PIPE-02**: P2P send/recv primitives for inter-stage communication
+- [ ] **PIPE-03**: Activation buffer management with ping-pong overlap
+- [ ] **PIPE-04**: Communicator splitting via ncclCommSplit for TP+DP
+- [ ] **PIPE-05**: Interleaved schedule option for reduced bubble overhead
+- [ ] **PIPE-06**: Stage balance validation within 10% compute variance
 
-- [ ] **DIST-01**: Distributed batch normalization
-- [ ] **TOPO-01**: NVLink-aware topology scheduling
+## v2 Requirements
 
----
+Deferred to future release.
+
+### Distributed Batch Normalization
+
+- **DBN-01**: Cross-GPU batch statistics aggregation
+- **DBN-02**: Distributed sync BatchNorm layer
+- **DBN-03**: Memory-efficient distributed BatchNorm with tensor parallelism
+
+### Multi-Node Support
+
+- **MULN-01**: MPI-based NCCL initialization for inter-node communication
+- **MULN-02**: Topology-aware collective selection across nodes
+- **MULN-03**: NCCL communicator across multiple nodes
 
 ## Out of Scope
 
-- Multi-node computation (multiple hosts, not just multiple GPUs)
-- Python bindings — separate project
-- CUDA MPS multi-process management — library feature, not deployment config
-- NVSHMEM — requires InfiniBand hardware, out of scope for single-node
+Explicitly excluded. Documented to prevent scope creep.
+
+| Feature | Reason |
+|---------|--------|
+| Hard NCCL dependency | Must preserve P2P fallback for environments without NCCL |
+| DeepSpeed integration | Over-engineered for single-node scope |
+| Megatron-LM integration | Too opinionated, single-node simplicity preferred |
+| FlashAttention integration | Sequence parallelism is separate concern |
+| NVSHMEM | Single-node scope, InfiniBand not required |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| NCCL-01 | Phase 1 | Pending |
+| NCCL-02 | Phase 1 | Pending |
+| NCCL-03 | Phase 1 | Pending |
+| NCCL-04 | Phase 1 | Pending |
+| NCCL-05 | Phase 1 | Pending |
+| COLL-01 | Phase 2 | Pending |
+| COLL-02 | Phase 2 | Pending |
+| COLL-03 | Phase 2 | Pending |
+| COLL-04 | Phase 2 | Pending |
+| COLL-05 | Phase 2 | Pending |
+| EXTD-01 | Phase 3 | Pending |
+| EXTD-02 | Phase 3 | Pending |
+| EXTD-03 | Phase 3 | Pending |
+| EXTD-04 | Phase 3 | Pending |
+| EXTD-05 | Phase 3 | Pending |
+| TENS-01 | Phase 4 | Pending |
+| TENS-02 | Phase 4 | Pending |
+| TENS-03 | Phase 4 | Pending |
+| TENS-04 | Phase 4 | Pending |
+| TENS-05 | Phase 4 | Pending |
+| TENS-06 | Phase 4 | Pending |
+| PIPE-01 | Phase 5 | Pending |
+| PIPE-02 | Phase 5 | Pending |
+| PIPE-03 | Phase 5 | Pending |
+| PIPE-04 | Phase 5 | Pending |
+| PIPE-05 | Phase 5 | Pending |
+| PIPE-06 | Phase 5 | Pending |
+
+**Coverage:**
+- v1 requirements: 26 total
+- Mapped to phases: 26
+- Unmapped: 0
 
 ---
-
-## Current Tech Stack
-
-- **C++ Standard:** C++23
-- **CUDA Standard:** CUDA 20
-- **CMake Version:** 4.0+
-- **Test Framework:** GoogleTest v1.17.0
-- **Test Count:** 444 tests passing
-
----
-
-Run `/gsd-new-milestone` to start v1.3 planning.
-
----
-
-*Requirements updated: 2026-04-24 after v1.2 milestone completion*
+*Requirements defined: 2026-04-24*
+*Last updated: 2026-04-24 after v1.3 requirements definition*
