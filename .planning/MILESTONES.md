@@ -25,3 +25,24 @@
 - Deep learning primitives (matmul, activations, normalization)
 
 ---
+
+## v1.1 Multi-GPU Support (Shipped: 2026-04-24)
+
+**Phases completed:** 4 phases, 4 plans, 13 requirements
+
+**Key accomplishments:**
+
+- **Phase 7: Device Mesh Detection** - DeviceMesh, PeerCapabilityMap, ScopedDevice, PeerCopy with 25 tests passing
+- **Phase 8: Multi-GPU Data Parallelism** - DistributedReduce, DistributedBroadcast, DistributedAllGather, MeshBarrier primitives
+- **Phase 9: Distributed Memory Pool** - Per-device pools with auto-allocation, ownership tracking, cross-device visibility
+- **Phase 10: Multi-GPU Matmul** - Row-wise split with single-GPU fallback, 11 tests passing
+
+**Requirements delivered:** 13 total (MGPU-01 to MGPU-13)
+
+**Core features implemented:**
+- Device mesh detection and peer memory access between GPUs
+- Multi-GPU collective operations (all-reduce, broadcast, all-gather, barrier)
+- Distributed memory pool spanning multiple GPUs
+- Multi-GPU matrix multiply with single-GPU fallback
+
+**Future roadmap:** v1.2 with NCCL integration, tensor parallelism, and pipeline parallelism
