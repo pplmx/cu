@@ -1,51 +1,50 @@
-# Requirements: Nova CUDA Library v1.1 — Multi-GPU Support
+# Requirements: Nova CUDA Library
 
-**Milestone:** v1.1 Multi-GPU Support
-**Created:** 2026-04-24
-**Requirements:** 12 total
+**Last Updated:** 2026-04-24
+**Current Milestone:** v1.2 Complete
+**Next Milestone:** v1.3 Planning Needed
 
-## v1.1 Requirements
+## Milestone Summary
 
-### MGPU-01: Device Mesh Detection
+| Milestone | Status | Requirements | Notes |
+|-----------|--------|--------------|-------|
+| v1.0 Production Release | ✅ Shipped | 58 (PERF, BMCH, ASYNC, POOL, FFT, RAY, GRAPH, NN) | 2026-04-24 |
+| v1.1 Multi-GPU Support | ✅ Shipped | 13 (MGPU-01 to MGPU-13) | 2026-04-24 |
+| v1.2 Toolchain Upgrade | ✅ Shipped | 9 (TC-01 to TC-09) + 2 (TC-10, TC-11) | 2026-04-24 |
 
-- [x] **MGPU-01**: Device can enumerate all available CUDA devices and query properties (memory, compute capability, clock rates)
-- [x] **MGPU-02**: Device can query peer access capability between all GPU pairs (cudaDeviceCanAccessPeer)
-- [x] **MGPU-03**: Device can build a peer access matrix and cache results for efficient lookup
-- [x] **MGPU-04**: Async peer-to-peer copy primitives work with existing StreamManager streams
-
-### MGPU-02: Multi-GPU Data Parallelism Primitives
-
-- [x] **MGPU-05**: Multi-GPU all-reduce (ring algorithm) works across 2+ GPUs with CUDA-native P2P fallback
-- [x] **MGPU-06**: Multi-GPU broadcast distributes data from one GPU to all others
-- [x] **MGPU-07**: Multi-GPU all-gather gathers data from all GPUs to all GPUs
-- [x] **MGPU-08**: Multi-GPU barrier synchronizes all devices before proceeding
-
-### MGPU-03: Distributed Memory Pool
-
-- [x] **MGPU-09**: Distributed memory pool maintains per-device pools with cross-device allocation visibility
-- [x] **MGPU-10**: Memory pool can allocate on a specific device or automatically select device with most available memory
-- [x] **MGPU-11**: Memory pool tracks which device owns which pointer for correct deallocation
-
-### MGPU-04: Multi-GPU Matmul
-
-- [x] **MGPU-12**: Row-wise split multi-GPU matmul produces numerically correct results matching single-GPU reference (within 1e-3 absolute error)
-- [x] **MGPU-13**: Multi-GPU matmul has single-GPU fallback that bypasses all multi-GPU code paths
+See archived requirements in `.planning/milestones/` for full details.
 
 ---
 
-## Future Requirements (Deferred)
+## v1.3 Candidates (Planning Needed)
 
-The following are identified but deferred to v1.2+:
+### NCCL Integration
 
-### v1.2 Candidates
+- [ ] **NCCL-01**: NCCL library detection and linking
+- [ ] **NCCL-02**: NCCL-based all-reduce (replaces P2P ring algorithm)
+- [ ] **NCCL-03**: NCCL-based broadcast and all-gather
+- [ ] **NCCL-04**: Multi-node NCCL communication (future)
 
-- Tensor parallelism for multi-GPU matmul (column-parallel with all-reduce output)
-- Pipeline parallelism for deep model layers
-- NCCL backend for optimized collectives (4+ GPUs, NVLink-aware)
-- Device mesh topology optimization (NVLink vs PCIe bandwidth-aware scheduling)
-- Distributed batch normalization across GPUs
+### Tensor Parallelism
 
-### Out of Scope
+- [ ] **TENS-01**: Column-parallel matmul with all-reduce
+- [ ] **TENS-02**: Row-parallel matmul with all-gather
+- [ ] **TENS-03**: Tensor parallelism utilities
+
+### Pipeline Parallelism
+
+- [ ] **PIPE-01**: Pipeline stage abstraction
+- [ ] **PIPE-02**: 1F1B (one-forward-one-backward) scheduling
+- [ ] **PIPE-03**: Micro-batch management
+
+### Additional
+
+- [ ] **DIST-01**: Distributed batch normalization
+- [ ] **TOPO-01**: NVLink-aware topology scheduling
+
+---
+
+## Out of Scope
 
 - Multi-node computation (multiple hosts, not just multiple GPUs)
 - Python bindings — separate project
@@ -54,24 +53,18 @@ The following are identified but deferred to v1.2+:
 
 ---
 
-## Traceability
+## Current Tech Stack
 
-| Requirement | Phase | Plan | Verified |
-|-------------|-------|------|----------|
-| MGPU-01 | Phase 7 | 07-01-PLAN.md | Yes (2026-04-24) |
-| MGPU-02 | Phase 7 | 07-01-PLAN.md | Yes (2026-04-24) |
-| MGPU-03 | Phase 7 | 07-01-PLAN.md | Yes (2026-04-24) |
-| MGPU-04 | Phase 7 | 07-01-PLAN.md | Yes (2026-04-24) |
-| MGPU-05 | Phase 8 | 08-01-PLAN.md | Yes (2026-04-24) |
-| MGPU-06 | Phase 8 | 08-01-PLAN.md | Yes (2026-04-24) |
-| MGPU-07 | Phase 8 | 08-01-PLAN.md | Yes (2026-04-24) |
-| MGPU-08 | Phase 8 | 08-01-PLAN.md | Yes (2026-04-24) |
-| MGPU-09 | Phase 9 | 09-01-PLAN.md | Yes (2026-04-24) |
-| MGPU-10 | Phase 9 | 09-01-PLAN.md | Yes (2026-04-24) |
-| MGPU-11 | Phase 9 | 09-01-PLAN.md | Yes (2026-04-24) |
-| MGPU-12 | Phase 10 | 10-01-PLAN.md | Yes (2026-04-24) |
-| MGPU-13 | Phase 10 | 10-01-PLAN.md | Yes (2026-04-24) |
+- **C++ Standard:** C++23
+- **CUDA Standard:** CUDA 20
+- **CMake Version:** 4.0+
+- **Test Framework:** GoogleTest v1.17.0
+- **Test Count:** 444 tests passing
 
 ---
 
-*Requirements created: 2026-04-24*
+Run `/gsd-new-milestone` to start v1.3 planning.
+
+---
+
+*Requirements updated: 2026-04-24 after v1.2 milestone completion*

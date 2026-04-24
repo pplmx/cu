@@ -45,4 +45,25 @@
 - Distributed memory pool spanning multiple GPUs
 - Multi-GPU matrix multiply with single-GPU fallback
 
-**Future roadmap:** v1.2 with NCCL integration, tensor parallelism, and pipeline parallelism
+**Next:** v1.2 Toolchain Upgrade (C++23, CUDA 20, CMake 4.0+)
+
+---
+
+## v1.2 Toolchain Upgrade (Shipped: 2026-04-24)
+
+**Phases completed:** 2 phases, 2 plans, 9 requirements
+
+**Key accomplishments:**
+
+- **Phase 11: Toolchain Analysis** - Compatibility audit for C++23, CUDA 20, CMake 4.0+
+- **Phase 12: Toolchain Upgrade** - CMakeLists.txt updates, 444 tests passing
+
+**Requirements delivered:** 9 total (TC-01 to TC-09)
+
+**Core features implemented:**
+- C++23 standard (CMAKE_CXX_STANDARD 23)
+- CUDA 20 standard (CMAKE_CUDA_STANDARD 20)
+- CMake 4.0+ minimum version
+- All 444 tests passing
+
+**Future roadmap:** v1.3 with NCCL integration, tensor parallelism, and pipeline parallelism

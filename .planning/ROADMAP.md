@@ -8,7 +8,7 @@
 
 - ✅ **v1.0 Production Release** — Phases 1-6 (shipped 2026-04-24)
 - ✅ **v1.1 Multi-GPU Support** — Phases 7-10 (shipped 2026-04-24)
-- 🚧 **v1.2** — Planning needed
+- ✅ **v1.2 Toolchain Upgrade** — Phases 11-12 (shipped 2026-04-24)
 
 ## Phase Progress
 
@@ -42,11 +42,23 @@ See `.planning/milestones/v1.1-ROADMAP.md` for full phase details.
 
 </details>
 
+<details>
+<summary>✅ v1.2 Toolchain Upgrade (Phases 11-12) — SHIPPED 2026-04-24</summary>
+
+| # | Phase | Goal | Requirements | Status |
+|---|-------|------|--------------|--------|
+| 11 | Toolchain Analysis | Audit current versions, plan upgrade path | TC-01 to TC-03 | ✅ Complete |
+| 12 | Toolchain Upgrade | Implement C++23, CUDA 20, CMake 4.0+ upgrades | TC-04 to TC-09 | ✅ Complete |
+
+See `.planning/milestones/v1.2-ROADMAP.md` for full phase details.
+
+</details>
+
 ---
 
-## Next Milestone (v1.2)
+## Next Milestone (v1.3)
 
-**Status:** Planning needed
+**Status:** Planning Needed
 
 **Candidate features:**
 - NCCL integration for optimized multi-GPU collectives
@@ -54,6 +66,8 @@ See `.planning/milestones/v1.1-ROADMAP.md` for full phase details.
 - Pipeline parallelism for deep model support
 - Distributed batch normalization
 - Device mesh topology optimization (NVLink-aware)
+
+Run `/gsd-new-milestone` to start planning v1.3.
 
 ---
 

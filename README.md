@@ -205,9 +205,9 @@ auto config = cuda::api::ReduceConfig::optimized_config();
 
 ## Requirements
 
-- CUDA Toolkit 12+
-- CMake 3.25+
-- C++20 compatible compiler
+- CUDA Toolkit 20+
+- CMake 4.0+
+- C++23 compatible compiler
 - CUDA-capable GPU
 
 ## License

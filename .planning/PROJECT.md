@@ -4,11 +4,11 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: v1.2 Planning Needed
+## Current Milestone: v1.3 Planning Needed
 
-**Previous milestone:** v1.1 Multi-GPU Support — COMPLETE
+**Previous milestone:** v1.2 Toolchain Upgrade — SHIPPED 2026-04-24
 
-**Next milestone:** v1.2 with NCCL integration, tensor parallelism, and pipeline parallelism
+**Next milestone:** v1.3 NCCL Integration, Tensor Parallelism, Pipeline Parallelism
 
 ## Core Value
 
@@ -34,9 +34,12 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 - ✓ Multi-GPU data parallelism primitives (reduce, broadcast, all-gather, barrier) — v1.1
 - ✓ Distributed memory pool across GPU devices — v1.1
 - ✓ Multi-GPU matmul with single-GPU fallback — v1.1
-- ✓ 418 tests passing — existing
+- ✓ C++23 standard (CMAKE_CXX_STANDARD 23) — v1.2
+- ✓ CUDA 20 standard (CMAKE_CUDA_STANDARD 20) — v1.2
+- ✓ CMake 4.0+ minimum version — v1.2
+- ✓ 444 tests passing — v1.2
 
-### Active (v1.2 Planning)
+### Deferrals from v1.2 (moved to v1.3)
 
 - [ ] NCCL integration for optimized multi-GPU collectives
 - [ ] Tensor parallelism for large layer support
@@ -52,11 +55,11 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 ## Context
 
 **Project:** nova CUDA library at `https://github.com/pplmx/nova`
-- C++20, CUDA 17, CMake 3.25+
+- **Current:** C++23, CUDA 20, CMake 4.0+
 - Target architectures: 6.0, 7.0, 8.0, 9.0 (Pascal through Ampere)
 - Five-layer architecture with clear separation of concerns
-- **418 tests using Google Test v1.14.0**
-- **v1.1 shipped:** Multi-GPU support with DeviceMesh, PeerCopy, DistributedReduce, DistributedMemoryPool, DistributedMatmul
+- **444 tests using Google Test v1.14.0**
+- **v1.2 shipped:** Toolchain upgrade (C++23, CUDA 20, CMake 4.0)
 
 **Current capabilities:**
 - Device mesh detection and peer memory access between GPUs
@@ -67,9 +70,9 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 
 ## Constraints
 
-- **Tech stack:** C++20, CUDA 17, CMake 3.25+ — must maintain compatibility
+- **Tech stack:** C++23, CUDA 20, CMake 4.0+ — current versions
 - **Backward compatibility:** Existing API must not break
-- **Testing:** All new code requires tests, maintain 80%+ coverage
+- **Testing:** All existing tests must pass after upgrade
 - **Performance:** New implementations must not regress existing algorithms
 
 ## Key Decisions
@@ -83,6 +86,9 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 | P2P ring-allreduce fallback | No NCCL dependency for v1.1 | ✓ Implemented |
 | Row-wise split matmul | Simple, builds on existing infrastructure | ✓ Implemented |
 | Device mesh singleton | Lazy initialization, single source of truth | ✓ Implemented |
+| C++23 adoption | std::expected, constexpr, ranges for modern patterns | ✓ v1.2 shipped |
+| CUDA 20 standard | Next-generation CUDA toolkit for new features | ✓ v1.2 shipped |
+| CMake 4.0+ | Modern CMake features and policy support | ✓ v1.2 shipped |
 
 ## Evolution
 
@@ -102,4 +108,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state (users, feedback, metrics)
 
 ---
-*Last updated: 2026-04-24 after v1.1 milestone completion*
+*Last updated: 2026-04-24 after v1.2 milestone completion*

@@ -23,14 +23,13 @@ clean:
 run: build
 	@./build/bin/$(APP_NAME)
 
-# run all tests
+# run all tests (parallel)
 test: build
-	@./build/bin/nova-tests
-	@./build/bin/test_patterns-tests
+	@ctest --test-dir build --parallel 4 --output-on-failure
 
 # run unit tests only
 test-unit: build
-	@./build/bin/nova-tests
+	@./build/bin/nova-tests --gtest_parallel_workers=4
 
 # run pattern tests only
 test-patterns: build
