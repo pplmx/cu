@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <numeric>
 
 #if NOVA_USE_ZSTD
 #include <zstd.h>
@@ -12,16 +13,21 @@
 
 namespace cuda::memory_opt {
 
+CheckpointCompressor::CheckpointCompressor()
+    : config_(), compression_ratio_(1.0f), total_original_bytes_(0), total_compressed_bytes_(0) {}
+
 CheckpointCompressor& CheckpointCompressor::instance() {
     static CheckpointCompressor compressor;
     return compressor;
 }
 
 void CheckpointCompressor::set_config(const CompressionConfig& config) {
+    std::lock_guard<std::mutex> lock(mutex_);
     config_ = config;
 }
 
 CompressionConfig CheckpointCompressor::get_config() const {
+    std::lock_guard<std::mutex> lock(mutex_);
     return config_;
 }
 
@@ -31,37 +37,61 @@ size_t CheckpointCompressor::compress(
     void* output,
     size_t output_capacity
 ) {
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        total_original_bytes_ += input_size;
+    }
+
     if (!config_.enable_compression || input_size < config_.min_size_for_compression) {
         if (input_size <= output_capacity) {
             memcpy(output, input, input_size);
+            {
+                std::lock_guard<std::mutex> lock(mutex_);
+                total_compressed_bytes_ += input_size;
+                compression_ratio_ = total_original_bytes_ > 0
+                    ? static_cast<float>(total_original_bytes_) / total_compressed_bytes_
+                    : 1.0f;
+            }
             return input_size;
         }
         return 0;
     }
 
+    size_t compressed_size = 0;
+
 #if NOVA_USE_ZSTD
-    size_t compressed_size = ZSTD_compress(
+    compressed_size = ZSTD_compress(
         output, output_capacity, input, input_size, config_.compression_level);
     if (ZSTD_isError(compressed_size)) {
         memcpy(output, input, std::min(input_size, output_capacity));
-        return std::min(input_size, output_capacity);
+        compressed_size = std::min(input_size, output_capacity);
     }
-    return compressed_size;
 #elif NOVA_USE_LZ4
-    int compressed_size = LZ4_compress_default(
+    int lz4_size = LZ4_compress_default(
         static_cast<const char*>(input),
         static_cast<char*>(output),
         static_cast<int>(input_size),
         static_cast<int>(output_capacity));
-    if (compressed_size == 0) {
+    if (lz4_size == 0) {
         memcpy(output, input, std::min(input_size, output_capacity));
-        return std::min(input_size, output_capacity);
+        compressed_size = std::min(input_size, output_capacity);
+    } else {
+        compressed_size = static_cast<size_t>(lz4_size);
     }
-    return compressed_size;
 #else
     memcpy(output, input, std::min(input_size, output_capacity));
-    return std::min(input_size, output_capacity);
+    compressed_size = std::min(input_size, output_capacity);
 #endif
+
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        total_compressed_bytes_ += compressed_size;
+        compression_ratio_ = total_original_bytes_ > 0
+            ? static_cast<float>(total_original_bytes_) / total_compressed_bytes_
+            : 1.0f;
+    }
+
+    return compressed_size;
 }
 
 size_t CheckpointCompressor::decompress(
@@ -93,6 +123,11 @@ size_t CheckpointCompressor::decompress(
     memcpy(output, input, std::min(input_size, output_capacity));
     return std::min(input_size, output_capacity);
 #endif
+}
+
+float CheckpointCompressor::get_average_compression_ratio() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return compression_ratio_;
 }
 
 GradientAccumulator::GradientAccumulator(int max_accumulation_steps)
@@ -273,6 +308,180 @@ void MemoryOptimizationManager::reset_stats() {
     total_compressed_bytes_ = 0;
     total_original_bytes_ = 0;
     num_defragmentations_ = 0;
+}
+
+AdaptiveMemoryPoolTuner::AdaptiveMemoryPoolTuner()
+    : config_(), adaptive_enabled_(true),
+      current_usage_(0), peak_usage_(0), num_failures_(0),
+      total_allocations_(0), total_deallocations_(0) {}
+
+AdaptiveMemoryPoolTuner& AdaptiveMemoryPoolTuner::instance() {
+    static AdaptiveMemoryPoolTuner tuner;
+    return tuner;
+}
+
+void AdaptiveMemoryPoolTuner::set_config(const PoolTuningConfig& config) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    config_ = config;
+}
+
+PoolTuningConfig AdaptiveMemoryPoolTuner::get_config() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return config_;
+}
+
+void AdaptiveMemoryPoolTuner::record_allocation(size_t bytes) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    total_allocations_++;
+    current_usage_ += bytes;
+    peak_usage_ = std::max(peak_usage_, current_usage_);
+    allocation_samples_.push_back(bytes);
+
+    if (allocation_samples_.size() > static_cast<size_t>(config_.samples_for_adaptation)) {
+        allocation_samples_.erase(allocation_samples_.begin());
+    }
+}
+
+void AdaptiveMemoryPoolTuner::record_deallocation(size_t bytes) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    total_deallocations_++;
+    current_usage_ = current_usage_ > bytes ? current_usage_ - bytes : 0;
+}
+
+void AdaptiveMemoryPoolTuner::record_allocation_failure() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    num_failures_++;
+}
+
+size_t AdaptiveMemoryPoolTuner::suggest_pool_size() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (!adaptive_enabled_) {
+        return config_.initial_pool_size;
+    }
+
+    size_t suggested = config_.initial_pool_size;
+    float avg_size = 0.0f;
+
+    if (!allocation_samples_.empty()) {
+        avg_size = static_cast<float>(
+            std::accumulate(allocation_samples_.begin(), allocation_samples_.end(), 0ULL)
+        ) / allocation_samples_.size();
+
+        suggested = static_cast<size_t>(avg_size * config_.samples_for_adaptation * 1.2f);
+    }
+
+    suggested = std::max(suggested, peak_usage_ * 2);
+    suggested = std::min(suggested, config_.max_pool_size);
+
+    return suggested;
+}
+
+bool AdaptiveMemoryPoolTuner::should_grow() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (!adaptive_enabled_) return false;
+    if (num_failures_ > 0) return true;
+
+    float utilization = static_cast<float>(current_usage_) / config_.initial_pool_size;
+    return utilization > 0.8f;
+}
+
+bool AdaptiveMemoryPoolTuner::should_shrink() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (!adaptive_enabled_) return false;
+    if (total_allocations_ < 10) return false;
+
+    float utilization = static_cast<float>(current_usage_) / config_.initial_pool_size;
+    return utilization < config_.shrink_threshold;
+}
+
+void AdaptiveMemoryPoolTuner::enable_adaptive_tuning() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    adaptive_enabled_ = true;
+}
+
+void AdaptiveMemoryPoolTuner::disable_adaptive_tuning() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    adaptive_enabled_ = false;
+}
+
+bool AdaptiveMemoryPoolTuner::is_adaptive_enabled() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return adaptive_enabled_;
+}
+
+WorkloadProfile AdaptiveMemoryPoolTuner::detect_workload_profile() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (allocation_samples_.empty()) {
+        return WorkloadProfile::Training;
+    }
+
+    float avg_size = static_cast<float>(
+        std::accumulate(allocation_samples_.begin(), allocation_samples_.end(), 0ULL)
+    ) / allocation_samples_.size();
+
+    if (avg_size > 100 * 1024 * 1024) {
+        return WorkloadProfile::LargeBatch;
+    } else if (avg_size < 10 * 1024 * 1024) {
+        return WorkloadProfile::Inference;
+    } else {
+        return WorkloadProfile::SmallBatch;
+    }
+}
+
+void AdaptiveMemoryPoolTuner::set_workload_profile(WorkloadProfile profile) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    config_.profile = profile;
+
+    switch (profile) {
+        case WorkloadProfile::SmallBatch:
+            config_.initial_pool_size = 256 * 1024 * 1024;
+            break;
+        case WorkloadProfile::LargeBatch:
+            config_.initial_pool_size = 1024 * 1024 * 1024;
+            break;
+        case WorkloadProfile::Inference:
+            config_.initial_pool_size = 128 * 1024 * 1024;
+            break;
+        case WorkloadProfile::Training:
+        default:
+            config_.initial_pool_size = 512 * 1024 * 1024;
+            break;
+    }
+}
+
+AdaptiveMemoryPoolTuner::TuningStats AdaptiveMemoryPoolTuner::get_stats() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    TuningStats stats;
+    stats.total_allocations = total_allocations_;
+    stats.total_deallocations = total_deallocations_;
+    stats.peak_usage = peak_usage_;
+    stats.current_usage = current_usage_;
+    stats.num_failures = num_failures_;
+    stats.detected_profile = detect_workload_profile();
+
+    if (!allocation_samples_.empty()) {
+        stats.average_allocation_size = static_cast<float>(
+            std::accumulate(allocation_samples_.begin(), allocation_samples_.end(), 0ULL)
+        ) / allocation_samples_.size();
+    }
+
+    return stats;
+}
+
+void AdaptiveMemoryPoolTuner::reset_stats() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    allocation_samples_.clear();
+    deallocation_samples_.clear();
+    current_usage_ = 0;
+    peak_usage_ = 0;
+    num_failures_ = 0;
+    total_allocations_ = 0;
+    total_deallocations_ = 0;
 }
 
 } // namespace cuda::memory_opt

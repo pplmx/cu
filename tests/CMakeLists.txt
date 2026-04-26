@@ -61,6 +61,7 @@ add_executable(nova-tests
     multinode/test_multi_node_context.cpp
     performance/profiler_test.cpp
     performance/autotuner_test.cu
+    memory_opt/memory_optimizer_test.cpp
 )
 
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)
