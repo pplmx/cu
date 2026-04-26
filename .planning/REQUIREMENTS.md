@@ -1,62 +1,54 @@
-# Nova v1.9 Documentation — Requirements
+# Requirements — v2.0 Testing & Quality
 
-**Milestone:** v1.9 Documentation
-**Status:** Draft
+## Active Requirements
 
-## Overview
+### Fuzz Testing
 
-This milestone adds comprehensive documentation to Nova:
+- [ ] **FUZZ-01**: User can run property-based fuzzing on memory pool operations
+- [ ] **FUZZ-02**: User can run property-based fuzzing on algorithm inputs (reduce, scan, sort)
+- [ ] **FUZZ-03**: User can run property-based fuzzing on matmul with varied tensor shapes
+- [ ] **FUZZ-04**: Fuzzing artifacts (corpus, crashes) are isolated in dedicated directories
 
-1. **API Reference** — Auto-generated documentation from source code
-2. **Tutorials** — Step-by-step guides for common use cases
-3. **Examples** — Sample code demonstrating key features
+### Property-Based Tests
 
-## Requirements
+- [ ] **PROP-01**: User can run property tests verifying mathematical invariants (e.g., matmul identity, FFT invertibility)
+- [ ] **PROP-02**: User can run property tests verifying algorithmic correctness (e.g., sort produces sorted output)
+- [ ] **PROP-03**: User can run property tests verifying numerical stability across precision modes
+- [ ] **PROP-04**: Property test results include seed for reproducibility
 
-### Phase 37: API Reference
+### Coverage Reports
 
-- [ ] **API-01**: Doxygen configuration generates HTML documentation from source code
-- [ ] **API-02**: All public headers have documented function signatures
-- [ ] **API-03**: Grouped documentation by module (memory, device, algo, api)
-- [ ] **API-04**: Cross-references link related functions and types
-
-### Phase 38: Tutorials
-
-- [ ] **TUT-01**: Quick start guide (5-minute to first CUDA program)
-- [ ] **TUT-02**: Multi-GPU tutorial with device mesh example
-- [ ] **TUT-03**: Checkpoint and restore tutorial
-- [ ] **TUT-04**: Performance profiling guide using benchmarks
-
-### Phase 39: Examples
-
-- [ ] **EX-01**: Image processing example with blur/sobel/morphology
-- [ ] **EX-02**: Graph algorithm example (BFS/PageRank)
-- [ ] **EX-03**: Neural net primitives example (matmul, softmax)
-- [ ] **EX-04**: Distributed training example with NCCL
+- [ ] **COVR-01**: User can generate HTML coverage report with line/branch coverage
+- [ ] **COVR-02**: User can identify untested code paths via coverage gap analysis
+- [ ] **COVR-03**: User can view per-module coverage breakdown
+- [ ] **COVR-04**: Coverage thresholds are enforced in CI (minimum 80% line coverage)
 
 ## Future Requirements (Deferred)
 
-- Interactive API playground
-- Video tutorials
-- Community-contributed examples
+*Property-based testing for graph algorithms and ray tracing primitives — depends on fuzzing infrastructure*
 
 ## Out of Scope
 
-| Feature | Reason |
-|---------|--------|
-| Python documentation | Separate project |
-| Video content | Requires different tooling |
-| Translated documentation | English-only for v1.9 |
+- Mutation testing — too expensive for CUDA kernels
+- Formal verification — separate effort
+- Code coverage for third-party dependencies (NCCL, MPI)
 
 ## Traceability
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| API-01 to API-04 | Phase 37 | — |
-| TUT-01 to TUT-04 | Phase 38 | — |
-| EX-01 to EX-04 | Phase 39 | — |
+| Phase | REQ-ID | Description | Status |
+|-------|--------|-------------|--------|
+| TBD | FUZZ-01 | Memory pool fuzzing | TBD |
+| TBD | FUZZ-02 | Algorithm fuzzing | TBD |
+| TBD | FUZZ-03 | Matmul fuzzing | TBD |
+| TBD | FUZZ-04 | Fuzzing artifact isolation | TBD |
+| TBD | PROP-01 | Mathematical invariants | TBD |
+| TBD | PROP-02 | Algorithmic correctness | TBD |
+| TBD | PROP-03 | Numerical stability | TBD |
+| TBD | PROP-04 | Reproducible seeds | TBD |
+| TBD | COVR-01 | HTML coverage report | TBD |
+| TBD | COVR-02 | Coverage gap analysis | TBD |
+| TBD | COVR-03 | Per-module breakdown | TBD |
+| TBD | COVR-04 | CI coverage gates | TBD |
 
 ---
-
-*Requirements defined: 2026-04-26*
-*Total: 12 requirements (API-01..API-04, TUT-01..TUT-04, EX-01..EX-04)*
+*Requirements defined: 2026-04-26 for v2.0 Testing & Quality*

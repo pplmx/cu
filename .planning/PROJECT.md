@@ -4,18 +4,18 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: v1.9 Documentation
+## Current Milestone: v2.0 Testing & Quality
 
-**Previous milestone:** v1.8 Developer Experience — SHIPPED 2026-04-26
+**Previous milestone:** v1.9 Documentation — SHIPPED 2026-04-26
 
 **Status:** Planning
 
-**Goal:** Comprehensive documentation including API reference, tutorials, and examples.
+**Goal:** Comprehensive testing and quality infrastructure with fuzz testing, property-based tests, and detailed coverage reports.
 
 **Target features:**
-- API Reference: Doxygen/Sphinx auto-generated documentation
-- Tutorials: Step-by-step guides for common use cases
-- Examples: Sample code demonstrating key features
+- Fuzz Testing: Property-based fuzzing to catch edge cases automatically
+- Property-Based Tests: QuickCheck-style tests that verify mathematical properties
+- Coverage Reports: HTML coverage reports, branch coverage, gap analysis
 
 ## Core Value
 
@@ -161,6 +161,9 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 | Error framework | std::error_code categories with recovery hints | ✓ v1.8 shipped |
 | CMake package | Config-file packages with exported targets | ✓ v1.8 shipped |
 | IDE support | .clangd, VS Code settings, compile_commands | ✓ v1.8 shipped |
+| Doxygen docs | HTML output with group definitions | ✓ v1.9 shipped |
+| Tutorial guides | Markdown docs covering quick start through profiling | ✓ v1.9 shipped |
+| Example programs | Runnable examples in examples/ directory | ✓ v1.9 shipped |
 
 ## Evolution
 
@@ -180,5 +183,5 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state (users, feedback, metrics)
 
 ---
-*Last updated: 2026-04-26 after v1.8 milestone complete*
-*Last updated: 2026-04-26 for v1.9 Documentation*
+*Last updated: 2026-04-26 after v1.9 Documentation complete*
+*Last updated: 2026-04-26 for v2.0 Testing & Quality*
