@@ -352,15 +352,17 @@ set(ERROR_SOURCES
 set(PERFORMANCE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/performance)
 set(SRC_CUDA_PERFORMANCE ${CMAKE_SOURCE_DIR}/src/cuda/performance)
 
-set(PROFILING_SOURCES
-        ${SRC_CUDA_PERFORMANCE}/profiler.cpp
-)
-
 set(FUSION_DIR ${CMAKE_SOURCE_DIR}/include/cuda/neural/fusion)
 set(SRC_CUDA_FUSION ${CMAKE_SOURCE_DIR}/src/cuda/neural/fusion)
 
 set(FUSION_SOURCES
         ${SRC_CUDA_FUSION}/kernel_fusion.cu
+        ${SRC_CUDA_FUSION}/fused_matmul_bias_act.cu
+)
+
+set(PERFORMANCE_SOURCES
+        ${SRC_CUDA_PERFORMANCE}/profiler.cpp
+        ${SRC_CUDA_PERFORMANCE}/autotuner.cpp
 )
 
 set(MEMORY_OPT_DIR ${CMAKE_SOURCE_DIR}/include/cuda/memory_opt)
@@ -387,7 +389,7 @@ set(ALL_CUDA_SOURCES
         ${NCCL_SOURCES}
         ${PIPELINE_SOURCES}
         ${DISTRIBUTED_SOURCES}
-        ${PROFILING_SOURCES}
+        ${PERFORMANCE_SOURCES}
         ${FUSION_SOURCES}
         ${MEMORY_OPT_SOURCES}
         ${ERROR_SOURCES}
