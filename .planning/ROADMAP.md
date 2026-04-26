@@ -1,557 +1,168 @@
-# Roadmap: Nova CUDA Library Enhancement
+# Roadmap: Nova CUDA Library — v1.7 Benchmarking & Testing
 
-**Created:** 2026-04-23
-**Updated:** 2026-04-26 (v1.5 added)
-**Granularity:** Standard
+**Milestone:** v1.7 Benchmarking & Testing
+**Created:** 2026-04-26
+**Total Phases:** 4 | **Total Requirements:** 27
 
-## Milestones
+## Phase Overview
 
-- ✅ **v1.0 Production Release** — Phases 1-6 (shipped 2026-04-24)
-- ✅ **v1.1 Multi-GPU Support** — Phases 7-10 (shipped 2026-04-24)
-- ✅ **v1.2 Toolchain Upgrade** — Phases 11-12 (shipped 2026-04-24)
-- ✅ **v1.3 NCCL Integration, Tensor & Pipeline Parallelism** — Phases 13-17 (shipped 2026-04-24)
-- ✅ **v1.4 Multi-Node Support** — Phases 18-20 (shipped 2026-04-24)
-- ✅ **v1.5 Fault Tolerance** — Phases 21-24 (shipped 2026-04-26)
-- ✅ **v1.6 Performance & Training** — Phases 25-28 (shipped 2026-04-26)
-
-## Phase Progress
-
-<details>
-<summary>✅ v1.0 Production Release (Phases 1-6) — SHIPPED 2026-04-24</summary>
-
-| # | Phase | Goal | Requirements | Status |
-|---|-------|------|--------------|--------|
-| 1 | Performance Foundations | Device-aware kernels, memory metrics, validation, benchmarks | PERF-01 to PERF-06, BMCH-01 to BMCH-04 | ✅ Complete |
-| 2 | Async & Streaming | CUDA streams, pinned memory, pool improvements | ASYNC-01 to ASYNC-04, POOL-01 to POOL-04 | ✅ Complete |
-| 3 | FFT Module | Fast Fourier Transform implementation | FFT-01 to FFT-04 | ✅ Complete |
-| 4 | Ray Tracing Primitives | Intersection tests and BVH helpers | RAY-01 to RAY-04 | ✅ Complete |
-| 5 | Graph Algorithms | BFS and PageRank on GPU | GRAPH-01 to GRAPH-04 | ✅ Complete |
-| 6 | Neural Net Primitives | Matmul, softmax, ReLU, layer norm | NN-01 to NN-04 | ✅ Complete |
-
-</details>
-
-<details>
-<summary>✅ v1.1 Multi-GPU Support (Phases 7-10) — SHIPPED 2026-04-24</summary>
-
-| # | Phase | Goal | Requirements | Requirements |
-|---|-------|------|--------------|--------------|
-| 7 | Device Mesh Detection | GPU enumeration, peer access matrix, async P2P copy | MGPU-01 to MGPU-04 | ✅ Complete |
-| 8 | Multi-GPU Data Parallelism | All-reduce, broadcast, all-gather, barrier sync | MGPU-05 to MGPU-08 | ✅ Complete |
-| 9 | Distributed Memory Pool | Per-device pools, auto-allocation, cross-device tracking | MGPU-09 to MGPU-11 | ✅ Complete |
-| 10 | Multi-GPU Matmul | Row-wise split matmul, single-GPU fallback | MGPU-12 to MGPU-13 | ✅ Complete |
-
-</details>
-
-<details>
-<summary>✅ v1.2 Toolchain Upgrade (Phases 11-12) — SHIPPED 2026-04-24</summary>
-
-| # | Phase | Goal | Requirements | Status |
-|---|-------|------|--------------|--------|
-| 11 | Toolchain Analysis | Audit current versions, plan upgrade path | TC-01 to TC-03 | ✅ Complete |
-| 12 | Toolchain Upgrade | Implement C++23, CUDA 20, CMake 4.0+ upgrades | TC-04 to TC-09 | ✅ Complete |
-
-</details>
+| # | Phase | Goal | Requirements | Success Criteria |
+|---|-------|------|--------------|------------------|
+| 29 | Benchmark Infrastructure Foundation | Stable measurement infrastructure with CUDA event timing, warmup protocols, and NVTX framework | BENCH-01 to BENCH-05 | 4 |
+| 30 | Comprehensive Benchmark Suite | Algorithmic benchmarks covering reduce, scan, sort, FFT, matmul, memory ops, and multi-GPU NCCL collectives | SUITE-01 to SUITE-09 | 6 |
+| 31 | CI Regression Testing | GitHub Actions workflow with statistical baseline comparison and regression gating | CI-01 to CI-07 | 4 |
+| 32 | Performance Dashboards | HTML dashboard with trend charts, baseline comparison, and regression visualization | DASH-01 to DASH-06 | 4 |
 
 ---
 
-## v1.3 NCCL Integration, Tensor & Pipeline Parallelism
+## Phase 29: Benchmark Infrastructure Foundation
 
-**Status:** Phase 14 Planning - 1/5 phases
+**Goal:** Establish stable, accurate measurement methodology that all downstream benchmarking depends on.
 
-**Goal:** Enable efficient multi-GPU training with NCCL-based collectives, tensor parallelism for large layers, and pipeline parallelism for deep models.
-
-### Phase Overview
-
-| # | Phase | Goal | Requirements | Plans | Status |
-|---|-------|------|--------------|-------|--------|
-| 13 | NCCL Foundation | Library detection, NcclContext, communicator init, error handling | NCCL-01 to NCCL-05 | 3/3 | ✅ Complete |
-| 14 | Core Collectives | AllReduce, Broadcast, Barrier with async stream-based operations | COLL-01 to COLL-05 | 3/3 | ✅ Complete |
-| 15 | Extended Collectives | AllGather, ReduceScatter, group ops, unified fallback | EXTD-01 to EXTD-05 | 3/3 | ✅ Complete |
-| 16 | Tensor Parallelism | Column/row parallel matmul, transformer layer patterns | TENS-01 to TENS-06 | 3/3 | ✅ Complete |
-| 17 | Pipeline Parallelism | 1F1B scheduler, P2P primitives, activation buffer management | PIPE-01 to PIPE-06 | 3/3 | ✅ Complete |
-
-### Phase Details
-
-<details>
-<summary>Phase 13: NCCL Foundation ✅ COMPLETE</summary>
-
-**Goal:** Set up NCCL integration infrastructure with proper error handling.
-
-**Commits:** 098fa79, ed9176d, b80a747
-
-**Files Created:**
-- `cmake/FindNCCL.cmake` - Version validation, NCCL 2.25+ required
-- `include/cuda/nccl/nccl_types.h` - CUDA to NCCL dtype mapping
-- `include/cuda/nccl/nccl_context.h` - NcclContext with DI + singleton
-- `include/cuda/nccl/nccl_error.h` - safe_nccl_call() wrapper
-- `include/cuda/nccl/nccl_validation.h` - Shared memory & version validation
-- `src/cuda/nccl/nccl_context.cpp` - Full NcclContext implementation
-- `src/cuda/nccl/nccl_error.cpp` - safe_stream_wait() implementation
-- `src/cuda/nccl/nccl_validation.cpp` - Validation implementations
-- Updated `CMakeLists.txt` - NOVA_ENABLE_NCCL option, cuda_nccl library
-
-**Requirements:**
-- NCCL-01: Library detection and version validation via CMake find module ✅
-- NCCL-02: NcclContext with dependency injection pattern and DeviceMesh integration ✅
-- NCCL-03: Communicator initialization and lifecycle management per device ✅
-- NCCL-04: Shared memory validation (require 512MB+) with clear error messages ✅
-- NCCL-05: Async error polling infrastructure with ncclCommGetAsyncError ✅
-
-**Decisions Applied:**
-- D-01: DI with singleton fallback (NcclContext::instance())
-- D-02: safe_nccl_call() wrapper with automatic polling
-- D-03: Optional NCCL with P2P fallback (NCCL_ENABLE option)
-- D-04: Per-device singleton caching (get_comm(device))
-
-**Plans:**
-- `13-01-PLAN.md` — CMake integration and version validation ✅
-- `13-02-PLAN.md` — NcclContext implementation ✅
-- `13-03-PLAN.md` — Error handling and validation ✅
-
-</details>
-
-<details>
-<summary>Phase 14: Core Collectives</summary>
-
-**Goal:** Implement stream-based NCCL collective operations replacing P2P fallbacks.
-
-**Requirements:**
-- COLL-01: Stream-based all-reduce replacing P2P ring-allreduce fallback
-- COLL-02: Broadcast wrapper for weight synchronization across devices
-- COLL-03: Barrier implementation for explicit synchronization points
-- COLL-04: Safe NCCL call wrapper with async error detection
-- COLL-05: Stream-ordered collectives passing cudaStream_t to all operations
+**Requirements:** BENCH-01, BENCH-02, BENCH-03, BENCH-04, BENCH-05
 
 **Success Criteria:**
-1. All-reduce produces identical results to existing P2P ring-allreduce
-2. Broadcast correctly distributes weights from rank 0 to all devices
-3. Barrier synchronizes all devices in mesh before proceeding
-4. Safe wrapper detects and reports NCCL errors without hanging
-5. Collectives integrate with existing MeshStreams infrastructure
 
-**Pitfalls Addressed:**
-- Cross-collective deadlocks (single-threaded dispatch)
-- Timeout hangs (proper async error polling)
-- Stream serialization issues (explicit cudaStream_t passing)
+1. Developer can invoke the full benchmark suite with `python scripts/benchmark/run_benchmarks.py --all` and receive structured output
+2. Benchmark timing measurements match expected values for known-duration kernels (verified with cudaEvent synchronization)
+3. First-run vs. steady-state benchmark times differ significantly, confirming warmup is effective
+4. NVTX annotations are absent from timing data when the annotation toggle is disabled (verified by comparing run times with/without NVTX)
+5. NVTX timeline annotations appear correctly in Nsight Systems when enabled (verified by inspecting generated `.nsys-rep` file)
 
-**Plans:**
-- `14-01-PLAN.md` — NCCL AllReduce implementation ✅
-- `14-02-PLAN.md` — NCCL Broadcast and Barrier ✅
-- `14-03-PLAN.md` — Integration, tests, and CMakeLists updates ✅
+**Implementation Notes:**
 
-</details>
-
-<details>
-<summary>Phase 15: Extended Collectives</summary>
-
-**Goal:** Add advanced collective operations and unified fallback path.
-
-**Requirements:**
-- EXTD-01: All-gather for row-parallel activation gathering
-- EXTD-02: Reduce-scatter for alternative gradient aggregation
-- EXTD-03: Group operations with ncclGroupStart/End batching
-- EXTD-04: Unified NCCL/legacy fallback path for deployment flexibility
-- EXTD-05: Communicator caching for repeated collective operations
-
-**Success Criteria:**
-1. All-gather correctly assembles partitioned activations across devices
-2. Reduce-scatter performs gradient aggregation with configurable root
-3. Group operations batch multiple collectives for efficiency
-4. Unified path seamlessly falls back to P2P when NCCL unavailable
-5. Communicator caching reduces initialization overhead
-
-**Pitfalls Addressed:**
-- Single-rank collective calls (always use group operations)
-- Blocking operations (async with explicit streams)
-- Deployment flexibility (unified fallback path)
-
-</details>
-
-<details>
-<summary>Phase 16: Tensor Parallelism</summary>
-
-**Goal:** Implement tensor parallelism patterns for transformer layers.
-
-**Requirements:**
-- TENS-01: TensorParallelMatmul with column-parallel strategy
-- TENS-02: TensorParallelMatmul with row-parallel strategy
-- TENS-03: ColumnParallelLayer for QKV projection pattern
-- TENS-04: RowParallelLayer for output projection pattern
-- TENS-05: Integration with existing DistributedMatmul infrastructure
-- TENS-06: Memory-aware TP degree selection with profiling
-
-**Success Criteria:**
-1. Column-parallel matmul partitions weights along output dimension
-2. Row-parallel matmul partitions weights along input dimension
-3. ColumnParallelLayer produces identical results to single-GPU reference
-4. RowParallelLayer produces identical results to single-GPU reference
-5. Integration works with existing memory pool and device mesh
-6. Memory profiling reports working set per TP degree
-
-**Pitfalls Addressed:**
-- Memory explosions from replicated optimizer states
-- TP degree selection without memory awareness
-- Integration with existing DistributedMatmul
-
-</details>
-
-<details>
-<summary>Phase 17: Pipeline Parallelism</summary>
-
-**Goal:** Implement pipeline parallelism scheduling for deep model training.
-
-**Requirements:**
-- PIPE-01: PipelineScheduler with 1F1B schedule implementation
-- PIPE-02: P2P send/recv primitives for inter-stage communication
-- PIPE-03: Activation buffer management with ping-pong overlap
-- PIPE-04: Communicator splitting via ncclCommSplit for TP+DP
-- PIPE-05: Interleaved schedule option for reduced bubble overhead
-- PIPE-06: Stage balance validation within 10% compute variance
-
-**Success Criteria:**
-1. 1F1B schedule overlaps forward and backward passes
-2. P2P primitives transfer activations/gradients between stages
-3. Ping-pong buffering hides communication latency
-4. Communicator split supports TP+DP parallelism simultaneously
-5. Interleaved schedule reduces bubble overhead to <10%
-6. Balance validation reports compute variance across stages
-
-**Pitfalls Addressed:**
-- Unbalanced stage compute (stage balance validation)
-- Bubble overhead (microbatch count tuning M >= 4*K)
-- Multi-communicator deadlocks (NCCL 2.26+ launch ordering)
-
-</details>
+- Build on existing `cuda::benchmark::Benchmark` class patterns from the codebase
+- Add CUDA event-based timing wrapper compatible with Google Benchmark's `UseManualTime()`
+- Implement GPU clock stabilization (fixed frequency via `nvidia-smi -lgc` or warmup iteration discard)
+- Create `include/cuda/benchmark/nvtx.h` with RAII scoped_range guards
+- Separate timing code from NVTX annotation code to prevent overhead distortion
 
 ---
 
-## v1.4 Multi-Node Support
+## Phase 30: Comprehensive Benchmark Suite
 
-**Status:** Phase 20 Planning - 3/3 phases complete
+**Goal:** Cover all major algorithm categories with parameterized benchmarks across production-scale input sizes.
 
-**Goal:** Enable efficient multi-node training with MPI-based NCCL initialization, topology-aware collective selection, and cross-node communicator management.
+**Requirements:** SUITE-01, SUITE-02, SUITE-03, SUITE-04, SUITE-05, SUITE-06, SUITE-07, SUITE-08, SUITE-09
 
-### Phase Overview
+**Success Criteria:**
 
-| # | Phase | Goal | Requirements | Plans | Status |
-|---|-------|------|--------------|-------|--------|
-| 18 | MPI Integration | MPI detection, MpiContext, rank discovery, lifecycle | MULN-01 to MULN-05 | 3/3 | ✅ Complete |
-| 19 | Topology-Aware Collectives | NIC enumeration, topology detection, algo selection | TOPO-01 to TOPO-05 | 3/3 | ✅ Complete |
-| 20 | Cross-Node Communicators | MultiNodeContext, hierarchical collectives, fallback | CNOD-01 to CNOD-05 | 3/3 | ✅ Complete |
+1. Each algorithm (reduce, scan, sort, FFT, matmul) reports throughput in GB/s that matches published cuBLAS/cuFFT reference values within 10%
+2. Multi-GPU NCCL benchmarks show scaling efficiency >80% when adding GPUs (verified on 2+ GPU topology)
+3. Benchmark suite completes in <30 minutes on a single A100 for the standard configuration
+4. Parameterized benchmarks produce scaling curves across at least 3 orders of magnitude in input size
+5. All benchmark results are available as JSON with fields: `name`, `real_time`, `cpu_time`, `bytes_per_second`, `items_per_second`, `iterations`, `threads`
+6. Multi-GPU benchmarks aggregate timing correctly across ranks (no peer-to-peer synchronization errors)
 
-### Phase Details
+**Implementation Notes:**
 
-<details>
-<summary>Phase 18: MPI Integration ✅ COMPLETE</summary>
-
-**Goal:** Set up MPI integration for multi-node NCCL bootstrapping and rank discovery.
-
-**Commits:** Phase 18 implementation
-
-**Files Created:**
-- `cmake/FindMPI.cmake` - MPI detection for OpenMPI/MPICH
-- `include/cuda/mpi/mpi_context.h` - MpiContext with singleton + RAII
-- `src/cuda/mpi/mpi_context.cpp` - Rank discovery, local_rank calculation
-- Updated `CMakeLists.txt` - NOVA_ENABLE_MPI option, cuda_mpi target
-
-**Requirements:**
-- MULN-01: MPI library detection and version validation via CMake find module ✅
-- MULN-02: MpiContext with rank/node discovery and NCCL bootstrapping ✅
-- MULN-03: MPI init/finalize lifecycle management with RAII semantics ✅
-- MULN-04: Cross-node device assignment (local_rank calculation) ✅
-- MULN-05: Environment variable and config file options for MPI parameters ✅
-
-**Plans:**
-- `18-01-PLAN.md` — CMake MPI detection and find module ✅
-- `18-02-PLAN.md` — MpiContext implementation ✅
-- `18-03-PLAN.md` — Lifecycle and configuration ✅
-
-</details>
-
-<details>
-<summary>Phase 19: Topology-Aware Collectives ✅ COMPLETE</summary>
-
-**Goal:** Detect node topology and select optimal NCCL collective algorithms.
-
-**Files Created:**
-- `include/cuda/topology/topology_map.h` — TopologyMap, NcclTopologyContext, CollectiveSelector
-- `src/cuda/topology/topology_map.cpp` — NIC detection, bandwidth estimation, algorithm selection
-
-**Requirements:**
-- TOPO-01: Node topology detection (intra-node vs inter-node paths) ✅
-- TOPO-02: Network interface card (NIC) enumeration and selection ✅
-- TOPO-03: Topology-aware NCCL communicator splitting by NIC ✅
-- TOPO-04: Bandwidth-aware collective algorithm selection (ring vs tree vs collnet) ✅
-- TOPO-05: Topology validation with performance profiling ✅
-
-**Plans:**
-- `19-01-PLAN.md` — Topology detection implementation ✅
-- `19-02-PLAN.md` — NIC selection and NCCL communicator splitting ✅
-- `19-03-PLAN.md` — Algorithm selection and profiling ✅
-
-</details>
-
-<details>
-<summary>Phase 20: Cross-Node Communicators ✅ COMPLETE</summary>
-
-**Goal:** Implement hierarchical communicators and graceful degradation.
-
-**Files Created:**
-- `include/cuda/multinode/multi_node_context.h` — MultiNodeContext singleton
-- `src/cuda/multinode/multi_node_context.cpp` — Hierarchical communicators, fallback
-
-**Requirements:**
-- CNOD-01: MultiNodeContext extending NcclContext for cluster scale ✅
-- CNOD-02: Intra-node NCCL communicator (per-node GPU groups) ✅
-- CNOD-03: Inter-node NCCL communicator (cross-node GPU groups) ✅
-- CNOD-04: Hierarchical collectives (node-local then cross-node) ✅
-- CNOD-05: Graceful degradation when MPI/NCCL-NET unavailable ✅
-
-**Plans:**
-- `20-01-PLAN.md` — MultiNodeContext and communicator hierarchy ✅
-- `20-02-PLAN.md` — Hierarchical collective implementation ✅
-- `20-03-PLAN.md` — Integration, tests, and fallback path ✅
-
-</details>
+- Create `benchmark/` directory with C++ Google Benchmark source files
+- Implement benchmarks using the patterns established in Phase 29
+- Add `benchmark/configs/standard.json` for reproducible workload configurations
+- Benchmark all five layers: memory (H2D/D2H/D2D), algo (reduce/scan/sort/FFT), api (matmul), distributed (NCCL collectives)
+- Input size ranges should cover: 1KB to 256MB for memory-bandwidth-limited ops, 1K to 128M elements for compute-bound ops
+- For multi-GPU: use existing DeviceMesh from v1.1 to detect topology, aggregate timing across ranks
 
 ---
 
-## v1.5 Fault Tolerance
+## Phase 31: CI Regression Testing
 
-**Status:** Phase 21 Planning - 0/4 phases
+**Goal:** Automated regression detection in CI with statistical rigor and actionable failure output.
 
-**Goal:** Enable production-grade fault tolerance with checkpoint/restart, error recovery, and graceful handling of cluster preemption.
-
-### Phase Overview
-
-| # | Phase | Goal | Requirements | Plans | Status |
-|---|-------|------|--------------|-------|--------|
-| 21 | Checkpoint/Restart | Full state serialization, async writes, storage abstraction | CKPT-01 to CKPT-05 | 3/3 | ✅ Complete |
-| 22 | Comm Error Recovery | NCCL timeout detection, health monitoring, automatic retry | COMM-01 to COMM-05 | 3/3 | ✅ Complete |
-| 23 | Memory Error Detection | ECC error handling, device health monitoring, graceful degradation | MEM-01 to MEM-05 | 3/3 | ✅ Complete |
-| 24 | Job Preemption | Signal handlers, graceful shutdown, resume-from-checkpoint | PEMP-01 to PEMP-05 | 3/3 | ✅ Complete |
-
-### Phase Details
-
-<details>
-<summary>Phase 21: Checkpoint/Restart (🚧 Planning)</summary>
-
-**Goal:** Implement full state checkpoint/restart for training recovery.
-
-**Requirements:**
-- CKPT-01: CheckpointManager with async writes and configurable interval
-- CKPT-02: Full state serialization (weights, optimizer states, RNG state)
-- CKPT-03: Storage backend abstraction (filesystem, object store paths)
-- CKPT-04: Incremental checkpoint support for reduced I/O overhead
-- CKPT-05: Automatic checkpoint on error detection before recovery
+**Requirements:** CI-01, CI-02, CI-03, CI-04, CI-05, CI-06, CI-07
 
 **Success Criteria:**
-1. CheckpointManager supports async writes without blocking training
-2. Full state includes weights, optimizer states, and RNG seed
-3. Storage abstraction allows file paths and future object store support
-4. Incremental checkpoints reduce I/O by only saving changed tensors
-5. Automatic checkpoint triggered before error recovery attempts
 
-**Pitfalls Addressed:**
-- Blocking I/O during checkpoint (async with dedicated stream)
-- Large checkpoint sizes (compression, incremental saves)
-- Partial writes on crash (atomic writes with rename)
-- Cross-rank synchronization (coordinated checkpoint)
+1. GitHub Actions workflow runs on PR and posts benchmark results as PR comment or CI artifact
+2. Workflow fails (blocks merge) when any benchmark regresses beyond configured tolerance with statistical significance (p < 0.01)
+3. Baseline JSON files in `scripts/benchmark/baselines/` include metadata: `{ "commit": "...", "gpu": "...", "cuda": "...", "driver": "...", "date": "..." }`
+4. `scripts/benchmark/check_regression.py` produces output: `"Benchmark X: ±Y% (current: Zms, baseline: Wms, threshold: T%)"` on both pass and fail
+5. CI workflow detects and reports when baselines are older than 30 days
+6. CI regression failures are reproducible locally (same command that CI runs produces the same result)
 
-</details>
+**Implementation Notes:**
 
-<details>
-<summary>Phase 22: Communication Error Recovery (Pending)</summary>
-
-**Goal:** Detect and recover from NCCL/TCP communication failures.
-
-**Requirements:**
-- COMM-01: NCCL timeout detection with configurable thresholds
-- COMM-02: Health monitoring for collective operations (watchdog thread)
-- COMM-03: Automatic retry with exponential backoff for transient errors
-- COMM-04: Cross-node connection repair and communicator recreation
-- COMM-05: Error classification (transient vs permanent) for retry decisions
-
-**Success Criteria:**
-1. Timeout detection triggers within configured threshold (default 60s)
-2. Health monitor detects stalled collectives without false positives
-3. Transient errors retry with exponential backoff (max 3 attempts)
-4. Communicators recreated after permanent failures
-5. Error classification guides retry vs abort decisions
-
-**Pitfalls Addressed:**
-- False positive timeouts on slow networks (adaptive thresholds)
-- Deadlock during recovery (single-threaded recovery coordinator)
-- Resource leaks on communicator recreation (proper cleanup)
-- Cascading failures (circuit breaker pattern)
-
-</details>
-
-<details>
-<summary>Phase 23: Memory Error Detection (Pending)</summary>
-
-**Goal:** Detect and handle memory errors gracefully.
-
-**Requirements:**
-- MEM-01: CUDA error detection and classification via cudaDeviceGetErrorString
-- MEM-02: ECC error callback registration and handling infrastructure
-- MEM-03: Device health monitoring with periodic checks during idle
-- MEM-04: Graceful degradation strategies (reduce TP degree, fall back to CPU)
-- MEM-05: Memory error telemetry and logging for diagnostics
-
-**Success Criteria:**
-1. CUDA errors caught and classified with descriptive messages
-2. ECC callbacks registered with device-level error notification
-3. Health checks run periodically without impacting performance
-4. Graceful degradation maintains partial functionality on errors
-5. Error telemetry provides actionable diagnostics
-
-**Pitfalls Addressed:**
-- Unhandled CUDA errors crashing training (catch and handle)
-- Silent ECC errors degrading accuracy (detect and report)
-- Degradation causing cascading failures (controlled fallback)
-- Missing diagnostics for root cause analysis (telemetry)
-
-</details>
-
-<details>
-<summary>Phase 24: Job Preemption Handling ✅ COMPLETE</summary>
-
-**Goal:** Graceful handling of cluster scheduler preemption.
-
-**Files Created:**
-- `include/cuda/preemption/preemption_handler.h` — SignalHandler, ShutdownCoordinator, ResumeValidator
-- `src/cuda/preemption/preemption_handler.cpp` — Full implementation
-- CMakeLists.txt — Added cuda_preemption library
-
-**Requirements:**
-- PEMP-01: Signal handlers for SIGTERM/SIGUSR1 with graceful shutdown ✅
-- PEMP-02: Training state preservation sequence on preemption ✅
-- PEMP-03: Resume-from-checkpoint validation and recovery ✅
-- PEMP-04: Configurable shutdown timeout (default 30s, extendable) ✅
-- PEMP-05: Coordinated checkpoint across multi-node ranks ✅
-
-**Decisions Applied:**
-- Async signal handlers with callback pattern
-- Shutdown phases: Signaling → Checkpointing → Finalizing
-- Thread-per-shutdown for non-blocking operation
-- Configurable timeout with extendability
-
-</details>
+- Create `scripts/benchmark/run_benchmarks.py` with `--all`, `--filter`, `--config` arguments
+- Create `scripts/benchmark/check_regression.py` using `scipy.stats.ttest_ind` for Welch's t-test
+- Store baselines in git under `scripts/benchmark/baselines/` with version tags (e.g., `v1.7.0/`)
+- GitHub Actions workflow: trigger on PR, run benchmarks, compare against baselines, fail if regression exceeds threshold
+- Use `BENCHMARK_ENABLE_GTEST_TESTS=OFF` in CMake to avoid conflicts with existing Google Test
+- Tolerance defaults: 5% for memory ops, 10% for compute ops, 15% for distributed ops
 
 ---
 
-## v1.6 Performance & Training
+## Phase 32: Performance Dashboards
 
-**Status:** Phase 25-28 Complete - 4/4 phases
+**Goal:** Visual performance reporting that makes trends and regressions immediately visible.
 
-**Goal:** Enhance training performance with distributed batch normalization, profiling infrastructure, and kernel fusion opportunities.
-
-### Phase Overview
-
-| # | Phase | Goal | Requirements | Plans | Status |
-|---|-------|------|--------------|-------|--------|
-| 25 | Distributed BatchNorm | Cross-GPU batch statistics synchronization | DBN-01 to DBN-03 | 3/3 | ✅ Complete |
-| 26 | Performance Profiling | Kernel and collective profiling infrastructure | PROF-01 to PROF-03 | 1/1 | ✅ Complete |
-| 27 | Kernel Fusion | Fused operations for training efficiency | FUSN-01 to FUSN-03 | 1/1 | ✅ Complete |
-| 28 | Memory Optimization | Checkpoint compression and gradient buffering | MOPT-01 to MOPT-03 | 1/1 | ✅ Complete |
-
-### Phase Details
-
-<details>
-<summary>Phase 25: Distributed Batch Normalization (🚧 Planning)</summary>
-
-**Goal:** Implement synchronized batch normalization across GPUs.
-
-**Requirements:**
-- DBN-01: SyncBatchNorm with all-reduce for mean/variance
-- DBN-02: Cross-GPU batch statistics aggregation
-- DBN-03: Evaluation vs training mode handling
+**Requirements:** DASH-01, DASH-02, DASH-03, DASH-04, DASH-05, DASH-06
 
 **Success Criteria:**
-1. Mean and variance synchronized across GPUs via all-reduce
-2. Training mode maintains running statistics correctly
-3. Evaluation mode uses population statistics
 
-**Pitfalls Addressed:**
-- Lazy initialization on first forward pass
-- Numerical stability in variance computation
-- Synchronization overhead blocking training
+1. Running `python scripts/benchmark/generate_dashboard.py --results results/latest --output reports/` produces `reports/index.html`
+2. Dashboard table shows all benchmarks with columns: Name, Time (ms), Throughput, Change vs Baseline, Status
+3. Trend chart shows at least the last 5 benchmark runs with regression annotations
+4. Regressions display in red (#ef4444), improvements in green (#22c55e), stable results in gray
+5. Dashboard footer includes GPU model, CUDA version, driver version, and benchmark run timestamp
+6. Generated HTML is self-contained with no external dependencies (CSS and JS inlined or bundled)
 
-</details>
+**Implementation Notes:**
 
-<details>
-<summary>Phase 26: Performance Profiling (🚧 Planning)</summary>
-
-**Goal:** Add profiling infrastructure for kernel and collective performance.
-
-**Requirements:**
-- PROF-01: Kernel-level profiling with CUDA profiling tools integration
-- PROF-02: Memory bandwidth and compute throughput metrics
-- PROF-03: Collective operation latency tracking
-
-**Success Criteria:**
-1. Integration with nvprof/nsys for kernel analysis
-2. Memory bandwidth utilization reported per operation
-3. Collective latencies tracked and logged
-
-**Pitfalls Addressed:**
-- Profiling overhead impacting performance measurements
-- Coarse-grained vs fine-grained metrics
-- Incomplete coverage of all operations
-
-</details>
-
-<details>
-<summary>Phase 27: Kernel Fusion (🚧 Planning)</summary>
-
-**Goal:** Implement fused kernels for training efficiency.
-
-**Requirements:**
-- FUSN-01: Fused matmul + bias + activation kernels
-- FUSN-02: Fused layernorm + softmax patterns
-- FUSN-03: Automatic kernel fusion discovery
-
-**Success Criteria:**
-1. Matmul-bias-activation fused into single kernel
-2. Layernorm followed by softmax fused
-3. Fusion opportunities discovered automatically
-
-**Pitfalls Addressed:**
-- Register pressure from fusion
-- Code complexity vs performance trade-off
-- Maintaining numerical accuracy
-
-</details>
-
-<details>
-<summary>Phase 28: Memory Optimization (🚧 Planning)</summary>
-
-**Goal:** Optimize memory usage during training.
-
-**Requirements:**
-- MOPT-01: Checkpoint compression with LZ4
-- MOPT-02: Gradient accumulation buffering
-- MOPT-03: Memory defragmentation during training
-
-**Success Criteria:**
-1. Checkpoints compressed with LZ4, reducing size by ~50%
-2. Gradient accumulation uses pinned memory buffers
-3. Memory defragmentation reduces allocation failures
-
-**Pitfalls Addressed:**
-- Compression overhead during checkpoint
-- Fragmentation from many small allocations
-- Memory pressure during accumulation
-
-</details>
+- Create `scripts/benchmark/generate_dashboard.py` using `pandas` for data processing and `plotly` for charts
+- Use `jinja2` or `chevron` for HTML template rendering
+- Dashboard template at `scripts/benchmark/templates/dashboard.html` with inline CSS/JS
+- Plotly HTML output is self-contained by default (`plotly.io.write_html` with `full_html=True`)
+- CI can attach `reports/` as GitHub Actions artifact or push to GitHub Pages
+- Include a "Compare" view that overlays current run against selected baseline version
 
 ---
 
-## Backlog
+## Phase Ordering Rationale
 
-No items currently in backlog. All previously deferred features have been implemented.
+| Phase | Reason for Order |
+|-------|------------------|
+| Phase 29 first | Measurement methodology underpins everything. Without stable timing, benchmarks produce misleading data. |
+| Phase 30 second | Core algorithmic benchmarks are the reason the infrastructure exists. |
+| Phase 31 third | CI gates need benchmarks to run and baselines to compare against. Statistical rigor depends on Phase 29 infrastructure. |
+| Phase 32 last | Dashboards consume data from Phases 30-31. No point in visualizing data that isn't reliable yet. |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| BENCH-01 | Phase 29 | Pending |
+| BENCH-02 | Phase 29 | Pending |
+| BENCH-03 | Phase 29 | Pending |
+| BENCH-04 | Phase 29 | Pending |
+| BENCH-05 | Phase 29 | Pending |
+| SUITE-01 | Phase 30 | Pending |
+| SUITE-02 | Phase 30 | Pending |
+| SUITE-03 | Phase 30 | Pending |
+| SUITE-04 | Phase 30 | Pending |
+| SUITE-05 | Phase 30 | Pending |
+| SUITE-06 | Phase 30 | Pending |
+| SUITE-07 | Phase 30 | Pending |
+| SUITE-08 | Phase 30 | Pending |
+| SUITE-09 | Phase 30 | Pending |
+| CI-01 | Phase 31 | Pending |
+| CI-02 | Phase 31 | Pending |
+| CI-03 | Phase 31 | Pending |
+| CI-04 | Phase 31 | Pending |
+| CI-05 | Phase 31 | Pending |
+| CI-06 | Phase 31 | Pending |
+| CI-07 | Phase 31 | Pending |
+| DASH-01 | Phase 32 | Pending |
+| DASH-02 | Phase 32 | Pending |
+| DASH-03 | Phase 32 | Pending |
+| DASH-04 | Phase 32 | Pending |
+| DASH-05 | Phase 32 | Pending |
+| DASH-06 | Phase 32 | Pending |
+
+**Coverage:**
+- v1.7 requirements: 27 total
+- Mapped to phases: 27
+- Unmapped: 0 ✓
 
 ---
-
-*Roadmap updated: 2026-04-26 after v1.6 milestone completion*
+*Roadmap created: 2026-04-26*
+*4 phases | 27 requirements | Ready to execute*
