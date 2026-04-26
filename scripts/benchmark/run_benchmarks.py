@@ -204,6 +204,12 @@ def compare_results(current: dict, baseline: dict, tolerance: float) -> dict:
 
     baseline_map = {b["name"]: b for b in baseline["benchmarks"]}
 
+    try:
+        from scipy import stats
+        use_statistical = True
+    except ImportError:
+        use_statistical = False
+
     for result in current.get("benchmarks", []):
         name = result.get("name", "")
         if name not in baseline_map:
@@ -222,6 +228,21 @@ def compare_results(current: dict, baseline: dict, tolerance: float) -> dict:
                 "baseline": base_time,
                 "delta_pct": delta_pct,
             }
+
+            if use_statistical and result.get("iterations", 0) > 1 and base.get("iterations", 0) > 1:
+                current_runs = [result.get("real_time", 0)] * result.get("iterations", 1)
+                baseline_runs = [base.get("real_time", 0)] * base.get("iterations", 1)
+
+                try:
+                    _, p_value = stats.ttest_ind(current_runs, baseline_runs, equal_var=False)
+
+                    if p_value > 0.01:
+                        comparison["stable"].append(entry)
+                        entry["significant"] = False
+                        entry["p_value"] = p_value
+                        continue
+                except Exception:
+                    pass
 
             if delta_pct > tolerance:
                 comparison["regressions"].append(entry)

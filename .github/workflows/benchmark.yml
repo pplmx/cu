@@ -1,0 +1,112 @@
+name: Benchmark Regression
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: benchmark-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    name: Benchmark Regression
+    runs-on: [self-hosted, gpu]
+
+    env:
+      BUILD_DIR: build
+      RESULTS_DIR: results
+      TOLERANCE: 10.0
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: |
+          cmake -G Ninja -B ${{ env.BUILD_DIR }} \
+            -DNOVA_ENABLE_NCCL=OFF \
+            -DNOVA_ENABLE_MPI=OFF
+
+      - name: Build benchmarks
+        run: cmake --build ${{ env.BUILD_DIR }} --target nova_benchmarks --parallel
+
+      - name: Get device info
+        run: |
+          nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader
+          echo "CUDA_VERSION=$(nvcc --version | grep release | awk '{print $5}' | tr -d ',')" >> $GITHUB_ENV
+
+      - name: Run benchmarks
+        run: |
+          mkdir -p ${{ env.RESULTS_DIR }}
+          python scripts/benchmark/run_benchmarks.py \
+            --all \
+            --build-dir ${{ env.BUILD_DIR }}/bin \
+            --output-dir ${{ env.RESULTS_DIR }} \
+            --tolerance ${{ env.TOLERANCE }} \
+            --verbose
+
+      - name: Check baseline
+        id: baseline-check
+        run: |
+          if [ -d "scripts/benchmark/baselines/main" ]; then
+            echo "has_baseline=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_baseline=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Compare against baseline
+        if: steps.baseline-check.outputs.has_baseline == 'true'
+        run: |
+          python scripts/benchmark/run_benchmarks.py \
+            --all \
+            --baseline main \
+            --build-dir ${{ env.BUILD_DIR }}/bin \
+            --output-dir ${{ env.RESULTS_DIR }} \
+            --tolerance ${{ env.TOLERANCE }}
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-results-${{ github.run_number }}
+          path: |
+            ${{ env.RESULTS_DIR }}/*.json
+            ${{ env.BUILD_DIR }}/bin/benchmark_results*.json
+          retention-days: 30
+
+      - name: Update baseline
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          python scripts/benchmark/update_baseline.py \
+            --results ${{ env.RESULTS_DIR }} \
+            --version main
+
+      - name: Check baseline freshness
+        run: python scripts/benchmark/check_baseline_freshness.py --max-age 30
+
+  benchmark-quick:
+    name: Quick Benchmarks (CPU-only validation)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check benchmark files exist
+        run: |
+          test -f scripts/benchmark/run_benchmarks.py
+          test -f benchmark/benchmark_kernels.cu
+          test -d scripts/benchmark/baselines
+
+      - name: Validate Python syntax
+        run: python -m py_compile scripts/benchmark/run_benchmarks.py
+
+      - name: Validate CMakeLists
+        run: |
+          cmake --version
+          cmake -B build-check -DNOVA_ENABLE_NCCL=OFF -DNOVA_ENABLE_MPI=OFF
+          test -f build-check/CMakeCache.txt
