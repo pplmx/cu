@@ -77,6 +77,21 @@ option(NOVA_ENABLE_UNITY_BUILD "Enable unity build to speed up compilation" ON)
 # ccache support for faster rebuilds
 option(NOVA_USE_CCACHE "Enable ccache compiler launcher for faster rebuilds" OFF)
 
+# Code coverage support
+option(NOVA_COVERAGE "Enable code coverage instrumentation" OFF)
+set(NOVA_COVERAGE_MIN "80" CACHE STRING "Minimum required line coverage percentage")
+
+if(NOVA_COVERAGE)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        message(STATUS "Enabling code coverage instrumentation")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
+        set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fprofile-instr-generate,-fcoverage-mapping")
+    else()
+        message(WARNING "Coverage requires Clang or GCC. Coverage disabled.")
+        set(NOVA_COVERAGE OFF)
+    endif()
+endif()
+
 if(NOVA_USE_CCACHE)
     find_program(CCACHE_PROGRAM ccache)
     if(CCACHE_PROGRAM)
