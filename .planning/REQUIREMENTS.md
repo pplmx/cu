@@ -1,54 +1,56 @@
-# Requirements — v2.0 Testing & Quality
+# Requirements — v2.1 New Algorithms
 
 ## Active Requirements
 
-### Fuzz Testing
+### Sparse Matrix Support
 
-- [ ] **FUZZ-01**: User can run property-based fuzzing on memory pool operations
-- [ ] **FUZZ-02**: User can run property-based fuzzing on algorithm inputs (reduce, scan, sort)
-- [ ] **FUZZ-03**: User can run property-based fuzzing on matmul with varied tensor shapes
-- [ ] **FUZZ-04**: Fuzzing artifacts (corpus, crashes) are isolated in dedicated directories
+- [ ] **SPARSE-01**: User can create sparse matrices in CSR format
+- [ ] **SPARSE-02**: User can create sparse matrices in CSC format
+- [ ] **SPARSE-03**: User can perform sparse matrix-dense vector multiplication (SpMV)
+- [ ] **SPARSE-04**: User can perform sparse matrix-dense matrix multiplication (SpMM)
 
-### Property-Based Tests
+### Graph Neural Networks
 
-- [ ] **PROP-01**: User can run property tests verifying mathematical invariants (e.g., matmul identity, FFT invertibility)
-- [ ] **PROP-02**: User can run property tests verifying algorithmic correctness (e.g., sort produces sorted output)
-- [ ] **PROP-03**: User can run property tests verifying numerical stability across precision modes
-- [ ] **PROP-04**: Property test results include seed for reproducibility
+- [ ] **GNN-01**: User can run message passing on GPU graphs
+- [ ] **GNN-02**: User can compute graph attention mechanisms
+- [ ] **GNN-03**: User can run graph sampling operations
+- [ ] **GNN-04**: User can execute multi-hop neighborhood aggregation
 
-### Coverage Reports
+### Quantization
 
-- [ ] **COVR-01**: User can generate HTML coverage report with line/branch coverage
-- [ ] **COVR-02**: User can identify untested code paths via coverage gap analysis
-- [ ] **COVR-03**: User can view per-module coverage breakdown
-- [ ] **COVR-04**: Coverage thresholds are enforced in CI (minimum 80% line coverage)
+- [ ] **QUANT-01**: User can quantize tensors to INT8 format
+- [ ] **QUANT-02**: User can quantize tensors to FP16 format
+- [ ] **QUANT-03**: User can perform quantized matmul operations
+- [ ] **QUANT-04**: User can use mixed precision (FP32/FP16/INT8) in same computation
 
 ## Future Requirements (Deferred)
 
-*Property-based testing for graph algorithms and ray tracing primitives — depends on fuzzing infrastructure*
+- Sparse matrix COO format support
+- Graph pooling operations
+- QAT (Quantization-Aware Training) support
 
 ## Out of Scope
 
-- Mutation testing — too expensive for CUDA kernels
-- Formal verification — separate effort
-- Code coverage for third-party dependencies (NCCL, MPI)
+- Dense graph algorithms — already implemented
+- CPU-only operations — GPU focused
+- Third-party framework integration (PyTorch, TensorFlow)
 
 ## Traceability
 
 | Phase | REQ-ID | Description | Status |
 |-------|--------|-------------|--------|
-| TBD | FUZZ-01 | Memory pool fuzzing | TBD |
-| TBD | FUZZ-02 | Algorithm fuzzing | TBD |
-| TBD | FUZZ-03 | Matmul fuzzing | TBD |
-| TBD | FUZZ-04 | Fuzzing artifact isolation | TBD |
-| TBD | PROP-01 | Mathematical invariants | TBD |
-| TBD | PROP-02 | Algorithmic correctness | TBD |
-| TBD | PROP-03 | Numerical stability | TBD |
-| TBD | PROP-04 | Reproducible seeds | TBD |
-| TBD | COVR-01 | HTML coverage report | TBD |
-| TBD | COVR-02 | Coverage gap analysis | TBD |
-| TBD | COVR-03 | Per-module breakdown | TBD |
-| TBD | COVR-04 | CI coverage gates | TBD |
+| TBD | SPARSE-01 | CSR format creation | TBD |
+| TBD | SPARSE-02 | CSC format creation | TBD |
+| TBD | SPARSE-03 | SpMV operation | TBD |
+| TBD | SPARSE-04 | SpMM operation | TBD |
+| TBD | GNN-01 | Message passing | TBD |
+| TBD | GNN-02 | Graph attention | TBD |
+| TBD | GNN-03 | Graph sampling | TBD |
+| TBD | GNN-04 | Neighborhood aggregation | TBD |
+| TBD | QUANT-01 | INT8 quantization | TBD |
+| TBD | QUANT-02 | FP16 quantization | TBD |
+| TBD | QUANT-03 | Quantized matmul | TBD |
+| TBD | QUANT-04 | Mixed precision | TBD |
 
 ---
-*Requirements defined: 2026-04-26 for v2.0 Testing & Quality*
+*Requirements defined: 2026-04-26 for v2.1 New Algorithms*

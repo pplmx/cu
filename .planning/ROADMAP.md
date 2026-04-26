@@ -1,10 +1,10 @@
-# Roadmap — v2.0 Testing & Quality
+# Roadmap — v2.1 New Algorithms
 
 ## Milestone Summary
 
 | Metric | Value |
 |--------|-------|
-| Milestone | v2.0 Testing & Quality |
+| Milestone | v2.1 New Algorithms |
 | Requirements | 12 |
 | Phases | 4 |
 | Started | 2026-04-26 |
@@ -13,95 +13,94 @@
 
 | # | Phase | Goal | Requirements | Success Criteria |
 |---|-------|------|--------------|------------------|
-| 40 | Fuzz Testing Foundation | Build property-based fuzzing infrastructure for CUDA algorithms | FUZZ-01, FUZZ-02, FUZZ-03, FUZZ-04 | 4 criteria |
-| 41 | Property-Based Tests | Implement QuickCheck-style tests verifying mathematical and algorithmic properties | PROP-01, PROP-02, PROP-03, PROP-04 | 4 criteria |
-| 42 | Coverage Infrastructure | Generate detailed coverage reports with gap analysis | COVR-01, COVR-02, COVR-03 | 3 criteria |
-| 43 | CI Integration | Enforce coverage thresholds and integrate all testing in CI pipeline | COVR-04 | 3 criteria |
+| 44 | Sparse Matrix Support | Add CSR/CSC formats and sparse operations (SpMV, SpMM) | SPARSE-01, SPARSE-02, SPARSE-03, SPARSE-04 | 4 criteria |
+| 45 | Graph Neural Networks | Implement GNN primitives for message passing and attention | GNN-01, GNN-02, GNN-03, GNN-04 | 4 criteria |
+| 46 | Quantization Foundation | Build quantization infrastructure (INT8, FP16) | QUANT-01, QUANT-02 | 2 criteria |
+| 47 | Quantized Operations | Implement quantized matmul and mixed precision | QUANT-03, QUANT-04 | 2 criteria |
 
 ---
 
-## Phase 40: Fuzz Testing Foundation
+## Phase 44: Sparse Matrix Support
 
-**Goal:** Build property-based fuzzing infrastructure for CUDA algorithms using libFuzzer
+**Goal:** Add CSR/CSC sparse matrix formats and sparse operations (SpMV, SpMM)
 
-**Requirements:** FUZZ-01, FUZZ-02, FUZZ-03, FUZZ-04
+**Requirements:** SPARSE-01, SPARSE-02, SPARSE-03, SPARSE-04
 
 **Success Criteria:**
-1. User can run `make fuzz_memory_pool` and receive pass/fail with corpus count
-2. User can run `make fuzz_algorithms` and receive pass/fail with crash count (should be 0)
-3. User can run `make fuzz_matmul` and receive pass/fail with edge case discoveries
-4. Fuzzing corpus and crash artifacts are isolated in `tests/fuzz/corpus/` and `tests/fuzz/crashes/`
+1. User can create `SparseMatrixCSR` from dense input with `SparseMatrixCSR::FromDense()`
+2. User can create `SparseMatrixCSC` from CSR with `SparseMatrixCSR::ToCSC()`
+3. User can run SpMV: `sparse_mv(matrix, vector, result)` produces correct output
+4. User can run SpMM: `sparse_mm(matrix_a, dense_b, result)` produces correct output
 
 **Dependencies:** None (foundation phase)
 
 **Key Decisions:**
-- Use libFuzzer for native C++ fuzzing (already supported by LLVM)
-- Target memory pool, algorithm (reduce/scan/sort), and matmul modules first
-- Minimum corpus size: 1000 entries before declaring stable
+- Use cuSPARSE for efficient sparse operations where available
+- Provide fallback implementations for non-CUDA builds
+- CSR as primary format, CSC for column-wise operations
 
 ---
 
-## Phase 41: Property-Based Tests
+## Phase 45: Graph Neural Networks
 
-**Goal:** Implement QuickCheck-style tests verifying mathematical and algorithmic properties
+**Goal:** Implement GNN primitives for message passing and graph attention
 
-**Requirements:** PROP-01, PROP-02, PROP-03, PROP-04
+**Requirements:** GNN-01, GNN-02, GNN-03, GNN-04
 
 **Success Criteria:**
-1. User can run `./tests/property/mathematical` and see all invariants pass
-2. User can run `./tests/property/algorithmic` and see all correctness checks pass
-3. User can run `./tests/property/numerical` and see stability tests across FP16/FP32/FP64
-4. Failed tests output the seed value for exact reproduction
+1. User can run `MessagePassing(graph, features, message_fn, aggregate_fn)` with GPU acceleration
+2. User can compute `GraphAttention(node_features, edge_index, heads)` with attention weights
+3. User can sample `GraphSampler.sample_neighbors()` for mini-batch training
+4. User can execute `k_hop_aggregation()` for multi-hop neighborhood features
 
-**Dependencies:** Phase 40 (fuzzing infrastructure provides input generation patterns)
+**Dependencies:** Phase 44 (uses CSR graph format)
 
 **Key Decisions:**
-- Use rapidcheck or hand-rolled generator for property tests
-- Mathematical invariants: matmul identity (A @ I = A), FFT inverse (FFT^-1(FFT(x)) ≈ x)
-- Algorithmic invariants: sort produces sorted output, reduce is associative
-- Store seeds in test metadata for reproducibility
+- Build on existing CSR graph infrastructure
+- Support both GCN and GAT aggregation styles
+- Sampler operates on CSR format for efficiency
 
 ---
 
-## Phase 42: Coverage Infrastructure
+## Phase 46: Quantization Foundation
 
-**Goal:** Generate detailed coverage reports with line/branch coverage and gap analysis
+**Goal:** Build quantization infrastructure for INT8 and FP16 tensors
 
-**Requirements:** COVR-01, COVR-02, COVR-03
+**Requirements:** QUANT-01, QUANT-02
 
 **Success Criteria:**
-1. User can run `make coverage` and receive HTML report at `build/coverage/index.html`
-2. User can view coverage gaps via `make coverage-gaps` showing untested functions
-3. User can view per-module breakdown showing MEMORY: 85%, ALGO: 78%, NEURAL: 72%, etc.
+1. User can quantize `QuantizedTensor<int8_t>::FromFloat(float_tensor, scale)` with calibration
+2. User can quantize `QuantizedTensor<float16_t>::FromFloat(float_tensor)` with type conversion
+3. User can dequantize back to float32 for verification
+4. User can inspect quantization metadata (scale, zero_point, dtype)
 
-**Dependencies:** Phase 40 and 41 (coverage requires compiled tests)
+**Dependencies:** Phase 44 (uses tensor infrastructure)
 
 **Key Decisions:**
-- Use lcov/genhtml for coverage report generation
-- LLVM source-based coverage ( `-fprofile-instr-generate -fcoverage-mapping`)
-- Gap analysis compares coverage to TESTED annotation in headers
-- Per-module breakdown groups by include/nova/ subdirectory
+- Support per-tensor and per-channel quantization
+- Calibration-based quantization (not QAT initially)
+- Store quantization metadata alongside tensor data
 
 ---
 
-## Phase 43: CI Integration
+## Phase 47: Quantized Operations
 
-**Goal:** Enforce coverage thresholds and integrate all testing in CI pipeline
+**Goal:** Implement quantized matmul and mixed precision computation
 
-**Requirements:** COVR-04
+**Requirements:** QUANT-03, QUANT-04
 
 **Success Criteria:**
-1. PR fails if `make coverage` reports line coverage below 80%
-2. PR fails if fuzzing corpus drops below 90% of baseline corpus size
-3. All v2.0 test suites run in parallel on PR (fuzz + property + coverage in ~10 min)
+1. User can run `quantized_matmul(q_a, q_b, result)` producing quantized output
+2. User can execute `mixed_precision_matmul(fp32_a, int8_b, fp16_c)` with automatic casting
+3. Quantized operations maintain accuracy within 1% of FP32 baseline
+4. User can toggle between quantized and FP32 paths at runtime
 
-**Dependencies:** Phase 40, 41, 42 (all tests must exist before CI integration)
+**Dependencies:** Phase 46 (quantization infrastructure required)
 
 **Key Decisions:**
-- Coverage gate: `MIN_COVERAGE=80` in CI environment variable
-- Baseline corpus stored in repository at `tests/fuzz/baseline/`
-- Parallel execution via CMake CTest resource files
-- Timeout per fuzz target: 5 minutes (balance depth vs CI time)
+- Use WMMA (Warp Matrix Multiply and Accumulate) for INT8 on Tensor Cores
+- Automatic precision promotion in mixed operations
+- Runtime dispatch to fastest available implementation
 
 ---
 
@@ -109,18 +108,18 @@
 
 | REQ-ID | Phase | Covered |
 |--------|-------|---------|
-| FUZZ-01 | 40 | ✅ |
-| FUZZ-02 | 40 | ✅ |
-| FUZZ-03 | 40 | ✅ |
-| FUZZ-04 | 40 | ✅ |
-| PROP-01 | 41 | ✅ |
-| PROP-02 | 41 | ✅ |
-| PROP-03 | 41 | ✅ |
-| PROP-04 | 41 | ✅ |
-| COVR-01 | 42 | ✅ |
-| COVR-02 | 42 | ✅ |
-| COVR-03 | 42 | ✅ |
-| COVR-04 | 43 | ✅ |
+| SPARSE-01 | 44 | ✅ |
+| SPARSE-02 | 44 | ✅ |
+| SPARSE-03 | 44 | ✅ |
+| SPARSE-04 | 44 | ✅ |
+| GNN-01 | 45 | ✅ |
+| GNN-02 | 45 | ✅ |
+| GNN-03 | 45 | ✅ |
+| GNN-04 | 45 | ✅ |
+| QUANT-01 | 46 | ✅ |
+| QUANT-02 | 46 | ✅ |
+| QUANT-03 | 47 | ✅ |
+| QUANT-04 | 47 | ✅ |
 
 **All 12 requirements mapped across 4 phases.**
 
@@ -129,15 +128,15 @@
 ## Execution Order
 
 ```
-Phase 40 (Fuzz Testing Foundation)
+Phase 44 (Sparse Matrix Support) ← Foundation
          ↓
-Phase 41 (Property-Based Tests)  ← can start after Phase 40 partial
+Phase 45 (Graph Neural Networks) ← Builds on sparse/CSR
          ↓
-Phase 42 (Coverage Infrastructure) ← requires Phases 40+41
+Phase 46 (Quantization Foundation) ← Independent, can parallel
          ↓
-Phase 43 (CI Integration) ← final integration phase
+Phase 47 (Quantized Operations) ← Requires Phase 46
 ```
 
 ---
-*Roadmap created: 2026-04-26 for v2.0 Testing & Quality*
+*Roadmap created: 2026-04-26 for v2.1 New Algorithms*
 *4 phases, 12 requirements, all covered*

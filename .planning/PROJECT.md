@@ -4,20 +4,18 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: v2.0 Testing & Quality
+## Current Milestone: v2.1 New Algorithms
 
-**Previous milestone:** v1.9 Documentation — SHIPPED 2026-04-26
+**Previous milestone:** v2.0 Testing & Quality — SHIPPED 2026-04-26
 
-**Status:** ✅ COMPLETE
+**Status:** Planning
 
-**Goal:** Comprehensive testing and quality infrastructure with fuzz testing, property-based tests, and detailed coverage reports.
+**Goal:** Add new algorithm capabilities including sparse matrices, graph neural networks, and quantization.
 
 **Target features:**
-- Fuzz Testing: Property-based fuzzing to catch edge cases automatically
-- Property-Based Tests: QuickCheck-style tests that verify mathematical properties
-- Coverage Reports: HTML coverage reports, branch coverage, gap analysis
-
-**Completed:** 2026-04-26
+- Sparse Matrix Support: CSR/CSC formats, sparse matmul, SpMM kernels
+- Graph Neural Networks: GNN primitives, message passing, graph attention
+- Quantization: INT8/FP16 quantization, QAT support, mixed precision
 
 ## Core Value
 
@@ -170,6 +168,10 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 | Doxygen docs | HTML output with group definitions | ✓ v1.9 shipped |
 | Tutorial guides | Markdown docs covering quick start through profiling | ✓ v1.9 shipped |
 | Example programs | Runnable examples in examples/ directory | ✓ v1.9 shipped |
+| Fuzz testing | libFuzzer-based property fuzzing | ✓ v2.0 shipped |
+| Property tests | QuickCheck-style tests with reproducible seeds | ✓ v2.0 shipped |
+| Coverage reports | lcov/genhtml with per-module breakdown | ✓ v2.0 shipped |
+| CI integration | GitHub Actions with coverage gates | ✓ v2.0 shipped |
 
 ## Evolution
 
@@ -189,5 +191,5 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state (users, feedback, metrics)
 
 ---
-*Last updated: 2026-04-26 after v1.9 Documentation complete*
-*Last updated: 2026-04-26 for v2.0 Testing & Quality*
+*Last updated: 2026-04-26 after v2.0 Testing & Quality complete*
+*Last updated: 2026-04-26 for v2.1 New Algorithms*
