@@ -194,3 +194,25 @@
 - Build presets (dev/release/ci) with ccache integration
 
 **Next:** v1.9 Documentation
+
+---
+
+## v1.9 Documentation (Shipped: 2026-04-26)
+
+**Phases completed:** 3 phases, 12 requirements
+
+**Key accomplishments:**
+
+- **Phase 37: API Reference** - Doxygen configuration, documented headers with group definitions
+- **Phase 38: Tutorials** - Quick start, multi-GPU, checkpoint, and profiling guides
+- **Phase 39: Examples** - Image processing, graph algorithms, neural net, distributed training
+
+**Requirements delivered:** 12 total (API-01 to API-04, TUT-01 to TUT-04, EX-01 to EX-04)
+
+**Core features implemented:**
+- Doxygen configuration in `Doxyfile` with full HTML output
+- Doxygen-documented `cuda_error.hpp` with @defgroup and @ingroup
+- 4 tutorial documents covering quick start through profiling
+- 4 runnable example programs with compilation instructions
+
+**Next:** TBD
