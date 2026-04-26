@@ -74,6 +74,20 @@ option(NOVA_ENABLE_MPI "Enable MPI for multi-node support" OFF)
 # Unity build for faster compilation (CMake 3.16+)
 option(NOVA_ENABLE_UNITY_BUILD "Enable unity build to speed up compilation" ON)
 
+# ccache support for faster rebuilds
+option(NOVA_USE_CCACHE "Enable ccache compiler launcher for faster rebuilds" OFF)
+
+if(NOVA_USE_CCACHE)
+    find_program(CCACHE_PROGRAM ccache)
+    if(CCACHE_PROGRAM)
+        message(STATUS "ccache found: ${CCACHE_PROGRAM} - enabling compiler caching")
+        set(CMAKE_CUDA_COMPILER_LAUNCHER ${CCACHE_PROGRAM} CACHE STRING "" FORCE)
+        set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM} CACHE STRING "" FORCE)
+    else()
+        message(WARNING "ccache not found, but NOVA_USE_CCACHE=ON. Install ccache or set NOVA_USE_CCACHE=OFF")
+    endif()
+endif()
+
 # =============================================================================
 # Parallel Build Configuration
 # =============================================================================

@@ -1,0 +1,119 @@
+{
+  "version": 10,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "includeDefault": {
+    "label": "Optional",
+    "strategy": "external"
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "vendor": {
+        "example.com/Example": {
+          "url": "https://example.com/docs/cmake-presets"
+        }
+      },
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      },
+      "environment": {
+        "CC": "ccache",
+        "CXX": "ccache"
+      }
+    },
+    {
+      "name": "dev",
+      "displayName": "Development",
+      "description": "Debug build with ccache and verbose output",
+      "binaryDir": "${sourceDir}/build",
+      "inherits": ["base"],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "NOVA_ENABLE_NCCL": "OFF",
+        "NOVA_ENABLE_MPI": "OFF",
+        "NOVA_USE_CCACHE": "ON",
+        "NOVA_ENABLE_UNITY_BUILD": "OFF"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "description": "Optimized Release build with unity builds",
+      "binaryDir": "${sourceDir}/build-release",
+      "inherits": ["base"],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "NOVA_ENABLE_UNITY_BUILD": "ON"
+      }
+    },
+    {
+      "name": "ci",
+      "displayName": "CI Build",
+      "description": "Fast CI build optimized for continuous integration",
+      "binaryDir": "${sourceDir}/build-ci",
+      "inherits": ["base"],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "NOVA_ENABLE_NCCL": "OFF",
+        "NOVA_ENABLE_MPI": "OFF",
+        "NOVA_ENABLE_UNITY_BUILD": "ON",
+        "NOVA_USE_CCACHE": "OFF",
+        "CMAKE_UNITY_BUILD": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "dev",
+      "configurePreset": "dev",
+      "description": "Build development configuration"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "description": "Build release configuration"
+    },
+    {
+      "name": "ci",
+      "configurePreset": "ci",
+      "description": "Build CI configuration"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "dev",
+      "configurePreset": "dev",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "ignore"
+      }
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "ignore"
+      }
+    },
+    {
+      "name": "ci",
+      "configurePreset": "ci",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    }
+  ]
+}
