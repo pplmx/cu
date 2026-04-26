@@ -4,17 +4,17 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: v1.6 Performance & Training
+## Current Milestone: v1.7 Benchmarking & Testing
 
-**Previous milestone:** v1.5 Fault Tolerance — SHIPPED 2026-04-26
+**Previous milestone:** v1.6 Performance & Training — SHIPPED 2026-04-26
 
-**Goal:** Enhance training performance with distributed batch normalization, profiling infrastructure, and kernel fusion opportunities.
+**Goal:** Comprehensive benchmarking infrastructure for performance regression detection, measurement, and CI-gated quality.
 
 **Target features:**
-- Distributed batch normalization with cross-GPU synchronization
-- Performance profiling infrastructure for kernel and collective operations
-- Kernel fusion for matmul-bias-activation patterns
-- Memory optimization with checkpoint compression and gradient buffering
+- Comprehensive benchmark suite (Google Benchmark + Python harness)
+- Performance regression testing with automated detection
+- Continuous profiling hooks (NVTX annotations, CI baseline comparison)
+- Performance dashboards (HTML reports, trend charts, regression alerts)
 
 ## Core Value
 
@@ -54,10 +54,10 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 
 ### Active
 
-- [ ] Distributed batch normalization with cross-GPU sync — Phase 25
-- [ ] Performance profiling infrastructure — Phase 26
-- [ ] Kernel fusion for training efficiency — Phase 27
-- [ ] Memory optimization (compression, accumulation) — Phase 28
+- [ ] Comprehensive benchmark suite (reduce, scan, sort, FFT, matmul, collectives) — Phase 29
+- [ ] Performance regression testing with automated detection — Phase 30
+- [ ] Continuous profiling hooks (NVTX, CI baseline comparison) — Phase 31
+- [ ] Performance dashboards (HTML reports, trend charts, regression alerts) — Phase 32
 
 ### Completed (v1.5)
 
@@ -98,13 +98,17 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 - Memory error detection and device health monitoring
 - Job preemption signal handling (SIGTERM/SIGUSR1)
 
-**Added in v1.6 (planned):**
-- NCCL 2.25+ integration with P2P fallback
-- Stream-based NCCL collectives with async error handling
-- Column/row parallel matmul for transformer layers
-- TensorParallelLayer abstractions
-- PipelineScheduler with 1F1B and interleaved schedules
-- P2P send/recv for inter-stage communication
+**Added in v1.6:**
+- Distributed batch normalization with NCCL all-reduce
+- CUDA event-based kernel profiling infrastructure
+- Matmul-bias-activation kernel fusion
+- ZSTD/LZ4 checkpoint compression and gradient buffering
+
+**Added in v1.7 (planned):**
+- Comprehensive benchmark suite with Google Benchmark + Python harness
+- Performance regression testing with CI-gated detection
+- NVTX profiling annotations and automated baseline comparison
+- HTML performance dashboards with trend charts and alerts
 
 ## Constraints
 
@@ -135,8 +139,11 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 | Error recovery strategy | Detect → isolate → recover → retry | ✓ v1.5 shipped |
 | Signal handling | SIGTERM/SIGUSR1 for graceful shutdown | ✓ v1.5 shipped |
 | Thread-safety | Mutex protection for signal state | ✓ v1.5 shipped |
-| BatchNorm strategy | SyncBatchNorm with NCCL all-reduce | v1.6 planning |
-| Profiling approach | Integrate with CUDA profiling tools | v1.6 planning |
+| BatchNorm strategy | SyncBatchNorm with NCCL all-reduce | ✓ v1.6 shipped |
+| Profiling approach | CUDA events for kernel timing | ✓ v1.6 shipped |
+| Benchmark framework | Google Benchmark + Python harness hybrid | v1.7 planning |
+| Regression strategy | CI-gated threshold comparison against baseline | v1.7 planning |
+| Dashboard approach | HTML reports with trend charts, JSON data export | v1.7 planning |
 
 ## Evolution
 
@@ -156,4 +163,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state (users, feedback, metrics)
 
 ---
-*Last updated: 2026-04-26 after v1.6 milestone planning*
+*Last updated: 2026-04-26 after v1.7 milestone planning*
