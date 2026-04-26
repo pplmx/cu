@@ -1,0 +1,104 @@
+# Fuzz Testing CMake Configuration
+# Enable with: cmake -B build -DNOVA_BUILD_FUZZ_TESTS=ON
+
+option(NOVA_BUILD_FUZZ_TESTS "Build fuzz testing targets" OFF)
+
+if(NOT NOVA_BUILD_FUZZ_TESTS)
+    return()
+endif()
+
+# Check for libFuzzer (typically provided by compiler)
+set(FUZZER_LIB "")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(FUZZER_LIB "Fuzzer")
+elseif(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
+    # CUDA uses clang-based driver on Clang toolchains
+    if(CMAKE_CUDA_COMPILER MATCHES "clang")
+        set(FUZZER_LIB "Fuzzer")
+    endif()
+endif()
+
+if(NOT FUZZER_LIB)
+    message(STATUS "Fuzz testing requires Clang/LLVM. Skipping fuzz targets.")
+    return()
+endif()
+
+find_library(FUZZER_LIBRARY ${FUZZER_LIB} PATHS /usr/lib /usr/local/lib)
+if(NOT FUZZER_LIBRARY)
+    message(STATUS "libFuzzer not found. Install with: apt install libfuzzer-dev")
+    return()
+endif()
+
+message(STATUS "Building fuzz testing targets with libFuzzer")
+
+# Memory Pool Fuzz Target
+add_executable(memory_pool_fuzz
+    fuzz/memory_pool_fuzz.cpp
+)
+target_link_libraries(memory_pool_fuzz PRIVATE
+    cuda_impl
+    CUDA::cudart
+    ${FUZZER_LIBRARY}
+)
+target_include_directories(memory_pool_fuzz PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/tests/fuzz
+)
+target_compile_options(memory_pool_fuzz PRIVATE -fsanitize=fuzzer)
+
+add_custom_target(fuzz_memory_pool
+    COMMAND memory_pool_fuzz $<TARGET_FILE:memory_pool_fuzz> ${CMAKE_SOURCE_DIR}/tests/fuzz/corpus/memory_pool -max_total_time=60
+    DEPENDS memory_pool_fuzz
+    COMMENT "Running memory pool fuzzing tests"
+    VERBATIM
+)
+
+# Algorithm Fuzz Target
+add_executable(algorithm_fuzz
+    fuzz/algorithm_fuzz.cpp
+)
+target_link_libraries(algorithm_fuzz PRIVATE
+    cuda_impl
+    CUDA::cudart
+    ${FUZZER_LIBRARY}
+)
+target_include_directories(algorithm_fuzz PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/tests/fuzz
+)
+target_compile_options(algorithm_fuzz PRIVATE -fsanitize=fuzzer)
+
+add_custom_target(fuzz_algorithms
+    COMMAND algorithm_fuzz $<TARGET_FILE:algorithm_fuzz> ${CMAKE_SOURCE_DIR}/tests/fuzz/corpus/algorithm -max_total_time=60
+    DEPENDS algorithm_fuzz
+    COMMENT "Running algorithm fuzzing tests"
+    VERBATIM
+)
+
+# Matmul Fuzz Target
+add_executable(matmul_fuzz
+    fuzz/matmul_fuzz.cpp
+)
+target_link_libraries(matmul_fuzz PRIVATE
+    cuda_impl
+    CUDA::cudart
+    ${FUZZER_LIBRARY}
+)
+target_include_directories(matmul_fuzz PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/tests/fuzz
+)
+target_compile_options(matmul_fuzz PRIVATE -fsanitize=fuzzer)
+
+add_custom_target(fuzz_matmul
+    COMMAND matmul_fuzz $<TARGET_FILE:matmul_fuzz> ${CMAKE_SOURCE_DIR}/tests/fuzz/corpus/matmul -max_total_time=60
+    DEPENDS matmul_fuzz
+    COMMENT "Running matmul fuzzing tests"
+    VERBATIM
+)
+
+# Combined fuzz target
+add_custom_target(fuzz_all
+    DEPENDS fuzz_memory_pool fuzz_algorithms fuzz_matmul
+    COMMENT "Running all fuzzing tests"
+)

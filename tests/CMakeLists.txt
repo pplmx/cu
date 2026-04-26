@@ -122,3 +122,6 @@ target_compile_options(nova-tests PRIVATE
 
 include(GoogleTest)
 gtest_discover_tests(nova-tests)
+
+# Fuzz Testing
+include(CMakeFuzz.txt)

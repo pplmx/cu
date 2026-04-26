@@ -136,3 +136,6 @@ cuda_profile_*.log
 cub_cache/
 nvcc_cache/
 build-ninja/
+
+# Fuzzing
+tests/fuzz/crashes/
