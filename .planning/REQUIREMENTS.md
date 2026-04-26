@@ -1,122 +1,75 @@
-# Requirements: Nova CUDA Library — v1.7 Benchmarking & Testing
+# Nova v1.8 Developer Experience — Requirements
 
-**Defined:** 2026-04-26
-**Core Value:** A reliable, high-performance CUDA compute library that can be trusted in production environments, with comprehensive algorithms for scientific computing, image processing, and emerging workloads.
+**Milestone:** v1.8 Developer Experience
+**Research:** Complete (STACK.md, FEATURES.md, ARCHITECTURE.md, PITFALLS.md)
+**Status:** Draft
 
-## v1 Requirements
+## Overview
 
-Requirements for initial release. Each maps to roadmap phases.
+This milestone adds four developer experience layers to Nova:
 
-### Benchmark Infrastructure Foundation (BENCH)
+1. **Error Message Framework** — Descriptive CUDA errors with device context and recovery hints
+2. **CMake Package Export** — Relocatable `find_package(nova)` support via config-file packages
+3. **IDE Configuration** — clangd and VS Code settings for CUDA support
+4. **Build Performance** — ccache, Ninja, and CMakePresets.json for fast builds
 
-- [ ] **BENCH-01**: Developer can run benchmark suite with `python scripts/benchmark/run_benchmarks.py --all`
-- [ ] **BENCH-02**: Benchmarks use CUDA events for accurate wall-clock timing with proper synchronization
-- [ ] **BENCH-03**: Benchmarks include warmup iterations before measurement to stabilize GPU clocks
-- [ ] **BENCH-04**: NVTX annotation framework provides scoped range guards with compile-time toggle
-- [ ] **BENCH-05**: NVTX annotations can be disabled without affecting benchmark timing accuracy
+## Requirements
 
-### Comprehensive Benchmark Suite (SUITE)
+### Phase 1: Error Message Framework
 
-- [ ] **SUITE-01**: Developer can benchmark reduce operations (float, double) with configurable input sizes
-- [ ] **SUITE-02**: Developer can benchmark scan operations (inclusive, exclusive) with configurable input sizes
-- [ ] **SUITE-03**: Developer can benchmark sort operations with configurable input sizes
-- [ ] **SUITE-04**: Developer can benchmark FFT operations (forward, inverse) with configurable input sizes
-- [ ] **SUITE-05**: Developer can benchmark matmul operations with configurable input sizes and batch dimensions
-- [ ] **SUITE-06**: Benchmark results include throughput metrics (GB/s, items/sec) and latency (ms)
-- [ ] **SUITE-07**: Developer can benchmark memory operations (H2D, D2H, D2D) with throughput metrics
-- [ ] **SUITE-08**: Multi-GPU benchmarks measure NCCL collective operations (all-reduce, broadcast, all-gather)
-- [ ] **SUITE-09**: Benchmarks support parameterized input sizes across meaningful ranges (small to production-scale)
+- [ ] **ERR-01**: Developer can receive descriptive error messages that include the CUDA function name, file:line location, and device context
+- [ ] **ERR-02**: Developer receives error-category-specific recovery hints (e.g., "Try reducing block size" for shared memory errors)
+- [ ] **ERR-03**: cuBLAS status codes are translated to human-readable names (e.g., `CUBLAS_STATUS_NOT_SUPPORTED` instead of `7`)
+- [ ] **ERR-04**: Error types integrate with `std::error_code` for idiomatic C++ error handling
 
-### CI Regression Testing (CI)
+### Phase 2: CMake Package Export
 
-- [ ] **CI-01**: Benchmark results are exported as machine-readable JSON files
-- [ ] **CI-02**: Baseline JSON files are committed to `scripts/benchmark/baselines/` with version metadata
-- [ ] **CI-03**: Python harness compares results against baselines with configurable tolerance thresholds
-- [ ] **CI-04**: Regression detection uses statistical significance testing (Welch's t-test) to reduce false positives
-- [ ] **CI-05**: GitHub Actions workflow runs benchmarks on PR and fails if regression exceeds threshold
-- [ ] **CI-06**: CI workflow stores baseline freshness metadata and alerts when baselines are stale
-- [ ] **CI-07**: Regression check failures include clear output showing which benchmark regressed, by how much, and the baseline value
+- [ ] **CMK-01**: Library can be found via `find_package(nova REQUIRED)` after installation
+- [ ] **CMK-02**: Exported targets (`Nova::nova`, `Nova::cuda`) are relocatable using generator expressions
+- [ ] **CMK-03**: Feature matrix is displayed during CMake configure (NCCL, MPI status)
+- [ ] **CMK-04**: Version file matches installed version via `cmake_package_registry`
 
-### Performance Dashboards (DASH)
+### Phase 3: IDE Configuration
 
-- [ ] **DASH-01**: Python script generates HTML dashboard from benchmark JSON results
-- [ ] **DASH-02**: Dashboard displays benchmark results in tabular format with time, throughput, and iterations
-- [ ] **DASH-03**: Dashboard shows trend charts comparing current results against baselines
-- [ ] **DASH-04**: Dashboard highlights regressions in red, improvements in green, and stable results in neutral color
-- [ ] **DASH-05**: Dashboard includes hardware context (GPU model, driver version, CUDA version)
-- [ ] **DASH-06**: Dashboard generates self-contained HTML that can be served statically or attached as CI artifact
+- [ ] **IDE-01**: `.clangd/config.yaml` enables clangd to parse `.cu` files with correct CUDA flags
+- [ ] **IDE-02**: `.vscode/settings.json` integrates clangd for VS Code users
+- [ ] **IDE-03**: `compile_commands.json` symlink exists at project root for IDE discovery
+- [ ] **IDE-04**: Documentation exists for IDE setup in `docs/ide-setup.md`
 
-## v2 Requirements
+### Phase 4: Build Performance
 
-Deferred to future release. Tracked but not in current roadmap.
+- [ ] **BLD-01**: CMakePresets.json provides `dev`, `release`, and `ci` presets with sensible defaults
+- [ ] **BLD-02**: `NOVA_USE_CCACHE` CMake option enables ccache with correct configuration
+- [ ] **BLD-03**: `NOVA_ENABLE_UNITY_BUILD` CMake option enables unity builds validated against full test suite
+- [ ] **BLD-04**: Build performance documentation exists with ccache and preset usage instructions
 
-### Distributed Training Benchmarks
+## Future Requirements (Deferred)
 
-- **DIST-01**: Developer can benchmark tensor parallelism operations with scaling curves across GPU counts
-- **DIST-02**: Developer can benchmark pipeline parallelism schedules (1F1B, interleaved) with throughput metrics
-
-### Advanced Profiling
-
-- **PROF-01**: Developer can launch Nsight Systems from benchmark tooling for interactive GPU analysis
-- **PROF-02**: Benchmark reports include L2 cache hit rates and memory efficiency metrics
-- **PROF-03**: Developer can trigger automated alert routing (Slack/email) on regression detection
-
-### Memory Profiling
-
-- **MEMP-01**: Developer can detect memory leaks by comparing allocation count before and after benchmark runs
-- **MEMP-02**: Developer can measure memory pool fragmentation metrics across benchmark iterations
+- Interactive debugger helpers with ncu/nsight integration
+- Python/Rust bindings
+- pkg-config support
+- CI build matrix with multiple CUDA versions
 
 ## Out of Scope
 
-Explicitly excluded. Documented to prevent scope creep.
-
 | Feature | Reason |
 |---------|--------|
-| Real-time dashboard streaming | Continuous GPU polling adds overhead; periodic JSON + static HTML is sufficient |
-| Automatic kernel tuning | Takes hours to run, changes kernel behavior unexpectedly |
-| Cross-vendor validation (AMD/Intel) | Different architectures yield different metrics; focus on NVIDIA |
-| ML-based anomaly detection | False positives in noisy GPU workloads; statistical tolerance bands are more reliable |
-| Per-instruction SASS profiling | Prohibitive overhead; offer as opt-in manual tool (Nsight Compute) |
+| Real-time error monitoring | Advanced observability, not core DX |
+| Interactive debugger helpers | Advanced users use ncu/nsight directly |
+| Python/Rust bindings | Separate repository scope |
+| pkg-config support | Only needed for non-CMake build systems |
+| Cross-vendor support (HIP) | Nova is CUDA-specific by design |
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BENCH-01 | Phase 29 | Pending |
-| BENCH-02 | Phase 29 | Pending |
-| BENCH-03 | Phase 29 | Pending |
-| BENCH-04 | Phase 29 | Pending |
-| BENCH-05 | Phase 29 | Pending |
-| SUITE-01 | Phase 30 | Pending |
-| SUITE-02 | Phase 30 | Pending |
-| SUITE-03 | Phase 30 | Pending |
-| SUITE-04 | Phase 30 | Pending |
-| SUITE-05 | Phase 30 | Pending |
-| SUITE-06 | Phase 30 | Pending |
-| SUITE-07 | Phase 30 | Pending |
-| SUITE-08 | Phase 30 | Pending |
-| SUITE-09 | Phase 30 | Pending |
-| CI-01 | Phase 31 | Pending |
-| CI-02 | Phase 31 | Pending |
-| CI-03 | Phase 31 | Pending |
-| CI-04 | Phase 31 | Pending |
-| CI-05 | Phase 31 | Pending |
-| CI-06 | Phase 31 | Pending |
-| CI-07 | Phase 31 | Pending |
-| DASH-01 | Phase 32 | Pending |
-| DASH-02 | Phase 32 | Pending |
-| DASH-03 | Phase 32 | Pending |
-| DASH-04 | Phase 32 | Pending |
-| DASH-05 | Phase 32 | Pending |
-| DASH-06 | Phase 32 | Pending |
-
-**Coverage:**
-- v1 requirements: 27 total
-- Mapped to phases: 27
-- Unmapped: 0 ✓
+| ERR-01 to ERR-04 | Phase 33 | — |
+| CMK-01 to CMK-04 | Phase 34 | — |
+| IDE-01 to IDE-04 | Phase 35 | — |
+| BLD-01 to BLD-04 | Phase 36 | — |
 
 ---
+
 *Requirements defined: 2026-04-26*
-*Last updated: 2026-04-26 after requirements definition*
+*Total: 16 requirements (ERR-01..ERR-04, CMK-01..CMK-04, IDE-01..IDE-04, BLD-01..BLD-04)*
