@@ -55,6 +55,7 @@ public:
 
     void set_timeout_threshold(std::chrono::seconds timeout);
     void set_check_interval(std::chrono::milliseconds interval);
+    void set_stall_confirmations(int count);
 
     using ErrorCallback = std::function<void(const CommError&)>;
     void set_error_callback(ErrorCallback callback);

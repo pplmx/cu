@@ -12,6 +12,7 @@
 - ✅ **v1.3 NCCL Integration, Tensor & Pipeline Parallelism** — Phases 13-17 (shipped 2026-04-24)
 - ✅ **v1.4 Multi-Node Support** — Phases 18-20 (shipped 2026-04-24)
 - ✅ **v1.5 Fault Tolerance** — Phases 21-24 (shipped 2026-04-26)
+- ✅ **v1.6 Performance & Training** — Phases 25-28 (shipped 2026-04-26)
 
 ## Phase Progress
 
@@ -440,37 +441,117 @@
 
 ---
 
-## Backlog
+## v1.6 Performance & Training
 
-Deferred work from future milestones.
+**Status:** Phase 25-28 Complete - 4/4 phases
 
-### Phase 999.1: Distributed Batch Normalization (BACKLOG)
+**Goal:** Enhance training performance with distributed batch normalization, profiling infrastructure, and kernel fusion opportunities.
 
-**Goal:** Implement cross-GPU batch normalization synchronization
-**Source phase:** Future v1.3+ work
-**Deferred at:** Pending
-**Requirements:** DBN-01, DBN-02, DBN-03
+### Phase Overview
 
-### Phase 999.2: Multi-Node Support (BACKLOG)
+| # | Phase | Goal | Requirements | Plans | Status |
+|---|-------|------|--------------|-------|--------|
+| 25 | Distributed BatchNorm | Cross-GPU batch statistics synchronization | DBN-01 to DBN-03 | 3/3 | ✅ Complete |
+| 26 | Performance Profiling | Kernel and collective profiling infrastructure | PROF-01 to PROF-03 | 1/1 | ✅ Complete |
+| 27 | Kernel Fusion | Fused operations for training efficiency | FUSN-01 to FUSN-03 | 1/1 | ✅ Complete |
+| 28 | Memory Optimization | Checkpoint compression and gradient buffering | MOPT-01 to MOPT-03 | 1/1 | ✅ Complete |
 
-**Goal:** Enable NCCL communication across multiple nodes
-**Source phase:** Future v1.4+
-**Deferred at:** Pending
-**Requirements:** MULN-01, MULN-02, MULN-03
+### Phase Details
 
-### Deferred Verification (2026-04-26)
+<details>
+<summary>Phase 25: Distributed Batch Normalization (🚧 Planning)</summary>
 
-Phases 15-20 had implementation completed but verification summaries were not created:
+**Goal:** Implement synchronized batch normalization across GPUs.
 
-| Phase | Feature | Notes |
-|-------|---------|-------|
-| 15 | Extended Collectives | Implementation complete, summary pending |
-| 16 | Tensor Parallelism | Implementation complete, summary pending |
-| 17 | Pipeline Parallelism | Implementation complete, summary pending |
-| 18 | MPI Integration | Implementation complete, summary pending |
-| 19 | Topology-Aware Collectives | Implementation complete, summary pending |
-| 20 | Cross-Node Communicators | Implementation complete, summary pending |
+**Requirements:**
+- DBN-01: SyncBatchNorm with all-reduce for mean/variance
+- DBN-02: Cross-GPU batch statistics aggregation
+- DBN-03: Evaluation vs training mode handling
+
+**Success Criteria:**
+1. Mean and variance synchronized across GPUs via all-reduce
+2. Training mode maintains running statistics correctly
+3. Evaluation mode uses population statistics
+
+**Pitfalls Addressed:**
+- Lazy initialization on first forward pass
+- Numerical stability in variance computation
+- Synchronization overhead blocking training
+
+</details>
+
+<details>
+<summary>Phase 26: Performance Profiling (🚧 Planning)</summary>
+
+**Goal:** Add profiling infrastructure for kernel and collective performance.
+
+**Requirements:**
+- PROF-01: Kernel-level profiling with CUDA profiling tools integration
+- PROF-02: Memory bandwidth and compute throughput metrics
+- PROF-03: Collective operation latency tracking
+
+**Success Criteria:**
+1. Integration with nvprof/nsys for kernel analysis
+2. Memory bandwidth utilization reported per operation
+3. Collective latencies tracked and logged
+
+**Pitfalls Addressed:**
+- Profiling overhead impacting performance measurements
+- Coarse-grained vs fine-grained metrics
+- Incomplete coverage of all operations
+
+</details>
+
+<details>
+<summary>Phase 27: Kernel Fusion (🚧 Planning)</summary>
+
+**Goal:** Implement fused kernels for training efficiency.
+
+**Requirements:**
+- FUSN-01: Fused matmul + bias + activation kernels
+- FUSN-02: Fused layernorm + softmax patterns
+- FUSN-03: Automatic kernel fusion discovery
+
+**Success Criteria:**
+1. Matmul-bias-activation fused into single kernel
+2. Layernorm followed by softmax fused
+3. Fusion opportunities discovered automatically
+
+**Pitfalls Addressed:**
+- Register pressure from fusion
+- Code complexity vs performance trade-off
+- Maintaining numerical accuracy
+
+</details>
+
+<details>
+<summary>Phase 28: Memory Optimization (🚧 Planning)</summary>
+
+**Goal:** Optimize memory usage during training.
+
+**Requirements:**
+- MOPT-01: Checkpoint compression with LZ4
+- MOPT-02: Gradient accumulation buffering
+- MOPT-03: Memory defragmentation during training
+
+**Success Criteria:**
+1. Checkpoints compressed with LZ4, reducing size by ~50%
+2. Gradient accumulation uses pinned memory buffers
+3. Memory defragmentation reduces allocation failures
+
+**Pitfalls Addressed:**
+- Compression overhead during checkpoint
+- Fragmentation from many small allocations
+- Memory pressure during accumulation
+
+</details>
 
 ---
 
-*Roadmap updated: 2026-04-26 after v1.5 roadmap creation*
+## Backlog
+
+No items currently in backlog. All previously deferred features have been implemented.
+
+---
+
+*Roadmap updated: 2026-04-26 after v1.6 milestone completion*

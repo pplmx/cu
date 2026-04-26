@@ -26,10 +26,13 @@ struct HealthMonitor::Impl {
         std::chrono::steady_clock::time_point last_check;
         bool is_healthy = true;
         bool is_stalled = false;
+        int consecutive_not_ready = 0;
     };
 
     std::unordered_map<void*, CommState> comm_states;
     mutable std::shared_mutex state_mutex;
+
+    int stall_confirmations_required = 3;
 };
 
 HealthMonitor& HealthMonitor::instance() {
@@ -54,17 +57,20 @@ void HealthMonitor::start() {
                 for (auto& [comm_id, state] : impl_->comm_states) {
                     cudaError_t result = cudaStreamQuery(state.stream);
                     if (result == cudaErrorNotReady) {
+                        state.consecutive_not_ready++;
                         auto elapsed = std::chrono::steady_clock::now() - state.last_check;
-                        if (elapsed > impl_->timeout_threshold) {
-                            state.is_healthy = false;
-                            state.is_stalled = true;
+                        if (elapsed > impl_->timeout_threshold &&
+                            state.consecutive_not_ready >= impl_->stall_confirmations_required) {
+                            if (!state.is_stalled && impl_->error_callback) {
+                                state.is_healthy = false;
+                                state.is_stalled = true;
 
-                            if (impl_->error_callback) {
                                 CommError error;
                                 error.category = ErrorCategory::Timeout;
                                 error.severity = ErrorSeverity::Recoverable;
                                 error.message = "Communicator stalled for " +
-                                    std::to_string(std::chrono::duration_cast<std::chrono::seconds>(elapsed).count()) + "s";
+                                    std::to_string(std::chrono::duration_cast<std::chrono::seconds>(elapsed).count()) +
+                                    "s (" + std::to_string(state.consecutive_not_ready) + " confirmations)";
                                 error.device_id = 0;
                                 error.stream = state.stream;
                                 error.timestamp = std::chrono::steady_clock::now();
@@ -75,6 +81,7 @@ void HealthMonitor::start() {
                         state.last_check = std::chrono::steady_clock::now();
                         state.is_healthy = true;
                         state.is_stalled = false;
+                        state.consecutive_not_ready = 0;
                     }
                 }
             }
@@ -110,6 +117,10 @@ void HealthMonitor::set_timeout_threshold(std::chrono::seconds timeout) {
 
 void HealthMonitor::set_check_interval(std::chrono::milliseconds interval) {
     impl_->check_interval = interval;
+}
+
+void HealthMonitor::set_stall_confirmations(int count) {
+    impl_->stall_confirmations_required = std::max(1, count);
 }
 
 void HealthMonitor::set_error_callback(ErrorCallback callback) {

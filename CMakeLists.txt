@@ -242,6 +242,7 @@ set(NEURAL_SOURCES
         ${CUDA_NEURAL_DIR}/softmax.cu
         ${CUDA_NEURAL_DIR}/activations.cu
         ${CUDA_NEURAL_DIR}/layer_norm.cu
+        ${CUDA_NEURAL_DIR}/sync_batch_norm.cu
         ${CUDA_NEURAL_DIR}/tensor_parallel_matmul.cpp
         ${CUDA_NEURAL_DIR}/tensor_parallel_layers.cpp
         ${CUDA_NEURAL_DIR}/tensor_parallel_profile.cpp
@@ -311,6 +312,27 @@ set(PREEMPTION_SOURCES
         ${SRC_CUDA_PREEMPTION}/preemption_handler.cpp
 )
 
+set(PERFORMANCE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/performance)
+set(SRC_CUDA_PERFORMANCE ${CMAKE_SOURCE_DIR}/src/cuda/performance)
+
+set(PROFILING_SOURCES
+        ${SRC_CUDA_PERFORMANCE}/profiler.cpp
+)
+
+set(FUSION_DIR ${CMAKE_SOURCE_DIR}/include/cuda/neural/fusion)
+set(SRC_CUDA_FUSION ${CMAKE_SOURCE_DIR}/src/cuda/neural/fusion)
+
+set(FUSION_SOURCES
+        ${SRC_CUDA_FUSION}/kernel_fusion.cu
+)
+
+set(MEMORY_OPT_DIR ${CMAKE_SOURCE_DIR}/include/cuda/memory_opt)
+set(SRC_CUDA_MEMORY_OPT ${CMAKE_SOURCE_DIR}/src/cuda/memory_opt)
+
+set(MEMORY_OPT_SOURCES
+        ${SRC_CUDA_MEMORY_OPT}/memory_optimizer.cpp
+)
+
 set(ALL_CUDA_SOURCES
         ${DEVICE_SOURCES}
         ${ALGO_SOURCES}
@@ -328,6 +350,9 @@ set(ALL_CUDA_SOURCES
         ${NCCL_SOURCES}
         ${PIPELINE_SOURCES}
         ${DISTRIBUTED_SOURCES}
+        ${PROFILING_SOURCES}
+        ${FUSION_SOURCES}
+        ${MEMORY_OPT_SOURCES}
 )
 
 add_library(cuda_nccl STATIC ${NCCL_SOURCES})

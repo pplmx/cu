@@ -47,6 +47,7 @@ add_executable(nova-tests
     neural/softmax_test.cpp
     neural/activations_test.cpp
     neural/layer_norm_test.cpp
+    neural/sync_batch_norm_test.cu
     neural/tensor_parallel_test.cpp
     mesh/device_mesh_test.cu
     cuda/nccl/test_nccl_collectives.cpp
@@ -57,6 +58,7 @@ add_executable(nova-tests
     mpi/test_mpi_context.cpp
     topology/test_topology_map.cpp
     multinode/test_multi_node_context.cpp
+    performance/profiler_test.cpp
 )
 
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)

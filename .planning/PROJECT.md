@@ -4,17 +4,17 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: v1.5 Fault Tolerance
+## Current Milestone: v1.6 Performance & Training
 
-**Previous milestone:** v1.4 Multi-Node Support — SHIPPED 2026-04-24
+**Previous milestone:** v1.5 Fault Tolerance — SHIPPED 2026-04-26
 
-**Goal:** Enable production-grade fault tolerance with checkpoint/restart, error recovery, and graceful handling of cluster preemption.
+**Goal:** Enhance training performance with distributed batch normalization, profiling infrastructure, and kernel fusion opportunities.
 
 **Target features:**
-- GPU checkpoint/restart with full state serialization (weights + optimizer + RNG)
-- Communication error recovery for NCCL/TCP failures
-- Memory error detection and ECC error handling
-- Job preemption signal handling for scheduler integration
+- Distributed batch normalization with cross-GPU synchronization
+- Performance profiling infrastructure for kernel and collective operations
+- Kernel fusion for matmul-bias-activation patterns
+- Memory optimization with checkpoint compression and gradient buffering
 
 ## Core Value
 
@@ -54,10 +54,17 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 
 ### Active
 
-- [ ] GPU checkpoint/restart with full state serialization — Phase 21
-- [ ] Communication error recovery for NCCL/TCP failures — Phase 22
-- [ ] Memory error detection and ECC error handling — Phase 23
-- [ ] Job preemption signal handling — Phase 24
+- [ ] Distributed batch normalization with cross-GPU sync — Phase 25
+- [ ] Performance profiling infrastructure — Phase 26
+- [ ] Kernel fusion for training efficiency — Phase 27
+- [ ] Memory optimization (compression, accumulation) — Phase 28
+
+### Completed (v1.5)
+
+- [x] GPU checkpoint/restart with full state serialization — Phase 21
+- [x] Communication error recovery for NCCL/TCP failures — Phase 22
+- [x] Memory error detection and ECC error handling — Phase 23
+- [x] Job preemption signal handling — Phase 24
 
 ### Out of Scope
 
@@ -78,9 +85,20 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 - Multi-GPU collective operations (all-reduce, broadcast, all-gather, barrier)
 - Distributed memory pool spanning multiple GPUs
 - Multi-GPU matrix multiply with single-GPU fallback
-- All v1.0-v1.3 features: FFT, Ray Tracing, Graph Algorithms, Neural Net Primitives, Async/Streaming, NCCL, Tensor Parallelism, Pipeline Parallelism
+- All v1.0-v1.5 features: FFT, Ray Tracing, Graph Algorithms, Neural Net Primitives, Async/Streaming, NCCL, Tensor Parallelism, Pipeline Parallelism, Fault Tolerance
 
-**Added in v1.3:**
+**Added in v1.4:**
+- MPI-based NCCL bootstrapping for multi-node
+- Topology-aware collective algorithm selection
+- Hierarchical cross-node communicators
+
+**Added in v1.5:**
+- GPU checkpoint/restart with full state serialization
+- Communication error recovery with exponential backoff
+- Memory error detection and device health monitoring
+- Job preemption signal handling (SIGTERM/SIGUSR1)
+
+**Added in v1.6 (planned):**
 - NCCL 2.25+ integration with P2P fallback
 - Stream-based NCCL collectives with async error handling
 - Column/row parallel matmul for transformer layers
@@ -113,9 +131,12 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 | TensorParallelMatmul (col/row) | Build on existing DistributedMatmul | ✓ v1.3 shipped |
 | 1F1B pipeline scheduler | Classic GPipe-style scheduling | ✓ v1.3 shipped |
 | MPI for multi-node init | Standard for cluster NCCL bootstrapping | ✓ v1.4 shipped |
-| Checkpoint granularity | Full state (weights + optimizer + RNG) | v1.5 planning |
-| Error recovery strategy | Detect → isolate → recover → retry | v1.5 planning |
-| Signal handling | SIGTERM/SIGUSR1 for graceful shutdown | v1.5 planning |
+| Checkpoint granularity | Full state (weights + optimizer + RNG) | ✓ v1.5 shipped |
+| Error recovery strategy | Detect → isolate → recover → retry | ✓ v1.5 shipped |
+| Signal handling | SIGTERM/SIGUSR1 for graceful shutdown | ✓ v1.5 shipped |
+| Thread-safety | Mutex protection for signal state | ✓ v1.5 shipped |
+| BatchNorm strategy | SyncBatchNorm with NCCL all-reduce | v1.6 planning |
+| Profiling approach | Integrate with CUDA profiling tools | v1.6 planning |
 
 ## Evolution
 
@@ -135,4 +156,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state (users, feedback, metrics)
 
 ---
-*Last updated: 2026-04-26 after v1.5 milestone started*
+*Last updated: 2026-04-26 after v1.6 milestone planning*

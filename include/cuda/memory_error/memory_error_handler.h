@@ -173,3 +173,11 @@ MemoryError make_memory_error(cudaError_t error, int device_id,
                               MemoryErrorCategory category = MemoryErrorCategory::CudaError);
 
 } // namespace nova::memory
+
+namespace nova::memory {
+inline std::string get_ecc_limitations_note() {
+    return "ECC error detection requires nvidia-smi or NVML integration. "
+           "CUDA public API does not expose ECC error counts. "
+           "For ECC monitoring, consider using NVML APIs or nvidia-smi queries.";
+}
+} // namespace nova::memory

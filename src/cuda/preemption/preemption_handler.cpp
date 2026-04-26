@@ -27,18 +27,24 @@ SignalHandler& SignalHandler::instance() {
 }
 
 void SignalHandler::signal_handler(int signal) {
-    g_shutdown_requested.store(true);
-    g_received_signal.store(signal);
     {
         std::lock_guard<std::mutex> lock(g_signal_mutex);
+        g_shutdown_requested.store(true, std::memory_order_relaxed);
+        g_received_signal.store(signal, std::memory_order_relaxed);
         g_signal_time = std::chrono::steady_clock::now();
     }
 
     auto& instance = SignalHandler::instance();
     auto& impl = *instance.impl_;
 
-    if (impl.callback) {
-        impl.callback(signal);
+    ShutdownCallback callback;
+    {
+        std::lock_guard<std::mutex> lock(g_signal_mutex);
+        callback = impl.callback;
+    }
+
+    if (callback) {
+        callback(signal);
     }
 }
 
@@ -75,11 +81,13 @@ void SignalHandler::uninstall_handlers() {
 }
 
 bool SignalHandler::is_shutdown_requested() const {
-    return g_shutdown_requested.load();
+    std::lock_guard<std::mutex> lock(g_signal_mutex);
+    return g_shutdown_requested.load(std::memory_order_relaxed);
 }
 
 int SignalHandler::received_signal() const {
-    return g_received_signal.load();
+    std::lock_guard<std::mutex> lock(g_signal_mutex);
+    return g_received_signal.load(std::memory_order_relaxed);
 }
 
 void SignalHandler::set_shutdown_callback(ShutdownCallback callback) {
@@ -87,14 +95,12 @@ void SignalHandler::set_shutdown_callback(ShutdownCallback callback) {
 }
 
 SignalHandler::HandlerState SignalHandler::get_state() const {
+    std::lock_guard<std::mutex> lock(g_signal_mutex);
     HandlerState state;
     state.handler_installed = impl_->installed;
-    state.shutdown_requested = g_shutdown_requested.load();
-    state.received_signal_number = g_received_signal.load();
-    {
-        std::lock_guard<std::mutex> lock(g_signal_mutex);
-        state.signal_received_at = g_signal_time;
-    }
+    state.shutdown_requested = g_shutdown_requested.load(std::memory_order_relaxed);
+    state.received_signal_number = g_received_signal.load(std::memory_order_relaxed);
+    state.signal_received_at = g_signal_time;
     return state;
 }
 
