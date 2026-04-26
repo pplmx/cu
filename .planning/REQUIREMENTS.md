@@ -106,32 +106,30 @@
 
 ## Traceability
 
-*To be filled by roadmap*
-
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| PERF-01 | — | Pending |
-| PERF-02 | — | Pending |
-| PERF-03 | — | Pending |
-| PERF-04 | — | Pending |
-| OP-01 | — | Pending |
-| OP-02 | — | Pending |
-| OP-03 | — | Pending |
-| OP-04 | — | Pending |
-| OP-05 | — | Pending |
-| OP-06 | — | Pending |
-| OP-07 | — | Pending |
-| OP-08 | — | Pending |
-| TOOL-01 | — | Pending |
-| TOOL-02 | — | Pending |
-| TOOL-03 | — | Pending |
-| TOOL-04 | — | Pending |
-| TOOL-05 | — | Pending |
-| TOOL-06 | — | Pending |
-| DOC-01 | — | Pending |
-| DOC-02 | — | Pending |
-| DOC-03 | — | Pending |
-| DOC-04 | — | Pending |
+| PERF-01 | 48 | Mapped |
+| PERF-02 | 49 | Mapped |
+| PERF-03 | 48 | Mapped |
+| PERF-04 | 49 | Mapped |
+| OP-01 | 50 | Mapped |
+| OP-02 | 50 | Mapped |
+| OP-03 | 50 | Mapped |
+| OP-04 | 50 | Mapped |
+| OP-05 | 50 | Mapped |
+| OP-06 | 51 | Mapped |
+| OP-07 | 51 | Mapped |
+| OP-08 | 51 | Mapped |
+| TOOL-01 | 52 | Mapped |
+| TOOL-02 | 52 | Mapped |
+| TOOL-03 | 52 | Mapped |
+| TOOL-04 | 52 | Mapped |
+| TOOL-05 | 52 | Mapped |
+| TOOL-06 | 52 | Mapped |
+| DOC-01 | 53 | Mapped |
+| DOC-02 | 53 | Mapped |
+| DOC-03 | 53 | Mapped |
+| DOC-04 | 53 | Mapped |
 
 ---
 
