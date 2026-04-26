@@ -4,20 +4,19 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: v1.7 Benchmarking & Testing
+## Current Milestone: v1.8 Developer Experience
 
-**Previous milestone:** v1.6 Performance & Training — SHIPPED 2026-04-26
+**Previous milestone:** v1.7 Benchmarking & Testing — SHIPPED 2026-04-26
 
-**Status:** ✅ SHIPPED 2026-04-26
+**Status:** Planning
 
-**Goal:** Comprehensive benchmarking infrastructure for performance regression detection, measurement, and CI-gated quality.
+**Goal:** Comprehensive developer experience improvements including better error messages, CMake integration, IDE support, and build performance.
 
-**Delivered features:**
-- NVTX annotation framework with compile-time toggle
-- Python benchmark harness with JSON output
-- Comprehensive benchmarks for memory, reduce, scan, sort, FFT, matmul
-- GitHub Actions CI workflow with statistical significance testing
-- HTML performance dashboards with Plotly charts
+**Target features:**
+- Better error messages with descriptive CUDA errors and recovery hints
+- CMake integration with modern targets and exported packages
+- IDE support with compile_commands.json, clangd config, VS Code settings
+- Build performance improvements via ccache, unity builds, parallel compilation
 
 ## Core Value
 
@@ -174,3 +173,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 *Last updated: 2026-04-26 after v1.7 milestone complete*
+*Last updated: 2026-04-26 for v1.8 Developer Experience*
