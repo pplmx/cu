@@ -11,7 +11,7 @@
 - ✅ **v1.2 Toolchain Upgrade** — Phases 11-12 (shipped 2026-04-24)
 - ✅ **v1.3 NCCL Integration, Tensor & Pipeline Parallelism** — Phases 13-17 (shipped 2026-04-24)
 - ✅ **v1.4 Multi-Node Support** — Phases 18-20 (shipped 2026-04-24)
-- 🚧 **v1.5 Fault Tolerance** — Phases 21-24 (in progress)
+- ✅ **v1.5 Fault Tolerance** — Phases 21-24 (shipped 2026-04-26)
 
 ## Phase Progress
 
@@ -325,10 +325,10 @@
 
 | # | Phase | Goal | Requirements | Plans | Status |
 |---|-------|------|--------------|-------|--------|
-| 21 | Checkpoint/Restart | Full state serialization, async writes, storage abstraction | CKPT-01 to CKPT-05 | 0/3 | 🚧 Planning |
-| 22 | Comm Error Recovery | NCCL timeout detection, health monitoring, automatic retry | COMM-01 to COMM-05 | 0/3 | Pending |
-| 23 | Memory Error Detection | ECC error handling, device health monitoring, graceful degradation | MEM-01 to MEM-05 | 0/3 | Pending |
-| 24 | Job Preemption | Signal handlers, graceful shutdown, resume-from-checkpoint | PEMP-01 to PEMP-05 | 0/3 | Pending |
+| 21 | Checkpoint/Restart | Full state serialization, async writes, storage abstraction | CKPT-01 to CKPT-05 | 3/3 | ✅ Complete |
+| 22 | Comm Error Recovery | NCCL timeout detection, health monitoring, automatic retry | COMM-01 to COMM-05 | 3/3 | ✅ Complete |
+| 23 | Memory Error Detection | ECC error handling, device health monitoring, graceful degradation | MEM-01 to MEM-05 | 3/3 | ✅ Complete |
+| 24 | Job Preemption | Signal handlers, graceful shutdown, resume-from-checkpoint | PEMP-01 to PEMP-05 | 3/3 | ✅ Complete |
 
 ### Phase Details
 
@@ -414,28 +414,27 @@
 </details>
 
 <details>
-<summary>Phase 24: Job Preemption Handling (Pending)</summary>
+<summary>Phase 24: Job Preemption Handling ✅ COMPLETE</summary>
 
 **Goal:** Graceful handling of cluster scheduler preemption.
 
+**Files Created:**
+- `include/cuda/preemption/preemption_handler.h` — SignalHandler, ShutdownCoordinator, ResumeValidator
+- `src/cuda/preemption/preemption_handler.cpp` — Full implementation
+- CMakeLists.txt — Added cuda_preemption library
+
 **Requirements:**
-- PEMP-01: Signal handlers for SIGTERM/SIGUSR1 with graceful shutdown
-- PEMP-02: Training state preservation sequence on preemption
-- PEMP-03: Resume-from-checkpoint validation and recovery
-- PEMP-04: Configurable shutdown timeout (default 30s, extendable)
-- PEMP-05: Coordinated checkpoint across multi-node ranks
+- PEMP-01: Signal handlers for SIGTERM/SIGUSR1 with graceful shutdown ✅
+- PEMP-02: Training state preservation sequence on preemption ✅
+- PEMP-03: Resume-from-checkpoint validation and recovery ✅
+- PEMP-04: Configurable shutdown timeout (default 30s, extendable) ✅
+- PEMP-05: Coordinated checkpoint across multi-node ranks ✅
 
-**Success Criteria:**
-1. Signal handlers installed at startup for SIGTERM/SIGUSR1
-2. Shutdown sequence completes gracefully within timeout
-3. Checkpoints validated before resume attempt
-4. Coordinated checkpoint ensures all ranks consistent
-
-**Pitfalls Addressed:**
-- Abrupt termination losing progress (graceful shutdown on signal)
-- Timeout too short for large checkpoints (configurable, extendable)
-- Resume from corrupted checkpoint (validation before use)
-- Cross-node inconsistency after preemption (coordinated checkpoint)
+**Decisions Applied:**
+- Async signal handlers with callback pattern
+- Shutdown phases: Signaling → Checkpointing → Finalizing
+- Thread-per-shutdown for non-blocking operation
+- Configurable timeout with extendability
 
 </details>
 
@@ -458,6 +457,19 @@ Deferred work from future milestones.
 **Source phase:** Future v1.4+
 **Deferred at:** Pending
 **Requirements:** MULN-01, MULN-02, MULN-03
+
+### Deferred Verification (2026-04-26)
+
+Phases 15-20 had implementation completed but verification summaries were not created:
+
+| Phase | Feature | Notes |
+|-------|---------|-------|
+| 15 | Extended Collectives | Implementation complete, summary pending |
+| 16 | Tensor Parallelism | Implementation complete, summary pending |
+| 17 | Pipeline Parallelism | Implementation complete, summary pending |
+| 18 | MPI Integration | Implementation complete, summary pending |
+| 19 | Topology-Aware Collectives | Implementation complete, summary pending |
+| 20 | Cross-Node Communicators | Implementation complete, summary pending |
 
 ---
 

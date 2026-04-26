@@ -57,6 +57,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 find_package(CUDAToolkit REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 # =============================================================================
 # Build Options
@@ -132,6 +133,14 @@ set(CUDA_TOPOLOGY_DIR ${CMAKE_SOURCE_DIR}/include/cuda/topology)
 set(SRC_CUDA_TOPOLOGY ${CMAKE_SOURCE_DIR}/src/cuda/topology)
 set(CUDA_MULTINODE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/multinode)
 set(SRC_CUDA_MULTINODE ${CMAKE_SOURCE_DIR}/src/cuda/multinode)
+set(CUDA_CHECKPOINT_DIR ${CMAKE_SOURCE_DIR}/include/cuda/checkpoint)
+set(SRC_CUDA_CHECKPOINT ${CMAKE_SOURCE_DIR}/src/cuda/checkpoint)
+set(CUDA_COMM_DIR ${CMAKE_SOURCE_DIR}/include/cuda/comm)
+set(SRC_CUDA_COMM ${CMAKE_SOURCE_DIR}/src/cuda/comm)
+set(CUDA_MEMORY_ERROR_DIR ${CMAKE_SOURCE_DIR}/include/cuda/memory_error)
+set(SRC_CUDA_MEMORY_ERROR ${CMAKE_SOURCE_DIR}/src/cuda/memory_error)
+set(CUDA_PREEMPTION_DIR ${CMAKE_SOURCE_DIR}/include/cuda/preemption)
+set(SRC_CUDA_PREEMPTION ${CMAKE_SOURCE_DIR}/src/cuda/preemption)
 
 add_library(cuda_memory INTERFACE)
 target_include_directories(cuda_memory INTERFACE
@@ -286,6 +295,22 @@ set(MULTINODE_SOURCES
         ${SRC_CUDA_MULTINODE}/multi_node_context.cpp
 )
 
+set(CHECKPOINT_SOURCES
+        ${SRC_CUDA_CHECKPOINT}/checkpoint_manager.cpp
+)
+
+set(COMM_SOURCES
+        ${SRC_CUDA_COMM}/comm_error_recovery.cpp
+)
+
+set(MEMORY_ERROR_SOURCES
+        ${SRC_CUDA_MEMORY_ERROR}/memory_error_handler.cpp
+)
+
+set(PREEMPTION_SOURCES
+        ${SRC_CUDA_PREEMPTION}/preemption_handler.cpp
+)
+
 set(ALL_CUDA_SOURCES
         ${DEVICE_SOURCES}
         ${ALGO_SOURCES}
@@ -351,6 +376,46 @@ target_include_directories(cuda_multinode PUBLIC
 )
 target_link_libraries(cuda_multinode PUBLIC CUDA::cudart cuda_nccl)
 
+add_library(cuda_checkpoint STATIC ${CHECKPOINT_SOURCES})
+target_include_directories(cuda_checkpoint PUBLIC
+        ${CMAKE_SOURCE_DIR}/include
+        ${CUDA_CHECKPOINT_DIR}
+)
+target_link_libraries(cuda_checkpoint PUBLIC
+        CUDA::cudart
+        OpenSSL::Crypto
+)
+
+add_library(cuda_comm STATIC ${COMM_SOURCES})
+target_include_directories(cuda_comm PUBLIC
+        ${CMAKE_SOURCE_DIR}/include
+        ${CUDA_COMM_DIR}
+)
+target_link_libraries(cuda_comm PUBLIC
+        CUDA::cudart
+        Threads::Threads
+)
+
+add_library(cuda_memory_error STATIC ${MEMORY_ERROR_SOURCES})
+target_include_directories(cuda_memory_error PUBLIC
+        ${CMAKE_SOURCE_DIR}/include
+        ${CUDA_MEMORY_ERROR_DIR}
+)
+target_link_libraries(cuda_memory_error PUBLIC
+        CUDA::cudart
+        Threads::Threads
+)
+
+add_library(cuda_preemption STATIC ${PREEMPTION_SOURCES})
+target_include_directories(cuda_preemption PUBLIC
+        ${CMAKE_SOURCE_DIR}/include
+        ${CUDA_PREEMPTION_DIR}
+)
+target_link_libraries(cuda_preemption PUBLIC
+        CUDA::cudart
+        Threads::Threads
+)
+
 add_library(cuda_impl STATIC ${ALL_CUDA_SOURCES})
 target_include_directories(cuda_impl PUBLIC
         ${CMAKE_SOURCE_DIR}/include
@@ -365,6 +430,10 @@ target_link_libraries(cuda_impl PUBLIC
         cuda_mpi
         cuda_topology
         cuda_multinode
+        cuda_checkpoint
+        cuda_comm
+        cuda_memory_error
+        cuda_preemption
         CUDA::cudart
         CUDA::cublas
         CUDA::cufft

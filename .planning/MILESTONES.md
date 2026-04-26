@@ -119,24 +119,31 @@
 
 ---
 
-## v1.5 Fault Tolerance (In Progress)
+## v1.5 Fault Tolerance (Shipped: 2026-04-26)
 
-**Phases planned:** 4 phases, 12 plans, 20 requirements
+**Phases completed:** 4 phases, 12 plans, 20 requirements
 
-**Planned capabilities:**
+**Key accomplishments:**
 
-- **Phase 21: Checkpoint/Restart** - Full state serialization, async writes, storage abstraction
-- **Phase 22: Comm Error Recovery** - NCCL timeout detection, health monitoring, automatic retry
-- **Phase 23: Memory Error Detection** - ECC error handling, device health monitoring, graceful degradation
-- **Phase 24: Job Preemption** - Signal handlers, graceful shutdown, resume-from-checkpoint
+- **Phase 21: Checkpoint/Restart** - CheckpointManager, FileStorageBackend, full state serialization
+- **Phase 22: Comm Error Recovery** - HealthMonitor, RetryHandler with exponential backoff, ErrorClassifier
+- **Phase 23: Memory Error Detection** - DeviceHealthMonitor, MemoryErrorHandler, DegradationManager
+- **Phase 24: Job Preemption** - SignalHandler, ShutdownCoordinator, ResumeValidator
 
-**Requirements planned:** 20 total (CKPT-01 to CKPT-05, COMM-01 to COMM-05, MEM-01 to MEM-05, PEMP-01 to PEMP-05)
+**Requirements delivered:** 20 total (CKPT-01 to CKPT-05, COMM-01 to COMM-05, MEM-01 to MEM-05, PEMP-01 to PEMP-05)
 
-**Core features planned:**
+**Core features implemented:**
 - CheckpointManager with async writes and configurable interval
 - Full state serialization (weights + optimizer states + RNG state)
-- NCCL timeout detection and automatic retry with exponential backoff
-- ECC error callback infrastructure and device health monitoring
-- SIGTERM/SIGUSR1 signal handlers for graceful preemption
+- FileStorageBackend with atomic writes
+- HealthMonitor watchdog thread for stall detection
+- RetryHandler with exponential backoff and circuit breaker
+- ErrorClassifier for NCCL error categorization
+- DeviceHealthMonitor with memory thresholds
+- DegradationManager (Nominal → ReducedTP → CPUFallback)
+- MemoryErrorHandler with telemetry
+- SignalHandler for SIGTERM/SIGUSR1
+- ShutdownCoordinator with configurable timeout
+- ResumeValidator for checkpoint validation
 
-**Next:** Phase 21 execution
+**Next:** v1.6
