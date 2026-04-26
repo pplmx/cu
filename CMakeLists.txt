@@ -375,6 +375,13 @@ set(MEMORY_OPT_SOURCES
         ${SRC_CUDA_MEMORY_OPT}/memory_optimizer.cpp
 )
 
+set(TOOLS_DIR ${CMAKE_SOURCE_DIR}/include/cuda/tools)
+set(SRC_CUDA_TOOLS ${CMAKE_SOURCE_DIR}/src/cuda/tools)
+
+set(TOOLS_SOURCES
+        ${SRC_CUDA_TOOLS}/tools.cpp
+)
+
 set(ALL_CUDA_SOURCES
         ${DEVICE_SOURCES}
         ${ALGO_SOURCES}
@@ -395,6 +402,7 @@ set(ALL_CUDA_SOURCES
         ${PERFORMANCE_SOURCES}
         ${FUSION_SOURCES}
         ${MEMORY_OPT_SOURCES}
+        ${TOOLS_SOURCES}
         ${ERROR_SOURCES}
 )
 

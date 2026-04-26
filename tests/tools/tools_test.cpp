@@ -1,0 +1,153 @@
+#include <gtest/gtest.h>
+#include <cuda_runtime.h>
+#include <cuda/tools/bank_conflict_analyzer.h>
+#include <cuda/tools/timeline_visualizer.h>
+
+namespace cuda::tools::test {
+
+class ToolsTest : public ::testing::Test {
+protected:
+    void SetUp() override {}
+    void TearDown() override {
+        TimelineVisualizer::instance().clear();
+        BandwidthAnalyzer::instance().clear();
+    }
+};
+
+TEST_F(ToolsTest, SharedMemoryAnalyzerConstruction) {
+    SharedMemoryAnalyzer& analyzer = SharedMemoryAnalyzer::instance();
+
+    BankConflictConfig config;
+    config.block_size = 256;
+    config.check_padding = true;
+    analyzer.set_config(config);
+
+    auto retrieved = analyzer.get_config();
+    EXPECT_EQ(retrieved.block_size, 256);
+    EXPECT_TRUE(retrieved.check_padding);
+}
+
+TEST_F(ToolsTest, SharedMemoryAnalyzerPaddingHints) {
+    SharedMemoryAnalyzer& analyzer = SharedMemoryAnalyzer::instance();
+
+    analyzer.enable_padding_hints(true);
+    EXPECT_TRUE(analyzer.is_padding_hints_enabled());
+
+    analyzer.enable_padding_hints(false);
+    EXPECT_FALSE(analyzer.is_padding_hints_enabled());
+}
+
+TEST_F(ToolsTest, SharedMemoryAnalyzerSuggestPadding) {
+    SharedMemoryAnalyzer& analyzer = SharedMemoryAnalyzer::instance();
+
+    int padding = analyzer.suggest_padding(4, 1024);
+    EXPECT_GE(padding, 0);
+}
+
+TEST_F(ToolsTest, BankConflictDetection) {
+    int conflicts = detect_bank_conflicts(nullptr, 64, 32);
+    EXPECT_GE(conflicts, 0);
+}
+
+TEST_F(ToolsTest, BankConflictAnalysis) {
+    BankConflictConfig config;
+    config.block_size = 256;
+    config.num_threads = 64;
+
+    auto result = analyze_bank_conflicts(nullptr, 4096, config);
+    EXPECT_GE(result.potential_conflicts, 0);
+    EXPECT_GE(result.suggested_padding, 0);
+    EXPECT_FALSE(result.analysis.empty());
+}
+
+TEST_F(ToolsTest, TimelineVisualizerConstruction) {
+    TimelineVisualizer& visualizer = TimelineVisualizer::instance();
+    visualizer.clear();
+    EXPECT_EQ(visualizer.get_event_count(), 0);
+}
+
+TEST_F(ToolsTest, TimelineVisualizerRecordKernel) {
+    TimelineVisualizer& visualizer = TimelineVisualizer::instance();
+    visualizer.clear();
+
+    visualizer.record_kernel("test_kernel", 1.5f);
+    EXPECT_EQ(visualizer.get_event_count(), 1);
+}
+
+TEST_F(ToolsTest, TimelineVisualizerRecordMemoryOp) {
+    TimelineVisualizer& visualizer = TimelineVisualizer::instance();
+    visualizer.clear();
+
+    visualizer.record_memory_op("memcpy", 1024, 0.5f);
+    EXPECT_EQ(visualizer.get_event_count(), 1);
+}
+
+TEST_F(ToolsTest, TimelineVisualizerExport) {
+    TimelineVisualizer& visualizer = TimelineVisualizer::instance();
+    visualizer.clear();
+
+    visualizer.record_kernel("kernel1", 1.0f);
+    visualizer.record_memory_op("memcpy", 1024, 0.5f);
+
+    visualizer.export_chrome_trace("/tmp/test_trace.json");
+    visualizer.export_json("/tmp/test_timeline.json");
+}
+
+TEST_F(ToolsTest, TimelineVisualizerEnable) {
+    TimelineVisualizer& visualizer = TimelineVisualizer::instance();
+    visualizer.clear();
+
+    visualizer.enable();
+    visualizer.record_kernel("kernel1", 1.0f);
+    EXPECT_EQ(visualizer.get_event_count(), 1);
+}
+
+TEST_F(ToolsTest, BandwidthAnalyzerConstruction) {
+    BandwidthAnalyzer& analyzer = BandwidthAnalyzer::instance();
+    analyzer.clear();
+
+    auto stats = analyzer.get_stats();
+    EXPECT_TRUE(stats.empty());
+}
+
+TEST_F(ToolsTest, BandwidthAnalyzerRecordOperation) {
+    BandwidthAnalyzer& analyzer = BandwidthAnalyzer::instance();
+    analyzer.clear();
+
+    analyzer.record_operation("H2D", 1024 * 1024, 1.0f);
+    analyzer.record_operation("D2H", 512 * 1024, 0.5f);
+
+    auto stats = analyzer.get_stats();
+    EXPECT_EQ(stats.size(), 2);
+}
+
+TEST_F(ToolsTest, BandwidthAnalyzerUtilization) {
+    BandwidthAnalyzer& analyzer = BandwidthAnalyzer::instance();
+    analyzer.clear();
+
+    analyzer.record_operation("test", 1024, 1.0f);
+
+    float utilization = analyzer.get_utilization_percentage(0);
+    EXPECT_GE(utilization, 0.0f);
+}
+
+TEST_F(ToolsTest, BandwidthAnalyzerReport) {
+    BandwidthAnalyzer& analyzer = BandwidthAnalyzer::instance();
+    analyzer.clear();
+
+    analyzer.record_operation("test_op", 4096, 2.0f);
+    analyzer.export_report("/tmp/bandwidth_report.md");
+}
+
+TEST_F(ToolsTest, TraceEventsGeneration) {
+    TimelineVisualizer& visualizer = TimelineVisualizer::instance();
+    visualizer.clear();
+
+    visualizer.record_kernel("kernel1", 1.0f);
+    visualizer.record_kernel("kernel2", 2.0f);
+
+    auto traces = visualizer.get_trace_events();
+    EXPECT_EQ(traces.size(), 2);
+}
+
+}  // namespace cuda::tools::test
