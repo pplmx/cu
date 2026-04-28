@@ -238,6 +238,13 @@ set(SIGNAL_SOURCES
         ${SRC_CUDA_SIGNAL}/signal.cu
 )
 
+set(SRC_CUDA_PRODUCTION ${CMAKE_SOURCE_DIR}/src/cuda/production)
+set(PRODUCTION_SOURCES
+        ${SRC_CUDA_PRODUCTION}/graph_executor.cu
+        ${SRC_CUDA_PRODUCTION}/memory_node.cu
+        ${SRC_CUDA_PRODUCTION}/algo_wrapper.cu
+)
+
 set(IMAGE_SOURCES
         ${IMAGE_DIR}/brightness.cu
         ${IMAGE_DIR}/gaussian_blur.cu
@@ -407,6 +414,7 @@ set(ALL_CUDA_SOURCES
         ${LINALG_SOURCES}
         ${NUMERIC_SOURCES}
         ${SIGNAL_SOURCES}
+        ${PRODUCTION_SOURCES}
         ${IMAGE_SOURCES}
         ${PARALLEL_SOURCES}
         ${MATRIX_SOURCES}

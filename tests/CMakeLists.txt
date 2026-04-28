@@ -70,6 +70,7 @@ add_executable(nova-tests
     memory_opt/memory_optimizer_test.cpp
     memory_opt/memory_optimizer_edge_test.cpp
     algo_sort_test.cu
+    production/graph_executor_test.cu
 )
 
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)
@@ -90,6 +91,7 @@ set(CUDA_DISTRIBUTED_DIR ${CMAKE_SOURCE_DIR}/include/cuda/distributed)
 set(CUDA_MPI_DIR ${CMAKE_SOURCE_DIR}/include/cuda/mpi)
 set(CUDA_TOPOLOGY_DIR ${CMAKE_SOURCE_DIR}/include/cuda/topology)
 set(CUDA_MULTINODE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/multinode)
+set(CUDA_PRODUCTION_DIR ${CMAKE_SOURCE_DIR}/include/cuda/production)
 set(DISTRIBUTED_TESTS_DIR ${CMAKE_SOURCE_DIR}/tests/distributed)
 
 target_link_libraries(nova-tests
@@ -121,6 +123,7 @@ target_include_directories(nova-tests PRIVATE
     ${CUDA_MPI_DIR}
     ${CUDA_TOPOLOGY_DIR}
     ${CUDA_MULTINODE_DIR}
+    ${CUDA_PRODUCTION_DIR}
     ${DISTRIBUTED_TESTS_DIR}
 )
 
