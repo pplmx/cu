@@ -1,39 +1,31 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.3
-milestone_name: Extended Algorithms
-status: complete
+milestone: v2.4
+milestone_name: Production Hardening
+status: planning
 last_updated: "2026-04-28"
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 20
-  completed_plans: 20
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 **Project:** Nova CUDA Library Enhancement
-**Last Updated:** 2026-04-28 (v2.3 COMPLETE)
+**Last Updated:** 2026-04-28 (v2.4 started)
 
 ## Current Position
 
-Phase: All phases complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: ✅ MILESTONE COMPLETE
-Last activity: 2026-04-28 — v2.3 Extended Algorithms shipped
-
-Progress: [██████████] 100%
+Status: Defining requirements
+Last activity: 2026-04-28 — Milestone v2.4 started
 
 ## Phase List
 
-| Phase | Name | Requirements | Status |
-|-------|------|--------------|--------|
-| 54 | Foundation & Sorting | SORT-01, SORT-02, SORT-03 | ✅ Complete |
-| 55 | Linear Algebra Extras | LINALG-01, LINALG-02, LINALG-03 | ✅ Complete |
-| 56 | Numerical Methods | NUM-01, NUM-02, NUM-03, NUM-04 | ✅ Complete |
-| 57 | Signal Processing | SIGNAL-01, SIGNAL-02, SIGNAL-03 | ✅ Complete |
-| 58 | Integration & Polish | (cross-cutting) | ✅ Complete |
+(No phases defined yet)
 
 ## Milestone History
 
@@ -53,35 +45,7 @@ Progress: [██████████] 100%
 | v2.1 New Algorithms | ✅ Shipped | 2026-04-26 | 12 |
 | v2.2 Comprehensive Enhancement | ✅ Shipped | 2026-04-27 | 18 |
 | v2.3 Extended Algorithms | ✅ Shipped | 2026-04-28 | 13 |
-
-## Phase Summaries
-
-### Phase 54: Foundation & Sorting
-- GPU radix sort using CUB
-- Top-K selection
-- Binary search with warp shuffle
-
-### Phase 55: Linear Algebra Extras
-- SVD (full/thin modes) using cuSOLVER
-- Eigenvalue decomposition
-- QR, Cholesky factorization
-
-### Phase 56: Numerical Methods
-- Monte Carlo with variance reduction (cuRAND)
-- Trapezoidal and Simpson integration
-- Bisection and Newton-Raphson root finding
-- Linear and cubic spline interpolation
-
-### Phase 57: Signal Processing
-- FFT-based convolution (cuFFT)
-- Haar wavelet transform
-- FIR filters
-
-### Phase 58: Integration & Polish
-- CMake integration for all modules
-- CUDA dependency linking
+| v2.4 Production Hardening | 🚧 In Progress | 2026-04-28 | TBD |
 
 ---
-
-*State updated: 2026-04-28 — v2.3 Extended Algorithms COMPLETE*
-*5/5 phases | 13/13 requirements | 100%*
+*State updated: 2026-04-28 — v2.4 Production Hardening started*

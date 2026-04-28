@@ -4,11 +4,21 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current State
+## Current Milestone: v2.4 Production Hardening
 
-**Latest milestone:** v2.3 Extended Algorithms — SHIPPED 2026-04-28
+**Previous milestone:** v2.3 Extended Algorithms — SHIPPED 2026-04-28
 
-**Next milestone:** Not started (run `/gsd-new-milestone`)
+**Status:** 🚧 IN PROGRESS
+
+**Goal:** Improve production readiness across error handling, performance optimization, reliability, and testing.
+
+**Target features:**
+- **Error handling & recovery:** Better error messages, fault tolerance, graceful degradation
+- **Performance optimization:** CUDA graphs, stream priorities, memory optimization
+- **Stress testing:** Edge case coverage, fuzzing improvements, benchmark enhancements
+- **Reliability:** Comprehensive testing, stability improvements
+
+**Started:** 2026-04-28
 
 ## Core Value
 
