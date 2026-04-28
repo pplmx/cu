@@ -10,7 +10,6 @@ namespace cuda::signal {
 namespace {
 
 size_t next_optimal_fft_size(size_t n) {
-    size_t factors[] = {2, 3, 5, 7};
     size_t size = 1;
     while (size < n) {
         size *= 2;
@@ -47,6 +46,14 @@ __global__ void fir_kernel(const float* signal, const float* coeffs, float* outp
     output[idx] = sum;
 }
 
+void check_cufft(cufftResult status, const char* file, int line) {
+    if (status != CUFFT_SUCCESS) {
+        throw std::runtime_error(std::string(file) + ":" + std::to_string(line) + " - cuFFT error: " + std::to_string(static_cast<int>(status)));
+    }
+}
+
+#define CUFFT_CHECK(call) check_cufft(call, __FILE__, __LINE__)
+
 }  // namespace
 
 ConvolutionResult fft_convolution(const float* signal, size_t signal_len, const float* kernel, size_t kernel_len, BoundaryMode mode) {
@@ -73,10 +80,6 @@ ConvolutionResult fft_convolution(const float* signal, size_t signal_len, const 
     cufftComplex* d_kernel = reinterpret_cast<cufftComplex*>(kernel_padded.data());
 
     CUFFT_CHECK(cufftExecR2C(plan, d_signal, d_kernel));
-
-    for (size_t i = 0; i < fft_size / 2 + 1; ++i) {
-    }
-
     CUFFT_CHECK(cufftExecC2R(plan, d_kernel, d_signal));
 
     CUDA_CHECK(cudaMemcpy(result.output.data(), signal_padded.data(), output_size * sizeof(float), cudaMemcpyDeviceToDevice));
@@ -98,23 +101,19 @@ WaveletResult haar_wavelet_forward(const float* signal, size_t n) {
     result.coefficients = memory::Buffer<float>(n);
     result.levels = levels;
 
-    memory::Buffer<float> current(n);
-    CUDA_CHECK(cudaMemcpy(current.data(), signal, n * sizeof(float), cudaMemcpyDeviceToDevice));
+    CUDA_CHECK(cudaMemcpy(result.coefficients.data(), signal, n * sizeof(float), cudaMemcpyDeviceToDevice));
 
-    memory::Buffer<float> temp(n / 2);
+    memory::Buffer<float> temp_approx(n);
+    memory::Buffer<float> temp_detail(n);
 
     for (size_t level = 0; level < levels; ++level) {
         size_t curr_n = n >> level;
         if (curr_n < 2) break;
 
-        haar_decompose_kernel<<<(curr_n / 2 + 255) / 256, 256>>>(current.data(), temp.data(), temp.data() + curr_n / 2, curr_n);
+        haar_decompose_kernel<<<(curr_n / 2 + 255) / 256, 256>>>(result.coefficients.data(), temp_approx.data(), temp_detail.data(), curr_n);
 
-        memory::Buffer<float> next(curr_n / 2);
-        CUDA_CHECK(cudaMemcpy(next.data(), temp.data(), (curr_n / 2) * sizeof(float), cudaMemcpyDeviceToDevice));
-        current = next;
+        CUDA_CHECK(cudaMemcpy(result.coefficients.data(), temp_approx.data(), (curr_n / 2) * sizeof(float), cudaMemcpyDeviceToDevice));
     }
-
-    CUDA_CHECK(cudaMemcpy(result.coefficients.data(), signal, n * sizeof(float), cudaMemcpyDeviceToDevice));
 
     return result;
 }

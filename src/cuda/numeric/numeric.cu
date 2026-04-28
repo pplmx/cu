@@ -10,31 +10,6 @@ namespace cuda::numeric {
 
 namespace {
 
-__global__ void monte_carlo_kernel(float* results, size_t n, float a, float b, curandState* states) {
-    const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= n) return;
-
-    curandState state = states[idx];
-    float u = curand_uniform(&state);
-    float x = a + u * (b - a);
-    results[idx] = func(x);
-    states[idx] = state;
-}
-
-__global__ void antithetic_variate_kernel(float* results, size_t n, float a, float b, curandState* states) {
-    const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= n) return;
-
-    curandState state = states[idx];
-    float u = curand_uniform(&state);
-
-    float x1 = a + u * (b - a);
-    float x2 = a + (1.0f - u) * (b - a);
-
-    results[idx] = (func(x1) + func(x2)) * 0.5f;
-    states[idx] = state;
-}
-
 __global__ void trap_kernel(float* results, size_t n, float h, float a, float (*func)(float)) {
     const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= n) return;
@@ -56,18 +31,20 @@ __global__ void simpson_kernel(float* f0, float* f1, float* f2, size_t n, float 
     f2[idx] = func(x2);
 }
 
-float func_wrapper(float x) {
-    return x * x;
-}
+__global__ void linear_interp_kernel(const float* x, const float* y, const float* coeffs, float* result, size_t n, size_t out_len, float x_min, float x_max) {
+    const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= out_len) return;
 
-curandGenerator_t get_curand_generator() {
-    static curandGenerator_t gen = [] {
-        curandGenerator_t g;
-        curandCreateGenerator(&g, CURAND_RNG_PSEUDO_DEFAULT);
-        curandSetPseudoRandomGeneratorSeed(g, 1234ULL);
-        return g;
-    }();
-    return gen;
+    float xv = x_min + (x_max - x_min) * idx / out_len;
+
+    for (size_t i = 0; i < n - 1; ++i) {
+        if (xv >= x[i] && xv <= x[i + 1]) {
+            float t = (xv - x[i]) / (x[i + 1] - x[i]);
+            result[idx] = y[i] + t * (y[i + 1] - y[i]);
+            return;
+        }
+    }
+    result[idx] = 0.0f;
 }
 
 }  // namespace
@@ -77,33 +54,29 @@ MonteCarloResult monte_carlo_integration(float (*func)(float), float a, float b,
     result.samples = samples;
     result.converged = false;
 
-    memory::Buffer<float> results(samples);
     memory::Buffer<float> d_func(samples);
-
-    curandGenerator_t gen = get_curand_generator();
-    float* h_samples = static_cast<float*>(malloc(samples * sizeof(float)));
     float* h_func = static_cast<float*>(malloc(samples * sizeof(float)));
 
     for (size_t i = 0; i < samples; ++i) {
-        h_samples[i] = static_cast<float>(rand()) / RAND_MAX;
+        h_func[i] = static_cast<float>(rand()) / RAND_MAX;
     }
 
-    CUDA_CHECK(cudaMemcpy(d_func.data(), h_samples, samples * sizeof(float), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_func.data(), h_func, samples * sizeof(float), cudaMemcpyHostToDevice));
 
-    float mean = cuda::algo::reduce_sum(d_func.data(), samples) / samples;
+    float sum = cuda::algo::reduce_sum(d_func.data(), samples);
+    float mean = sum / samples;
+    result.mean = mean * (b - a);
+
     float variance = 0.0f;
-
     for (size_t i = 0; i < samples; ++i) {
         float diff = h_func[i] - mean;
         variance += diff * diff;
     }
     variance /= samples;
-    result.mean = mean * (b - a);
     result.variance = variance;
     result.std_error = std::sqrt(variance / samples);
     result.converged = result.std_error < tolerance;
 
-    free(h_samples);
     free(h_func);
 
     return result;
