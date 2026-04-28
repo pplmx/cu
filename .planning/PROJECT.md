@@ -4,22 +4,18 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: v2.4 Production Hardening
+## Current Milestone: v2.5 Error Handling & Recovery
 
-**Previous milestone:** v2.3 Extended Algorithms — SHIPPED 2026-04-28
+**Previous milestone:** v2.4 Production Hardening — SHIPPED 2026-04-28
 
-**Status:** ✅ COMPLETE (2026-04-28)
+**Status:** 🚧 In Progress
 
-**Goal:** Improve production readiness across error handling, performance optimization, reliability, and testing.
+**Goal:** Build a comprehensive error handling and recovery system with timeout policies, retry mechanisms, and graceful degradation.
 
-**Delivered:**
-- Phase 59: CUDA Graphs Foundation (GraphExecutor, MemoryNode, AlgoWrapper)
-- Phase 60: Performance Optimization (L2 Persistence, Priority Streams, NVBench)
-- Phase 61: Observability (NVTX Domains, Async Error Tracker, Health Metrics)
-- Phase 62: Stress Testing (Error Injection, Memory Pressure, Concurrent Streams)
-- Phase 63: Integration & Documentation (PRODUCTION.md, CMake integration)
-
-**Next milestone:** Not started (run `/gsd-new-milestone`)
+**Target features:**
+- Timeout policies (per-operation tracking, watchdog timers)
+- Retry with backoff (exponential backoff, jitter, circuit breaker)
+- Graceful degradation (reduced precision, fallback algorithms)
 
 ## Core Value
 
@@ -248,5 +244,5 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state (users, feedback, metrics)
 
 ---
-*Last updated: 2026-04-28 after v2.3 Extended Algorithms milestone*
-*v2.3: Sorting, Linear Algebra, Numerical Methods, Signal Processing*
+*Last updated: 2026-04-28 after v2.5 Error Handling & Recovery started*
+*v2.5: Timeout policies, Retry with backoff, Graceful degradation*
