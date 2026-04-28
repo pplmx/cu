@@ -322,3 +322,34 @@
 - `cuda/observability/` - Observability extensions
 
 **Next:** TBD
+
+---
+
+## v2.5 Error Handling & Recovery (Shipped: 2026-04-28)
+
+**Phases completed:** 5 phases, 12 requirements
+
+**Key accomplishments:**
+
+- **Phase 64: Timeout Foundation** - TimeoutManager, timeout_guard, watchdog thread
+- **Phase 65: Timeout Propagation** - Deadline inheritance, callback notifications
+- **Phase 66: Retry System** - Exponential backoff, jitter, circuit breaker
+- **Phase 67: Degradation Framework** - Precision fallback, algorithm registry
+- **Phase 68: Integration & Testing** - E2E tests, PRODUCTION.md docs
+
+**Requirements delivered:** 12 total (TO-01 to TO-04, RT-01 to RT-04, GD-01 to GD-04)
+
+**Core features implemented:**
+- Timeout management with per-operation tracking and watchdog monitoring
+- Deadline propagation across async operation chains
+- Exponential backoff with configurable base delay and jitter
+- Circuit breaker pattern with closed/open/half-open states
+- Graceful degradation with precision fallback (FP64→FP32→FP16)
+- Algorithm fallback registry with priority ordering
+- Quality-aware degradation with configurable thresholds
+- Integration tests for timeout→retry→degrade chain
+
+**New modules:**
+- `cuda/error/` - Error handling extensions (timeout, retry, degrade)
+
+**Next:** TBD

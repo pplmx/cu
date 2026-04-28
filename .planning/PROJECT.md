@@ -4,18 +4,13 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: v2.5 Error Handling & Recovery
+## Current Milestone: Not started
 
-**Previous milestone:** v2.4 Production Hardening — SHIPPED 2026-04-28
+**Previous milestone:** v2.5 Error Handling & Recovery — SHIPPED 2026-04-28
 
-**Status:** 🚧 In Progress
+**Status:** ✅ COMPLETE
 
-**Goal:** Build a comprehensive error handling and recovery system with timeout policies, retry mechanisms, and graceful degradation.
-
-**Target features:**
-- Timeout policies (per-operation tracking, watchdog timers)
-- Retry with backoff (exponential backoff, jitter, circuit breaker)
-- Graceful degradation (reduced precision, fallback algorithms)
+Run `/gsd-new-milestone` to start the next milestone.
 
 ## Core Value
 
@@ -99,6 +94,21 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 - ✓ Memory pressure stress tests — v2.4
 - ✓ Concurrent stream stress tests — v2.4
 - ✓ Production hardening guide (PRODUCTION.md) — v2.4
+
+### Completed (v2.5)
+
+- ✓ Per-operation timeout tracking with configurable deadlines — v2.5
+- ✓ Watchdog timer system for detecting stalled operations — v2.5
+- ✓ Deadline propagation across async operation chains — v2.5
+- ✓ Timeout callback/notification system — v2.5
+- ✓ Exponential backoff with configurable base delay — v2.5
+- ✓ Jitter implementation (full/decorrelated) — v2.5
+- ✓ Circuit breaker pattern with threshold configuration — v2.5
+- ✓ Retry policy composition and chaining — v2.5
+- ✓ Reduced precision mode (FP64→FP32→FP16 fallback) — v2.5
+- ✓ Fallback algorithm registry with priority ordering — v2.5
+- ✓ Quality-aware degradation with threshold configuration — v2.5
+- ✓ Degradation event logging and metrics — v2.5
 
 ### Completed (v1.6)
 
@@ -244,5 +254,5 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state (users, feedback, metrics)
 
 ---
-*Last updated: 2026-04-28 after v2.5 Error Handling & Recovery started*
+*Last updated: 2026-04-28 after v2.5 Error Handling & Recovery shipped*
 *v2.5: Timeout policies, Retry with backoff, Graceful degradation*
