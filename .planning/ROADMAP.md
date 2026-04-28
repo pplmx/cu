@@ -17,8 +17,9 @@
 | 1-53 | v2.2 | ✅ Complete |
 | 54-58 | v2.3 | ✅ Complete |
 | 59 | v2.4 | CUDA Graphs Foundation | ✅ Complete |
-| 60 | v2.4 | Performance Optimization | Not started |
+| 60 | v2.4 | Performance Optimization | ✅ Complete |
 | 61 | v2.4 | Observability & Monitoring | Not started |
+| 62 | v2.4 | Stress Testing | Not started |
 | 62 | v2.4 | Stress Testing | Not started |
 | 63 | v2.4 | Integration & Polish | Not started |
 

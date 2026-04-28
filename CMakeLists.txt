@@ -243,6 +243,8 @@ set(PRODUCTION_SOURCES
         ${SRC_CUDA_PRODUCTION}/graph_executor.cu
         ${SRC_CUDA_PRODUCTION}/memory_node.cu
         ${SRC_CUDA_PRODUCTION}/algo_wrapper.cu
+        ${SRC_CUDA_PRODUCTION}/l2_persistence.cu
+        ${SRC_CUDA_PRODUCTION}/priority_stream.cu
 )
 
 set(IMAGE_SOURCES
