@@ -135,6 +135,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/lib>")
 set(CUDA_MEMORY_DIR ${CMAKE_SOURCE_DIR}/include/cuda/memory)
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)
 set(CUDA_ALGO_DIR ${CMAKE_SOURCE_DIR}/include/cuda/algo)
+set(CUDA_LINALG_DIR ${CMAKE_SOURCE_DIR}/include/cuda/linalg)
 set(CUDA_API_DIR ${CMAKE_SOURCE_DIR}/include/cuda/api)
 set(CUDA_SRC_DEVICE ${CMAKE_SOURCE_DIR}/src/cuda/device)
 set(CUDA_SRC_ALGO ${CMAKE_SOURCE_DIR}/src/cuda/algo)
@@ -218,6 +219,11 @@ set(DEVICE_SOURCES
 set(ALGO_SOURCES
         ${CUDA_SRC_ALGO}/reduce.cu
         ${CUDA_SRC_ALGO}/sort.cu
+)
+
+set(SRC_CUDA_LINALG ${CMAKE_SOURCE_DIR}/src/cuda/linalg)
+set(LINALG_SOURCES
+        ${SRC_CUDA_LINALG}/linalg.cu
 )
 
 set(IMAGE_SOURCES
@@ -386,6 +392,7 @@ set(TOOLS_SOURCES
 set(ALL_CUDA_SOURCES
         ${DEVICE_SOURCES}
         ${ALGO_SOURCES}
+        ${LINALG_SOURCES}
         ${IMAGE_SOURCES}
         ${PARALLEL_SOURCES}
         ${MATRIX_SOURCES}
@@ -498,6 +505,7 @@ target_include_directories(cuda_impl PUBLIC
         ${CMAKE_SOURCE_DIR}/include
         ${CUDA_DEVICE_DIR}
         ${CUDA_ALGO_DIR}
+        ${CUDA_LINALG_DIR}
         ${CUDA_MEMORY_DIR}
         ${CUDA_ERROR_DIR}
 )
@@ -514,6 +522,7 @@ target_link_libraries(cuda_impl PUBLIC
         cuda_preemption
         CUDA::cudart
         CUDA::cublas
+        CUDA::cusolver
         CUDA::cufft
 )
 set_target_properties(cuda_impl PROPERTIES

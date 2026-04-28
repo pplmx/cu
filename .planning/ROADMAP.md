@@ -8,8 +8,8 @@
 
 ## Phase Summary
 
-- [ ] **Phase 54: Foundation & Sorting** - GPU radix sort, top-k selection, binary search
-- [ ] **Phase 55: Linear Algebra Extras** - SVD, eigenvalue decomposition, matrix factorization
+- [x] **Phase 54: Foundation & Sorting** - GPU radix sort, top-k selection, binary search ✅
+- [x] **Phase 55: Linear Algebra Extras** - SVD, eigenvalue decomposition, matrix factorization ✅
 - [ ] **Phase 56: Numerical Methods** - Monte Carlo, integration, root finding, interpolation
 - [ ] **Phase 57: Signal Processing** - FFT convolution, wavelet transform, FIR filters
 - [ ] **Phase 58: Integration & Polish** - Performance, benchmarks, documentation
@@ -76,8 +76,8 @@
 
 | Phase | Goal | Requirements | Success Criteria | Status |
 |-------|------|--------------|------------------|--------|
-| 54. Foundation & Sorting | GPU sorting primitives | SORT-01, SORT-02, SORT-03 | 4 criteria | Not started |
-| 55. Linear Algebra Extras | Matrix decompositions | LINALG-01, LINALG-02, LINALG-03 | 4 criteria | Not started |
+| 54. Foundation & Sorting | GPU sorting primitives | SORT-01, SORT-02, SORT-03 | 4 criteria | ✅ Complete |
+| 55. Linear Algebra Extras | Matrix decompositions | LINALG-01, LINALG-02, LINALG-03 | 4 criteria | ✅ Complete |
 | 56. Numerical Methods | Scientific computing | NUM-01, NUM-02, NUM-03, NUM-04 | 4 criteria | Not started |
 | 57. Signal Processing | Signal transforms | SIGNAL-01, SIGNAL-02, SIGNAL-03 | 4 criteria | Not started |
 | 58. Integration & Polish | Production readiness | (cross-cutting) | 4 criteria | Not started |
