@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <functional>
 #include <random>
+#include <thread>
 
 namespace nova::error {
 
@@ -28,6 +29,8 @@ enum class circuit_state { closed, open, half_open };
 class circuit_breaker {
 public:
     explicit circuit_breaker(circuit_breaker_config config);
+    circuit_breaker(circuit_breaker&&) noexcept = default;
+    circuit_breaker& operator=(circuit_breaker&&) noexcept = default;
 
     [[nodiscard]] bool allow_request() const;
     void record_success();
@@ -44,8 +47,6 @@ private:
     int failure_count_{0};
     int success_count_{0};
     std::chrono::steady_clock::time_point last_failure_time_;
-    mutable std::random_device rd_;
-    mutable std::mt19937 gen_;
 };
 
 class retry_executor {

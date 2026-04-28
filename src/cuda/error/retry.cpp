@@ -3,7 +3,7 @@
 namespace nova::error {
 
 circuit_breaker::circuit_breaker(circuit_breaker_config config)
-    : config_(config), gen_(rd_()) {}
+    : config_(config) {}
 
 bool circuit_breaker::allow_request() const {
     switch (state_) {

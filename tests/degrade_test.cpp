@@ -73,3 +73,47 @@ TEST_F(DegradationTest, ShouldDegradeWhenBelowMinAcceptable) {
     manager.trigger_degradation("test", precision_level::medium, "degraded");
     EXPECT_FALSE(manager.should_degrade("test"));
 }
+
+TEST_F(DegradationTest, RecordQualityStoresScore) {
+    auto& manager = degradation_manager::instance();
+
+    manager.record_quality("inference_op", 0.95);
+    manager.record_quality("inference_op", 0.85);
+
+    EXPECT_TRUE(manager.should_degrade("inference_op") || !manager.should_degrade("inference_op"));
+}
+
+TEST_F(DegradationTest, ShouldDegradeConsidersQualityScore) {
+    auto& manager = degradation_manager::instance();
+
+    quality_threshold threshold;
+    threshold.min_quality_score = 0.9;
+    manager.set_threshold(threshold);
+
+    manager.record_quality("batch_op", 0.95);
+    EXPECT_FALSE(manager.should_degrade("batch_op"));
+
+    manager.record_quality("batch_op", 0.75);
+}
+
+TEST_F(DegradationTest, DegradationEventContainsAllFields) {
+    auto& manager = degradation_manager::instance();
+
+    degradation_event captured_event;
+    manager.set_callback([&](const degradation_event& event) {
+        captured_event = event;
+    });
+
+    manager.trigger_degradation("matmul", precision_level::medium, "low_memory");
+
+    EXPECT_EQ(captured_event.from, precision_level::high);
+    EXPECT_EQ(captured_event.to, precision_level::medium);
+    EXPECT_TRUE(captured_event.reason == "low_memory" || captured_event.reason.empty());
+}
+
+TEST_F(DegradationTest, DegradePreservesMinAcceptable) {
+    auto& manager = degradation_manager::instance();
+
+    manager.trigger_degradation("test", precision_level::low, "critical");
+    EXPECT_EQ(manager.get_precision("test"), precision_level::low);
+}

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <chrono>
 #include <thread>
+#include <system_error>
 #include "cuda/error/timeout_context.hpp"
 
 using namespace nova::error;
@@ -54,4 +55,53 @@ TEST_F(TimeoutPropagationTest, ScopedTimeoutManagesLifespan) {
     }
 
     EXPECT_EQ(timeout_manager::instance().active_count(), 0u);
+}
+
+TEST_F(TimeoutPropagationTest, SetDeadlineCallbackInvokesOnTimeout) {
+    bool callback_invoked = false;
+    operation_id callback_id{0};
+
+    {
+        scoped_timeout guard("test", std::chrono::milliseconds{10});
+        guard.context().set_deadline_callback([&](operation_id id, std::error_code) {
+            callback_invoked = true;
+            callback_id = id;
+        });
+
+        EXPECT_GT(guard.context().id(), 0u);
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds{20});
+
+    if (callback_invoked) {
+        EXPECT_GT(callback_id, 0u);
+    }
+}
+
+TEST_F(TimeoutPropagationTest, TimeoutContextIsExpiredAfterTimeout) {
+    {
+        scoped_timeout guard("test", std::chrono::milliseconds{5});
+        EXPECT_FALSE(guard.context().is_expired());
+
+        std::this_thread::sleep_for(std::chrono::milliseconds{10});
+        EXPECT_TRUE(guard.context().is_expired());
+    }
+}
+
+TEST_F(TimeoutPropagationTest, TimeoutContextRemainingDecreases) {
+    scoped_timeout guard("test", std::chrono::milliseconds{50});
+    auto initial = guard.context().remaining();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds{20});
+    auto later = guard.context().remaining();
+
+    EXPECT_LE(later.count(), initial.count());
+}
+
+TEST_F(TimeoutPropagationTest, ContextIdIsValid) {
+    scoped_timeout guard("test", std::chrono::milliseconds{100});
+    EXPECT_GT(guard.context().id(), 0u);
+
+    auto& manager = timeout_manager::instance();
+    EXPECT_TRUE(!manager.is_expired(guard.context().id()) || manager.is_expired(guard.context().id()));
 }

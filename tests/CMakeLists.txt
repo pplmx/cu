@@ -30,8 +30,10 @@ add_executable(nova-tests
     error_context_test.cpp
     timeout_test.cpp
     timeout_propagation_test.cpp
+    timeout_error_category_test.cpp
     retry_test.cpp
     degrade_test.cpp
+    algorithm_registry_test.cpp
     error_handling_integration_test.cpp
     benchmark/benchmark_test.cpp
     benchmark/throughput_test.cpp
