@@ -4,21 +4,11 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: v2.3 Extended Algorithms
+## Current State
 
-**Previous milestone:** v2.2 Comprehensive Enhancement — SHIPPED 2026-04-27
+**Latest milestone:** v2.3 Extended Algorithms — SHIPPED 2026-04-28
 
-**Status:** 🚧 IN PROGRESS
-
-**Goal:** Expand the CUDA library with production-quality parallel algorithms across sorting, linear algebra, numerical methods, and signal processing domains.
-
-**Target features:**
-- **Sorting & searching:** GPU-accelerated sorting, binary search, top-k operations
-- **Linear algebra extras:** Eigenvalue decomposition, SVD, matrix factorization
-- **Numerical methods:** Monte Carlo, numerical integration, root finding, interpolation
-- **Signal processing:** Wavelets, filters, advanced convolution operations
-
-**Started:** 2026-04-28
+**Next milestone:** Not started (run `/gsd-new-milestone`)
 
 ## Core Value
 
@@ -62,6 +52,19 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 - ✓ Sparse matrix CSR/CSC formats — v2.1
 - ✓ Graph neural network primitives — v2.1
 - ✓ INT8/FP16 quantization — v2.1
+- ✓ GPU radix sort (ascending/descending) — v2.3
+- ✓ Top-K selection without full sort — v2.3
+- ✓ Binary search with warp shuffle — v2.3
+- ✓ SVD (full/thin modes) — v2.3
+- ✓ Eigenvalue decomposition — v2.3
+- ✓ QR, Cholesky factorization — v2.3
+- ✓ Monte Carlo with variance reduction — v2.3
+- ✓ Numerical integration (trapezoidal/Simpson) — v2.3
+- ✓ Root finding (bisection/Newton-Raphson) — v2.3
+- ✓ Interpolation (linear/cubic spline) — v2.3
+- ✓ FFT convolution — v2.3
+- ✓ Haar wavelet transform — v2.3
+- ✓ FIR filters — v2.3
 
 ### Completed (v1.6)
 
@@ -132,6 +135,12 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 - IDE configuration for clangd and VS Code
 - CMakePresets.json with dev/release/ci build presets
 
+**Added in v2.3:**
+- GPU sorting algorithms (CUB-based radix sort, top-K, binary search)
+- Linear algebra extras (cuSOLVER SVD, EVD, QR, Cholesky)
+- Numerical methods (Monte Carlo, integration, root finding, interpolation)
+- Signal processing (FFT convolution, Haar wavelet, FIR filters)
+
 ## Constraints
 
 - **Tech stack:** C++23, CUDA 20, CMake 4.0+ — current versions
@@ -178,6 +187,10 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 | Property tests | QuickCheck-style tests with reproducible seeds | ✓ v2.0 shipped |
 | Coverage reports | lcov/genhtml with per-module breakdown | ✓ v2.0 shipped |
 | CI integration | GitHub Actions with coverage gates | ✓ v2.0 shipped |
+| CUB for sorting | Production-quality GPU sorting primitives | ✓ v2.3 shipped |
+| cuSOLVER for linalg | SVD, EVD, factorization via NVIDIA library | ✓ v2.3 shipped |
+| std::rand for Monte Carlo | Simple PRNG for numerical methods | ✓ v2.3 shipped |
+| cuFFT for signal | Fast convolution via FFT | ✓ v2.3 shipped |
 
 ## Evolution
 
@@ -197,5 +210,5 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state (users, feedback, metrics)
 
 ---
-*Last updated: 2026-04-27 for v2.2 Comprehensive Enhancement*
-*Previous: v2.1 New Algorithms — SHIPPED 2026-04-26*
+*Last updated: 2026-04-28 after v2.3 Extended Algorithms milestone*
+*v2.3: Sorting, Linear Algebra, Numerical Methods, Signal Processing*
