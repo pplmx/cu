@@ -4,13 +4,18 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: Not started
+## Current Milestone: v2.7 Comprehensive Testing & Validation
+
+**Goal:** Comprehensive robustness testing, enhanced profiling, and new algorithm capabilities
+
+**Target features:**
+- Robustness & Testing: Error injection, boundary conditions, memory safety
+- Performance Profiling: Kernel timing, memory bandwidth, timeline visualization
+- New Algorithms: Advanced sorting, graph algorithms, numerical methods
 
 **Previous milestone:** v2.6 Transformer & Inference Optimization — SHIPPED 2026-04-29
 
-**Status:** ✅ COMPLETE
-
-Run `/gsd-new-milestone` to start the next milestone.
+**Status:** Planning
 
 ## Completed (v2.6)
 
