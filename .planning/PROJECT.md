@@ -4,20 +4,24 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: v2.6 Transformer & Inference Optimization
+## Current Milestone: Not started
 
-**Previous milestone:** v2.5 Error Handling & Recovery — SHIPPED 2026-04-28
+**Previous milestone:** v2.6 Transformer & Inference Optimization — SHIPPED 2026-04-29
 
-**Goal:** Optimize transformer inference with FlashAttention, KV cache management, and sequence parallelism for production LLM workloads.
+**Status:** ✅ COMPLETE
 
-**Target features:**
-- FlashAttention-2/3 integration for memory-efficient attention
-- KV cache allocation and eviction policies
-- Paged attention for flexible memory management
-- Sequence parallelism across tensor model parallel ranks
-- Continuous batching for throughput optimization
+Run `/gsd-new-milestone` to start the next milestone.
 
-**Status:** Planning
+## Completed (v2.6)
+
+- ✓ FlashAttention-2 integration with IO-aware tiling — Phase 69
+- ✓ Paged KV cache with block allocation and LRU eviction — Phase 70
+- ✓ Block manager with CPU-GPU sync — Phase 71
+- ✓ Sequence manager with continuous batching — Phase 72
+- ✓ Sequence parallelism across TP ranks — Phase 73
+- ✓ Integration tests with NVTX annotations — Phase 74
+
+**Next milestone:** TBD
 
 ## Core Value
 
@@ -116,6 +120,30 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 - ✓ Fallback algorithm registry with priority ordering — v2.5
 - ✓ Quality-aware degradation with threshold configuration — v2.5
 - ✓ Degradation event logging and metrics — v2.5
+
+### Completed (v2.6)
+
+- ✓ Attention backend enum (Standard/FlashAttention/PagedAttention) — Phase 69
+- ✓ FlashAttention forward with IO-aware tiling — Phase 69
+- ✓ Stable softmax with max subtraction — Phase 69
+- ✓ Backward pass with deterministic dropout — Phase 69
+- ✓ Dynamic workspace allocation — Phase 69
+- ✓ Block-based KV cache allocator (16/32/64 tokens) — Phase 70
+- ✓ LRU eviction on memory pressure — Phase 70
+- ✓ Prefix caching with hash lookup — Phase 70
+- ✓ KVCacheStats tracking — Phase 70
+- ✓ BlockManager with block table mapping — Phase 71
+- ✓ append_tokens with atomic block allocation — Phase 71
+- ✓ CPU-GPU block table synchronization — Phase 71
+- ✓ Paged attention forward with bounds validation — Phase 71
+- ✓ SequenceManager for lifecycle management — Phase 72
+- ✓ Continuous batching with iteration-level scheduling — Phase 72
+- ✓ GQA/MQA support — Phase 72
+- ✓ SequenceParallelAttention with TP integration — Phase 73
+- ✓ Ring sequence parallelism for long sequences — Phase 73
+- ✓ InferenceGraphExecutor with CUDA Graph capture — Phase 74
+- ✓ NVTX domain for inference phases — Phase 74
+- ✓ Integration tests covering all 18 requirements — Phase 74
 
 ### Completed (v1.6)
 

@@ -2,12 +2,12 @@
 
 ## Phases
 
-- [ ] **Phase 69: FlashAttention Integration** - Attention backend selection, IO-aware kernel, stable softmax
-- [ ] **Phase 70: Paged KV Cache Foundation** - Block allocator, LRU eviction, prefix caching
-- [ ] **Phase 71: Paged Attention Integration** - Block manager, block tables, CPU-GPU sync
-- [ ] **Phase 72: Sequence Manager & Scheduler** - Multi-sequence support, continuous batching, GQA/MQA
-- [ ] **Phase 73: Sequence Parallelism Extension** - TP/SP integration, ring attention
-- [ ] **Phase 74: Integration & Testing** - CUDA Graphs, NVTX, benchmarks
+- [x] **Phase 69: FlashAttention Integration** - Attention backend selection, IO-aware kernel, stable softmax
+- [x] **Phase 70: Paged KV Cache Foundation** - Block allocator, LRU eviction, prefix caching
+- [x] **Phase 71: Paged Attention Integration** - Block manager, block tables, CPU-GPU sync
+- [x] **Phase 72: Sequence Manager & Scheduler** - Multi-sequence support, continuous batching, GQA/MQA
+- [x] **Phase 73: Sequence Parallelism Extension** - TP/SP integration, ring attention
+- [x] **Phase 74: Integration & Testing** - CUDA Graphs, NVTX, benchmarks
 
 ---
 
