@@ -430,6 +430,7 @@ set(TESTING_SOURCES
         ${SRC_CUDA_TESTING}/layer_error_injection.cpp
         ${SRC_CUDA_TESTING}/boundary_testing.cpp
         ${SRC_CUDA_TESTING}/fp_determinism.cpp
+        ${SRC_CUDA_TESTING}/integration.cpp
 )
 
 set(OBSERVABILITY_DIR ${CMAKE_SOURCE_DIR}/include/cuda/observability)

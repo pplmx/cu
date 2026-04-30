@@ -102,6 +102,7 @@ add_executable(nova-tests
     algo/sssp_test.cpp
     testing/memory_safety_test.cpp
     testing/robustness_test.cpp
+    testing/integration_test.cpp
 )
 
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)
