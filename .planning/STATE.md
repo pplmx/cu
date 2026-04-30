@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.7
-milestone_name: Comprehensive Testing & Validation
-status: complete
-last_updated: "2026-04-30"
+milestone: v2.8
+milestone_name: Numerical Computing & Performance
+status: planning
+last_updated: "2026-05-01"
 progress:
   total_phases: 4
-  completed_phases: 4
+  completed_phases: 0
   total_plans: 0
   completed_plans: 0
 ---
@@ -14,23 +14,23 @@ progress:
 # Project State
 
 **Project:** Nova CUDA Library Enhancement
-**Last Updated:** 2026-04-30
+**Last Updated:** 2026-05-01
 
 ## Current Position
 
-Phase: All phases complete - Milestone shipped
+Phase: Not started (defining requirements)
 Plan: —
-Status: Milestone complete
-Last activity: 2026-04-30 — v2.7 Comprehensive Testing & Validation shipped
+Status: Defining requirements
+Last activity: 2026-05-01 — Milestone v2.8 started
 
 ## Phase List
 
 | Phase | Name | Goal | Status | Requirements |
 |-------|------|------|--------|--------------|
-| 75 | Observability & Profiling | Timeline, bandwidth, kernel stats, occupancy | ✅ Complete | OBS-01, OBS-02, OBS-03, OBS-04 |
-| 76 | Algorithm Extensions | Segmented sort, SpMV, sample sort, SSSP | ✅ Complete | ALGO-01, ALGO-02, ALGO-03, ALGO-04 |
-| 77 | Robustness & Testing | Memory safety, isolation, error injection, boundaries | ✅ Complete | ROB-01, ROB-02, ROB-03, ROB-04, ROB-05 |
-| 78 | Integration & Validation | E2E tests, safety validation, baselines, docs | ✅ Complete | INT-01, INT-02, INT-03, INT-04 |
+| 79 | Krylov Foundation | CG solver, SpMV integration | Not started | KRY-01, KRY-02, KRY-03, KRY-04 |
+| 80 | Advanced Solvers + Roofline | GMRES, BiCGSTAB, RooflineModel | Not started | KRY-05, KRY-06, RF-01, RF-02, RF-03 |
+| 81 | Sparse Extensions + Visualization | ELL/HYB formats, Roofline charts | Not started | SPARSE-01, SPARSE-02, RF-04, RF-05 |
+| 82 | Integration + Chaos | E2E tests, benchmarks, chaos scenarios | Not started | INT-01, INT-02, INT-03, INT-04 |
 
 ## Milestone History
 
@@ -54,6 +54,7 @@ Last activity: 2026-04-30 — v2.7 Comprehensive Testing & Validation shipped
 | v2.5 Error Handling & Recovery | ✅ Shipped | 2026-04-28 | 12 |
 | v2.6 Transformer & Inference Optimization | ✅ Shipped | 2026-04-29 | 18 |
 | v2.7 Comprehensive Testing & Validation | ✅ Shipped | 2026-04-30 | 16 |
+| v2.8 Numerical Computing & Performance | 🏗️ In Progress | 2026-05-01 | TBD |
 
 ---
-*State updated: 2026-04-30 — v2.7 Comprehensive Testing & Validation shipped*
+*State updated: 2026-05-01 — v2.8 Numerical Computing & Performance started*

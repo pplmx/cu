@@ -4,13 +4,17 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: Not started
+## Current Milestone: v2.8 Numerical Computing & Performance
 
-**Previous milestone:** v2.7 Comprehensive Testing & Validation — SHIPPED 2026-04-30
+**Goal:** Add iterative linear solvers (Krylov methods), performance Roofline model, and advanced sparse matrix formats
 
-**Status:** ✅ COMPLETE
+**Target features:**
+- Krylov Solvers (CG, GMRES, BiCGSTAB) for iterative linear solving
+- Roofline Performance Model for theoretical vs actual FLOP/s analysis
+- Advanced Sparse Formats (ELL, HYB) with pattern analysis
+- Integration tests, benchmarks, and chaos scenarios
 
-Run `/gsd-new-milestone` to start the next milestone.
+**Status:** Planning
 
 ## Completed (v2.6)
 
@@ -41,7 +45,7 @@ Run `/gsd-new-milestone` to start the next milestone.
 - ✓ Performance baselines — Phase 78
 - ✓ Documentation updates — Phase 78
 
-**Next milestone:** TBD
+**Next milestone:** v2.8 Numerical Computing & Performance
 
 ## Core Value
 
@@ -309,5 +313,5 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state (users, feedback, metrics)
 
 ---
-*Last updated: 2026-04-28 after v2.5 Error Handling & Recovery shipped*
-*v2.5: Timeout policies, Retry with backoff, Graceful degradation*
+*Last updated: 2026-05-01 after v2.8 Numerical Computing & Performance started*
+*v2.8: Krylov Solvers, Roofline Model, Advanced Sparse Formats*
