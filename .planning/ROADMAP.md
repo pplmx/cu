@@ -1,192 +1,139 @@
-# Roadmap — v2.6 Transformer & Inference Optimization
+# Milestone v2.7 Roadmap
+
+**Project:** Nova CUDA Library Enhancement
+**Milestone:** v2.7 Comprehensive Testing & Validation
+**Granularity:** Standard
+**Coverage:** 16/16 requirements mapped (100%)
+
+---
 
 ## Phases
 
-- [x] **Phase 69: FlashAttention Integration** - Attention backend selection, IO-aware kernel, stable softmax
-- [x] **Phase 70: Paged KV Cache Foundation** - Block allocator, LRU eviction, prefix caching
-- [x] **Phase 71: Paged Attention Integration** - Block manager, block tables, CPU-GPU sync
-- [x] **Phase 72: Sequence Manager & Scheduler** - Multi-sequence support, continuous batching, GQA/MQA
-- [x] **Phase 73: Sequence Parallelism Extension** - TP/SP integration, ring attention
-- [x] **Phase 74: Integration & Testing** - CUDA Graphs, NVTX, benchmarks
+- [ ] **Phase 75: Observability & Profiling** - Timeline visualization, bandwidth measurement, kernel statistics, occupancy analysis
+- [ ] **Phase 76: Algorithm Extensions** - Segmented sort, SpMV, sample sort, delta-stepping SSSP
+- [ ] **Phase 77: Robustness & Testing** - Memory safety validation, isolated contexts, error injection, boundary testing, FP determinism
+- [ ] **Phase 78: Integration & Validation** - End-to-end robustness, memory safety validation, baselines, documentation
 
 ---
 
 ## Phase Details
 
-### Phase 69: FlashAttention Integration
+### Phase 75: Observability & Profiling
 
-**Goal:** FlashAttention-2/3 kernel integration with attention backend selection and stable softmax
+**Goal:** Users can visualize kernel execution timelines, measure memory bandwidth, collect kernel statistics, and analyze occupancy
 
-**Depends on:** None (foundation)
+**Depends on:** Phase 74 (InferenceGraphExecutor, NVTX domains)
 
-**Requirements:** FA-01, FA-02, FA-03, FA-04
+**Requirements:** OBS-01, OBS-02, OBS-03, OBS-04
 
 **Success Criteria** (what must be TRUE):
-1. User can select attention backend via `AttentionBackend` enum (Standard/FlashAttention/PagedAttention)
-2. FlashAttention forward pass produces output matching standard attention within 1e-3 relative error
-3. Stable softmax with max subtraction prevents numerical overflow for large sequence lengths
-4. Backward pass computes correct gradients summing to input gradients across batch dimension
-5. Workspace allocation is dynamic based on query shape, not fixed at initialization
+
+1. User can export Chrome trace format files from NVTX annotations and load them in chrome://tracing
+2. User can measure H2D, D2H, and D2D memory bandwidth using NVbandwidth integration
+3. User can collect per-kernel statistics (latency, throughput, achieved occupancy) via profiler integration
+4. User can receive real-time feedback on block size selection with occupancy recommendations
 
 **Plans:** TBD
 
-**UI hint:** no
+**UI hint:** yes
 
 ---
 
-### Phase 70: Paged KV Cache Foundation
+### Phase 76: Algorithm Extensions
 
-**Goal:** Memory-efficient KV cache allocation with block-based management and LRU eviction
+**Goal:** Users can leverage advanced algorithms for segmented operations, sparse computation, large-scale sorting, and graph shortest paths
 
-**Depends on:** Phase 69
+**Depends on:** Phase 75
 
-**Requirements:** KV-01, KV-02, KV-03, KV-04
+**Requirements:** ALGO-01, ALGO-02, ALGO-03, ALGO-04
 
 **Success Criteria** (what must be TRUE):
-1. User can allocate KV cache blocks of fixed power-of-2 sizes (16/32/64 tokens) in O(1) from freelist
-2. LRU eviction triggers automatically when free_blocks falls below configured threshold
-3. Prefix hash lookup returns cached KV blocks for shared conversation prefixes, avoiding recomputation
-4. User can query KVCacheStats showing total/used/free blocks and fragmentation percentage
-5. Block allocator handles concurrent allocation/deallocation from multiple sequences safely
+
+1. User can sort elements within arbitrary segments without full array copy using segmented sort
+2. User can perform sparse matrix-vector multiply with CSR/CSC formatted matrices from v2.1
+3. User can sort datasets exceeding single-pass capacity using sample sort when radix sort is inefficient
+4. User can compute single-source shortest paths using delta-stepping for weighted graphs
 
 **Plans:** TBD
 
-**UI hint:** no
-
 ---
 
-### Phase 71: Paged Attention Integration
+### Phase 77: Robustness & Testing
 
-**Goal:** PagedAttention combining FlashAttention with block-based KV cache management
+**Goal:** Users can validate memory safety, run isolated tests, inject errors, test boundary conditions, and control floating-point determinism
 
-**Depends on:** Phase 70
+**Depends on:** Phase 76
 
-**Requirements:** PA-01, PA-02, PA-03, PA-04
+**Requirements:** ROB-01, ROB-02, ROB-03, ROB-04, ROB-05
 
 **Success Criteria** (what must be TRUE):
-1. BlockManager.create_sequence returns valid block table mapping logical to physical blocks
-2. append_tokens allocates additional physical blocks and updates block table atomically
-3. cudaStreamSynchronize called on dedicated sync stream before attention kernel launch
-4. Paged attention output matches contiguous attention output within 1e-3 relative error
-5. Out-of-bounds block table access returns error rather than reading invalid memory
+
+1. User can run Compute Sanitizer to detect UAF, double-free, and uninitialized memory access across all algorithms
+2. User can execute tests in isolated CUDA contexts with no state pollution between test cases
+3. User can inject errors at layer boundaries (Memory, Device, Algorithm, Stream, Inference) via error injection framework
+4. User can test CUDA-specific boundaries including 256-byte alignment, warp size, and SM limits
+5. User can control FP determinism at three levels: not_guaranteed, run_to_run, gpu_to_gpu
 
 **Plans:** TBD
 
-**UI hint:** no
-
 ---
 
-### Phase 72: Sequence Manager & Scheduler
+### Phase 78: Integration & Validation
 
-**Goal:** Multi-sequence orchestration with continuous batching and GQA/MQA support
+**Goal:** Users can run comprehensive end-to-end tests with profiling, validate all algorithms for memory safety, establish baselines, and access documentation
 
-**Depends on:** Phase 71
+**Depends on:** Phase 77
 
-**Requirements:** SCHED-01, SCHED-02, SCHED-03
+**Requirements:** INT-01, INT-02, INT-03, INT-04
 
 **Success Criteria** (what must be TRUE):
-1. Multiple sequences coexist with independent KV cache state and no interference
-2. Batched forward pass processes variable-length sequences correctly via iteration-level scheduling
-3. GQA/MQA attention produces correct output when num_kv_heads < num_q_heads
-4. New sequences can be added to active batch without blocking existing inference
-5. Completed sequences release KV cache blocks back to allocator for reuse
+
+1. User can run end-to-end robustness tests with simultaneous NVTX profiling enabled
+2. User can validate memory safety across all algorithm implementations using automated test suite
+3. User can establish performance regression baselines and compare subsequent runs against them
+4. User can access updated documentation covering new observability features, algorithms, and testing capabilities
 
 **Plans:** TBD
 
-**UI hint:** no
+---
+
+## Progress Table
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 75. Observability & Profiling | 0/1 | Not started | - |
+| 76. Algorithm Extensions | 0/1 | Not started | - |
+| 77. Robustness & Testing | 0/1 | Not started | - |
+| 78. Integration & Validation | 0/1 | Not started | - |
 
 ---
 
-### Phase 73: Sequence Parallelism Extension
-
-**Goal:** Distributed attention computation across tensor parallel ranks for long context support
-
-**Depends on:** Phase 72
-
-**Requirements:** SP-01, SP-02, SP-03
-
-**Success Criteria** (what must be TRUE):
-1. Sequence attention output across TP ranks matches single-GPU result
-2. Ring sequence parallelism handles sequences up to 128K tokens without OOM
-3. TP communicator correctly reduces sequence parallel output via all-reduce
-4. Ring attention communicates KV projections across ranks with minimal synchronization
-5. Sequence parallelism disables gracefully on single-GPU configurations
-
-**Plans:** TBD
-
-**UI hint:** no
-
----
-
-### Phase 74: Integration & Testing
-
-**Goal:** End-to-end validation with CUDA Graphs, observability, and performance benchmarks
-
-**Depends on:** Phase 73
-
-**Requirements:** All previous requirements
-
-**Success Criteria** (what must be TRUE):
-1. CUDA Graph capture/replay works with dynamic block allocation for paged attention
-2. NVTX annotations mark inference phases (prefill, decode, attention, scheduling)
-3. Throughput benchmark shows >2x speedup vs. standard attention for 1K+ sequence lengths
-4. Memory efficiency benchmark demonstrates <4% KV cache waste vs. 60-80% in naive allocation
-5. All 18 v2.6 requirements pass integration tests with backward compatibility preserved
-
-**Plans:** TBD
-
-**UI hint:** no
-
----
-
-## Coverage Summary
-
-| Category | Requirements | Coverage |
-|----------|--------------|----------|
-| FlashAttention | FA-01, FA-02, FA-03, FA-04 | 100% |
-| KV Cache Management | KV-01, KV-02, KV-03, KV-04 | 100% |
-| Paged Attention | PA-01, PA-02, PA-03, PA-04 | 100% |
-| Scheduler & Batching | SCHED-01, SCHED-02, SCHED-03 | 100% |
-| Sequence Parallelism | SP-01, SP-02, SP-03 | 100% |
-| **Total** | **18** | **100%** |
-
----
-
-## Phase Dependencies
+## Coverage Map
 
 ```
-Phase 69 (FlashAttention)
-       │
-       ▼
-Phase 70 (KV Cache Foundation)
-       │
-       ▼
-Phase 71 (Paged Attention)
-       │
-       ▼
-Phase 72 (Scheduler)
-       │
-       ▼
-Phase 73 (Sequence Parallelism)
-       │
-       ▼
-Phase 74 (Integration & Testing)
+OBS-01 → Phase 75 (Timeline visualization)
+OBS-02 → Phase 75 (Memory bandwidth)
+OBS-03 → Phase 75 (Kernel statistics)
+OBS-04 → Phase 75 (Occupancy analysis)
+ALGO-01 → Phase 76 (Segmented sort)
+ALGO-02 → Phase 76 (SpMV CSR/CSC)
+ALGO-03 → Phase 76 (Sample sort)
+ALGO-04 → Phase 76 (Delta-stepping SSSP)
+ROB-01 → Phase 77 (Compute Sanitizer)
+ROB-02 → Phase 77 (Isolated contexts)
+ROB-03 → Phase 77 (Error injection)
+ROB-04 → Phase 77 (Boundary testing)
+ROB-05 → Phase 77 (FP determinism)
+INT-01 → Phase 78 (E2E robustness + profiling)
+INT-02 → Phase 78 (Memory safety validation)
+INT-03 → Phase 78 (Performance baselines)
+INT-04 → Phase 78 (Documentation)
+
+Mapped: 16/16 ✓
+No orphaned requirements ✓
 ```
 
 ---
 
-## New Modules
-
-- `cuda/inference/` - Inference orchestration layer
-  - `block_manager.h` - Paged attention block manager
-  - `sequence_manager.h` - Sequence lifecycle management
-  - `scheduler.h` - Batching and scheduling
-- `cuda/algo/flash_attention.h` - FlashAttention kernel integration
-- `cuda/memory/kv_cache_allocator.h` - Block-based KV cache allocator
-- `cuda/distributed/sequence_parallel.h` - Ring attention implementation
-
----
-
-*Roadmap created: 2026-04-29*
-*Milestone: v2.6 Transformer & Inference Optimization*
-*Phases: 69-74 (continuation from v2.5 which ended at Phase 68)*
+*Roadmap created: 2026-04-30*
+*v2.7 phases: 75, 76, 77, 78*

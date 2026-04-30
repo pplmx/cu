@@ -5,7 +5,7 @@ milestone_name: Comprehensive Testing & Validation
 status: planning
 last_updated: "2026-04-30"
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -18,14 +18,19 @@ progress:
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-04-30 — Milestone v2.7 started
+Phase: 75 (Observability & Profiling)
+Plan: Not started
+Status: Defining roadmap
+Last activity: 2026-04-30 — Milestone v2.7 started, roadmap created
 
 ## Phase List
 
-*Phase list will be populated after roadmap creation.*
+| Phase | Name | Requirements | Status |
+|-------|------|--------------|--------|
+| 75 | Observability & Profiling | OBS-01, OBS-02, OBS-03, OBS-04 | Not started |
+| 76 | Algorithm Extensions | ALGO-01, ALGO-02, ALGO-03, ALGO-04 | Not started |
+| 77 | Robustness & Testing | ROB-01, ROB-02, ROB-03, ROB-04, ROB-05 | Not started |
+| 78 | Integration & Validation | INT-01, INT-02, INT-03, INT-04 | Not started |
 
 ## Milestone History
 
@@ -48,6 +53,7 @@ Last activity: 2026-04-30 — Milestone v2.7 started
 | v2.4 Production Hardening | ✅ Shipped | 2026-04-28 | 15 |
 | v2.5 Error Handling & Recovery | ✅ Shipped | 2026-04-28 | 12 |
 | v2.6 Transformer & Inference Optimization | ✅ Shipped | 2026-04-29 | 18 |
+| v2.7 Comprehensive Testing & Validation | 🔄 In progress | 2026-04-30 | 16 |
 
 ---
-*State updated: 2026-04-30 — Milestone v2.7 started*
+*State updated: 2026-04-30 — Roadmap created for v2.7*
