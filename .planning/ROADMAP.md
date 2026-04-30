@@ -33,7 +33,13 @@
 3. User can convert existing CSR matrices to ELL or SELL format with automatic padding calculation
 4. User can perform SpMV operations using ELL and SELL formatted matrices and compare results against CSR
 
-**Plans:** TBD
+**Plans:** 4 plans in 3 waves
+
+**Plan list:**
+- [ ] 79-00-PLAN.md — Interface contracts for ELL/SELL classes
+- [ ] 79-01-PLAN.md — Implement ELL and SELL matrix classes with FromCSR factory
+- [ ] 79-02-PLAN.md — Implement ELL and SELL SpMV operations
+- [ ] 79-03-PLAN.md — Comprehensive tests for ELL/SELL formats
 
 ---
 
@@ -102,7 +108,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 79. Sparse Format Foundation | 0/1 | Not started | - |
+| 79. Sparse Format Foundation | 0/4 | Planned | - |
 | 80. Krylov Solver Core + Roofline | 0/1 | Not started | - |
 | 81. Extended Formats + Roofline Analysis | 0/1 | Not started | - |
 | 82. Integration & Production | 0/1 | Not started | - |
