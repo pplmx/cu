@@ -6,9 +6,9 @@ status: planning
 last_updated: "2026-05-01"
 progress:
   total_phases: 4
-  completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
+  completed_phases: 3
+  total_plans: 7
+  completed_plans: 7
 ---
 
 # Project State
@@ -28,7 +28,7 @@ Last activity: 2026-05-01 — Milestone v2.8 roadmap created
 | Phase | Name | Goal | Status | Requirements |
 |-------|------|------|--------|--------------|
 | 80 | Krylov Solver Core + Roofline | CG/GMRES/BiCGSTAB solvers, device peaks, AI | Complete | KRY-01 to KRY-04, RF-01 to RF-03 (7) |
-| 81 | Extended Formats + Roofline Analysis | HYB format, performance classification, JSON | Not started | SPARSE-05, RF-04, RF-05 (3) |
+| 81 | Extended Formats + Roofline Analysis | HYB format, performance classification, JSON | Complete | SPARSE-05, RF-04, RF-05 (3) |
 | 82 | Integration & Production | Memory pool, diagnostics, E2E, benchmarks, NVTX, docs | Not started | KRY-05, KRY-06, INT-01 to INT-04 (6) |
 
 ## Milestone History
