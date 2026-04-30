@@ -96,6 +96,10 @@ add_executable(nova-tests
     observability/bandwidth_tracker_test.cpp
     observability/kernel_stats_test.cpp
     observability/occupancy_analyzer_test.cpp
+    algo/segmented_sort_test.cpp
+    algo/spmv_test.cpp
+    algo/sample_sort_test.cpp
+    algo/sssp_test.cpp
 )
 
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)

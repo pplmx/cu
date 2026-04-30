@@ -221,6 +221,10 @@ set(DEVICE_SOURCES
 set(ALGO_SOURCES
         ${CUDA_SRC_ALGO}/reduce.cu
         ${CUDA_SRC_ALGO}/sort.cu
+        ${CMAKE_SOURCE_DIR}/src/algo/segmented_sort.cpp
+        ${CMAKE_SOURCE_DIR}/src/algo/spmv.cpp
+        ${CMAKE_SOURCE_DIR}/src/algo/sample_sort.cpp
+        ${CMAKE_SOURCE_DIR}/src/algo/sssp.cpp
 )
 
 set(SRC_CUDA_LINALG ${CMAKE_SOURCE_DIR}/src/cuda/linalg)
