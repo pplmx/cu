@@ -108,7 +108,13 @@
 5. User can profile solver and format operations via NVTX annotations with dedicated domains
 6. User can access updated documentation covering Krylov solvers, Roofline model, and sparse formats
 
-**Plans:** TBD
+**Plans:** 4 plans in 2 waves
+
+**Plan list:**
+- [ ] 82-01-PLAN.md — SolverWorkspace + Diagnostics (KRY-05, KRY-06)
+- [ ] 82-02-PLAN.md — NVTX Integration with nova_sparse domain (INT-03)
+- [ ] 82-03-PLAN.md — E2E Tests + Benchmarks (INT-01, INT-02)
+- [ ] 82-04-PLAN.md — Documentation updates (INT-04)
 
 ---
 
@@ -119,7 +125,7 @@
 | 79. Sparse Format Foundation | 0/4 | Planned | - |
 | 80. Krylov Solver Core + Roofline | 0/1 | Planned | - |
 | 81. Extended Formats + Roofline Analysis | 0/3 | Planned | - |
-| 82. Integration & Production | 0/1 | Not started | - |
+| 82. Integration & Production | 0/4 | Planned | - |
 
 ---
 
