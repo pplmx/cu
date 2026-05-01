@@ -214,6 +214,63 @@ TEST_F(JacobiPreconditionerTest, MultipleSetupCalls) {
     EXPECT_NO_THROW(prec.setup(matrix2));
 }
 
+TEST_F(JacobiPreconditionerTest, PreconditionerErrorMessage) {
+    try {
+        JacobiPreconditioner<double> prec(0.0);
+        FAIL() << "Expected PreconditionerError";
+    } catch (const PreconditionerError& e) {
+        std::string msg = e.what();
+        EXPECT_TRUE(msg.find("omega") != std::string::npos);
+        EXPECT_TRUE(msg.find("0") != std::string::npos);
+    }
+}
+
+TEST_F(JacobiPreconditionerTest, PreconditionerErrorZeroDiagonalMessage) {
+    std::vector<double> values = {0.0, 0.0, 0.0};
+    std::vector<int> row_offsets = {0, 1, 2, 3};
+    std::vector<int> col_indices = {0, 1, 2};
+    auto matrix = SparseMatrix<double>::FromHostData(values, row_offsets, col_indices, 3, 3);
+
+    JacobiPreconditioner<double> prec;
+    try {
+        prec.setup(matrix);
+        FAIL() << "Expected PreconditionerError";
+    } catch (const PreconditionerError& e) {
+        std::string msg = e.what();
+        EXPECT_TRUE(msg.find("zero") != std::string::npos ||
+                    msg.find("near-zero") != std::string::npos);
+    }
+}
+
+TEST_F(JacobiPreconditionerTest, OmegaBoundaryValueOne) {
+    JacobiPreconditioner<double> prec(1.0);
+    EXPECT_DOUBLE_EQ(prec.omega(), 1.0);
+}
+
+TEST_F(JacobiPreconditionerTest, OmegaBoundaryValueTwo) {
+    JacobiPreconditioner<double> prec(2.0);
+    EXPECT_DOUBLE_EQ(prec.omega(), 2.0);
+}
+
+TEST_F(JacobiPreconditionerTest, ApplyWithDifferentInputVectors) {
+    std::vector<double> values = {2.0, 2.0, 2.0};
+    std::vector<int> row_offsets = {0, 1, 2, 3};
+    std::vector<int> col_indices = {0, 1, 2};
+    auto matrix = SparseMatrix<double>::FromHostData(values, row_offsets, col_indices, 3, 3);
+
+    JacobiPreconditioner<double> prec(0.5);
+    prec.setup(matrix);
+
+    std::vector<double> in = {4.0, 8.0, 12.0};
+    std::vector<double> out(3);
+
+    prec.apply(in.data(), out.data());
+
+    EXPECT_DOUBLE_EQ(out[0], 1.0);
+    EXPECT_DOUBLE_EQ(out[1], 2.0);
+    EXPECT_DOUBLE_EQ(out[2], 3.0);
+}
+
 }
 }
 }

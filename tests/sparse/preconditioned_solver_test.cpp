@@ -151,6 +151,155 @@ TEST_F(PreconditionedSolverTest, SolverConfigPreserved) {
     EXPECT_TRUE(result.converged);
 }
 
+TEST_F(PreconditionedSolverTest, SolverErrorEnumValues) {
+    EXPECT_EQ(static_cast<int>(SolverError::SUCCESS), 0);
+    EXPECT_EQ(static_cast<int>(SolverError::MAX_ITERATIONS), 1);
+    EXPECT_EQ(static_cast<int>(SolverError::BREAKDOWN), 2);
+    EXPECT_EQ(static_cast<int>(SolverError::INVALID_MATRIX), 3);
+    EXPECT_EQ(static_cast<int>(SolverError::CONVERGENCE_FAILURE), 4);
+    EXPECT_EQ(static_cast<int>(SolverError::PRECONDITIONER_ERROR), 5);
+}
+
+TEST_F(PreconditionedSolverTest, SolverConfigDefaults) {
+    SolverConfig<double> config;
+    EXPECT_DOUBLE_EQ(config.relative_tolerance, 1e-6);
+    EXPECT_DOUBLE_EQ(config.absolute_tolerance, 1e-10);
+    EXPECT_EQ(config.max_iterations, 1000);
+    EXPECT_FALSE(config.verbose);
+}
+
+TEST_F(PreconditionedSolverTest, SolverConfigCustom) {
+    SolverConfig<double> config;
+    config.relative_tolerance = 1e-10;
+    config.max_iterations = 500;
+    config.verbose = true;
+
+    EXPECT_DOUBLE_EQ(config.relative_tolerance, 1e-10);
+    EXPECT_EQ(config.max_iterations, 500);
+    EXPECT_TRUE(config.verbose);
+}
+
+TEST_F(PreconditionedSolverTest, GMRESConvergesOnTridiagonal) {
+    auto A = create_tridiagonal_matrix(10);
+    auto b = create_rhs(10);
+
+    GMRES<double> gmres;
+    std::vector<double> x(A.cols(), 0.0);
+
+    auto result = gmres.solve(A, b.data(), x.data());
+
+    EXPECT_TRUE(result.converged);
+    EXPECT_LT(result.relative_residual, 1e-6);
+}
+
+TEST_F(PreconditionedSolverTest, GMRESIterations) {
+    auto A = create_tridiagonal_matrix(20);
+    auto b = create_rhs(20);
+
+    GMRES<double> gmres;
+    std::vector<double> x(A.cols(), 0.0);
+
+    auto result = gmres.solve(A, b.data(), x.data());
+
+    EXPECT_TRUE(result.converged);
+    EXPECT_GT(result.iterations, 0);
+    EXPECT_LE(result.iterations, result.max_iterations);
+}
+
+TEST_F(PreconditionedSolverTest, GMRESGPUConvergesOnTridiagonal) {
+    auto A = create_tridiagonal_matrix(10);
+    auto b = create_rhs(10);
+
+    GMRESGPU<double> gmres;
+    std::vector<double> x(A.cols(), 0.0);
+
+    auto result = gmres.solve(A, b.data(), x.data());
+
+    EXPECT_TRUE(result.converged);
+    EXPECT_LT(result.relative_residual, 1e-6);
+}
+
+TEST_F(PreconditionedSolverTest, BiCGSTABConvergesOnTridiagonal) {
+    auto A = create_tridiagonal_matrix(10);
+    auto b = create_rhs(10);
+
+    BiCGSTAB<double> bicgstab;
+    std::vector<double> x(A.cols(), 0.0);
+
+    auto result = bicgstab.solve(A, b.data(), x.data());
+
+    EXPECT_TRUE(result.converged);
+    EXPECT_LT(result.relative_residual, 1e-6);
+}
+
+TEST_F(PreconditionedSolverTest, BiCGSTABIterations) {
+    auto A = create_tridiagonal_matrix(20);
+    auto b = create_rhs(20);
+
+    BiCGSTAB<double> bicgstab;
+    std::vector<double> x(A.cols(), 0.0);
+
+    auto result = bicgstab.solve(A, b.data(), x.data());
+
+    EXPECT_TRUE(result.converged);
+    EXPECT_GT(result.iterations, 0);
+}
+
+TEST_F(PreconditionedSolverTest, BiCGSTABZeroRHS) {
+    auto A = create_tridiagonal_matrix(5);
+    std::vector<double> b(A.cols(), 0.0);
+
+    BiCGSTAB<double> bicgstab;
+    std::vector<double> x(A.cols(), 0.0);
+
+    auto result = bicgstab.solve(A, b.data(), x.data());
+
+    EXPECT_TRUE(result.converged);
+    EXPECT_EQ(result.iterations, 0);
+}
+
+TEST_F(PreconditionedSolverTest, CGSquareMatrixValidation) {
+    std::vector<double> values = {1.0, 2.0};
+    std::vector<int> row_offsets = {0, 1, 2};
+    std::vector<int> col_indices = {0, 1};
+    auto A = SparseMatrix<double>::FromHostData(values, row_offsets, col_indices, 2, 2);
+    std::vector<double> b = {1.0, 1.0};
+
+    ConjugateGradient<double> cg;
+    std::vector<double> x(A.cols(), 0.0);
+    auto result = cg.solve(A, b.data(), x.data());
+
+    EXPECT_EQ(result.error_code, SolverError::INVALID_MATRIX);
+}
+
+TEST_F(PreconditionedSolverTest, GMRESSquareMatrixValidation) {
+    std::vector<double> values = {1.0, 2.0};
+    std::vector<int> row_offsets = {0, 1, 2};
+    std::vector<int> col_indices = {0, 1};
+    auto A = SparseMatrix<double>::FromHostData(values, row_offsets, col_indices, 2, 2);
+    std::vector<double> b = {1.0, 1.0};
+
+    GMRES<double> gmres;
+    std::vector<double> x(A.cols(), 0.0);
+    auto result = gmres.solve(A, b.data(), x.data());
+
+    EXPECT_EQ(result.error_code, SolverError::INVALID_MATRIX);
+}
+
+TEST_F(PreconditionedSolverTest, BiCGSTABSquareMatrixValidation) {
+    std::vector<double> values = {1.0, 2.0};
+    std::vector<int> row_offsets = {0, 1, 2};
+    std::vector<int> col_indices = {0, 1};
+    auto A = SparseMatrix<double>::FromHostData(values, row_offsets, col_indices, 2, 2);
+    std::vector<double> b = {1.0, 1.0};
+
+    BiCGSTAB<double> bicgstab;
+    std::vector<double> x(A.cols(), 0.0);
+    auto result = bicgstab.solve(A, b.data(), x.data());
+
+    EXPECT_EQ(result.error_code, SolverError::INVALID_MATRIX);
+}
+
 }
 }
 }

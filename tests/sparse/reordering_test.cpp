@@ -160,6 +160,60 @@ TEST_F(RCMReordererTest, BandwidthReductionRatio) {
     }
 }
 
+TEST_F(RCMReordererTest, ReorderingResultPermutationIsPermutation) {
+    auto matrix = create_tridiagonal_matrix(5);
+    RCMReorderer<double> reorderer;
+    auto result = reorderer.reorder(matrix);
+
+    std::vector<int> count(5, 0);
+    for (int p : result.permutation) {
+        EXPECT_GE(p, 0);
+        EXPECT_LT(p, 5);
+        count[p]++;
+    }
+    for (int c : count) {
+        EXPECT_EQ(c, 1);
+    }
+}
+
+TEST_F(RCMReordererTest, ReorderingResultInverseIsCorrect) {
+    auto matrix = create_tridiagonal_matrix(5);
+    RCMReorderer<double> reorderer;
+    auto result = reorderer.reorder(matrix);
+
+    for (int i = 0; i < 5; ++i) {
+        EXPECT_EQ(result.permutation[result.inverse_permutation[i]], i);
+    }
+}
+
+TEST_F(RCMReordererTest, ReorderingResultBandwidthMetrics) {
+    auto matrix = create_band_matrix(10, 5);
+    RCMReorderer<double> reorderer;
+    auto result = reorderer.reorder(matrix);
+
+    EXPECT_GE(result.original_bandwidth, 0);
+    EXPECT_GE(result.reordered_bandwidth, 0);
+}
+
+TEST_F(RCMReordererTest, ReorderingPreservesNnz) {
+    auto matrix = create_tridiagonal_matrix(5);
+    RCMReorderer<double> reorderer;
+    auto result = reorderer.reorder(matrix);
+    auto reordered = reorderer.apply_reordering(matrix, result);
+
+    EXPECT_EQ(reordered.nnz(), matrix.nnz());
+}
+
+TEST_F(RCMReordererTest, ReorderingPreservesSymmetry) {
+    auto matrix = create_tridiagonal_matrix(5);
+    RCMReorderer<double> reorderer;
+    auto result = reorderer.reorder(matrix);
+    auto reordered = reorderer.apply_reordering(matrix, result);
+
+    EXPECT_EQ(reordered.rows(), matrix.rows());
+    EXPECT_EQ(reordered.cols(), matrix.cols());
+}
+
 }
 }
 }
