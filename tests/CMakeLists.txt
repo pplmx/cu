@@ -107,6 +107,7 @@ add_executable(nova-tests
     sparse/krylov_test.cpp
     sparse/sparse_matrix_test.cpp
     sparse/integration_test.cpp
+    sparse/cusparse_test.cpp
 )
 
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)

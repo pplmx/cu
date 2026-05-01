@@ -173,6 +173,8 @@ set(CUDA_MEMORY_ERROR_DIR ${CMAKE_SOURCE_DIR}/include/cuda/memory_error)
 set(SRC_CUDA_MEMORY_ERROR ${CMAKE_SOURCE_DIR}/src/cuda/memory_error)
 set(CUDA_PREEMPTION_DIR ${CMAKE_SOURCE_DIR}/include/cuda/preemption)
 set(SRC_CUDA_PREEMPTION ${CMAKE_SOURCE_DIR}/src/cuda/preemption)
+set(CUDA_SPARSE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/sparse)
+set(SRC_CUDA_SPARSE ${CMAKE_SOURCE_DIR}/src/cuda/sparse)
 
 set(CUDA_ERROR_DIR ${CMAKE_SOURCE_DIR}/include/cuda/error)
 set(SRC_CUDA_ERROR ${CMAKE_SOURCE_DIR}/src/cuda/error)
@@ -204,6 +206,7 @@ target_include_directories(cuda_algo INTERFACE
 target_link_libraries(cuda_algo INTERFACE
         cuda_device
         CUDA::cublas
+        CUDA::cusparse
 )
 
 add_library(cuda_api INTERFACE)
@@ -240,6 +243,11 @@ set(NUMERIC_SOURCES
 set(SRC_CUDA_SIGNAL ${CMAKE_SOURCE_DIR}/src/cuda/signal)
 set(SIGNAL_SOURCES
         ${SRC_CUDA_SIGNAL}/signal.cu
+)
+
+set(SPARSE_SOURCES
+        ${SRC_CUDA_SPARSE}/cusparse_context.cpp
+        ${SRC_CUDA_SPARSE}/sparse_ops.cu
 )
 
 set(SRC_CUDA_PRODUCTION ${CMAKE_SOURCE_DIR}/src/cuda/production)
@@ -471,6 +479,7 @@ set(ALL_CUDA_SOURCES
         ${OBSERVABILITY_SOURCES}
         ${TESTING_SOURCES}
         ${ERROR_SOURCES}
+        ${SPARSE_SOURCES}
 )
 
 add_library(cuda_nccl STATIC ${NCCL_SOURCES})
@@ -569,6 +578,7 @@ target_include_directories(cuda_impl PUBLIC
         ${CUDA_SIGNAL_DIR}
         ${CUDA_MEMORY_DIR}
         ${CUDA_ERROR_DIR}
+        ${CUDA_SPARSE_DIR}
 )
 target_link_libraries(cuda_impl PUBLIC
         cuda_device

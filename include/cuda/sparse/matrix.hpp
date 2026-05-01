@@ -147,4 +147,16 @@ void SparseMatrix<T>::copy_to_host(std::vector<T>& out_values,
     col_indices_.copy_to(out_col_indices.data(), static_cast<size_t>(nnz()));
 }
 
+template<typename T>
+void spmv(const SparseMatrix<T>& A, const T* x, T* y);
+
+template<typename T>
+void spmv_async(const SparseMatrix<T>& A, const T* x, T* y, cudaStream_t stream);
+
+template<typename T>
+void spmv_transpose(const SparseMatrix<T>& A, const T* x, T* y);
+
+template<typename T>
+void spmv_transpose_async(const SparseMatrix<T>& A, const T* x, T* y, cudaStream_t stream);
+
 }  // namespace nova::sparse
