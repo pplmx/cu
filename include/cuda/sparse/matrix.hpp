@@ -159,4 +159,25 @@ void spmv_transpose(const SparseMatrix<T>& A, const T* x, T* y);
 template<typename T>
 void spmv_transpose_async(const SparseMatrix<T>& A, const T* x, T* y, cudaStream_t stream);
 
+template<typename T>
+class SparseMatrixCSR;
+
+template<typename T>
+SparseMatrix<T> ToSparseMatrix(const SparseMatrixCSR<T>& csr) {
+    if (csr.nnz() == 0) {
+        return SparseMatrix<T>(csr.num_rows(), csr.num_cols(), 0);
+    }
+
+    std::vector<T> values(csr.nnz());
+    std::vector<int> row_offsets(csr.num_rows() + 1);
+    std::vector<int> col_indices(csr.nnz());
+
+    std::copy(csr.values(), csr.values() + csr.nnz(), values.begin());
+    std::copy(csr.row_offsets(), csr.row_offsets() + csr.num_rows() + 1, row_offsets.begin());
+    std::copy(csr.col_indices(), csr.col_indices() + csr.nnz(), col_indices.begin());
+
+    return SparseMatrix<T>::FromHostData(values, row_offsets, col_indices,
+                                          csr.num_rows(), csr.num_cols());
+}
+
 }  // namespace nova::sparse

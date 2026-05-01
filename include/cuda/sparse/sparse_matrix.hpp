@@ -12,7 +12,8 @@ namespace sparse {
 enum class SparseFormat { CSR, CSC, ELL, SELL, HYB };
 
 template<typename T>
-class SparseMatrixCSR {
+class [[deprecated("Use cuda::sparse::SparseMatrix<T> instead")]]
+SparseMatrixCSR {
 public:
     SparseMatrixCSR() = default;
 
@@ -335,6 +336,12 @@ SparseMatrixSELL<T> SparseMatrixSELL<T>::FromCSR(const SparseMatrixCSR<T>& csr, 
     return SparseMatrixSELL<T>(std::move(values), std::move(col_indices),
                                 std::move(slice_ptr), num_rows, num_cols, slice_height);
 }
+
+template<typename T>
+class SparseMatrix;
+
+template<typename T>
+SparseMatrix<T> ToSparseMatrix(const SparseMatrixCSR<T>& csr);
 
 } // namespace sparse
 } // namespace nova
