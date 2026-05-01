@@ -1,8 +1,8 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.9
-milestone_name: Architecture Refactor
-status: audit_passed
+milestone: v2.10
+milestone_name: TBD
+status: ready_for_new_milestone
 last_updated: "2026-05-01"
 progress:
   total_phases: 5
@@ -18,20 +18,14 @@ progress:
 
 ## Current Position
 
-Phase: All phases complete
+Phase: v2.9 complete
 Plan: —
-Status: Audit passed — ready to complete
-Last activity: 2026-05-01 — v2.9 audit complete
+Status: Ready for new milestone
+Last activity: 2026-05-01 — v2.9 shipped
 
 ## Phase List
 
-| Phase | Name | Goal | Status | Requirements |
-|-------|------|------|--------|--------------|
-| 83 | SparseMatrix with Buffer<T> | Unified sparse matrix with GPU memory | Complete | ARCH-01 |
-| 84 | cuSPARSE Integration | GPU SpMV via cuSPARSE | Complete | ARCH-02 |
-| 85 | GPU-Accelerated Krylov | CG/GMRES/BiCGSTAB on GPU | Complete | ARCH-03 |
-| 86 | Backward Compatibility | Deprecate old API, add conversion | Complete | ARCH-04 |
-| 87 | Final Integration Tests | E2E validation | Complete | ARCH-05 |
+*No active phases — milestone v2.9 complete*
 
 ## Milestone History
 
@@ -56,7 +50,7 @@ Last activity: 2026-05-01 — v2.9 audit complete
 | v2.6 Transformer & Inference Optimization | ✅ Shipped | 2026-04-29 | 18 |
 | v2.7 Comprehensive Testing & Validation | ✅ Shipped | 2026-04-30 | 16 |
 | v2.8 Numerical Computing & Performance | ✅ Shipped | 2026-05-01 | 20 |
-| v2.9 Architecture Refactor | ✅ Audit Passed | 2026-05-01 | 7 |
+| v2.9 Architecture Refactor | ✅ Shipped | 2026-05-01 | 7 |
 
 ---
-*State updated: 2026-05-01 — v2.9 audit passed, ready to complete*
+*State updated: 2026-05-01 — v2.9 shipped, ready for v2.10*
