@@ -111,6 +111,7 @@ add_executable(nova-tests
     sparse/cusparse_test.cpp
     sparse/preconditioner_test.cpp
     sparse/reordering_test.cpp
+    sparse/ilu_preconditioner_test.cpp
 )
 
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)
