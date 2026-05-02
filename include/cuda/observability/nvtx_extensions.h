@@ -20,6 +20,10 @@ struct NVTXDomains {
     static constexpr nvtx3::domain_handle_t Algo = nvtx3::domain_create("nova.algo");
     static constexpr nvtx3::domain_handle_t API = nvtx3::domain_create("nova.api");
     static constexpr nvtx3::domain_handle_t Production = nvtx3::domain_create("nova.production");
+    static constexpr nvtx3::domain_handle_t Performance = nvtx3::domain_create("nova.performance");
+    static constexpr nvtx3::domain_handle_t NVBlox = nvtx3::domain_create("nova.performance.nvblox");
+    static constexpr nvtx3::domain_handle_t Fusion = nvtx3::domain_create("nova.performance.fusion");
+    static constexpr nvtx3::domain_handle_t Bandwidth = nvtx3::domain_create("nova.performance.bandwidth");
 };
 
 template <nvtx3::domain_handle_t Domain>
@@ -68,6 +72,10 @@ struct NVTXDomains {
     static constexpr void* Algo = nullptr;
     static constexpr void* API = nullptr;
     static constexpr void* Production = nullptr;
+    static constexpr void* Performance = nullptr;
+    static constexpr void* NVBlox = nullptr;
+    static constexpr void* Fusion = nullptr;
+    static constexpr void* Bandwidth = nullptr;
 };
 
 }  // namespace cuda::observability

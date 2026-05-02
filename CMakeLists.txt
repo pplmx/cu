@@ -74,6 +74,10 @@ option(NOVA_ENABLE_MPI "Enable MPI for multi-node support" OFF)
 # Unity build for faster compilation (CMake 3.16+)
 option(NOVA_ENABLE_UNITY_BUILD "Enable unity build to speed up compilation" ON)
 
+# NVBlox support (optional)
+# Enable NVIDIA Nsight Compute profiling integration
+option(NOVA_ENABLE_NVBLOX "Enable NVBlox for kernel-level profiling" ON)
+
 # ccache support for faster rebuilds
 option(NOVA_USE_CCACHE "Enable ccache compiler launcher for faster rebuilds" OFF)
 
@@ -413,6 +417,16 @@ set(FUSION_SOURCES
 set(PERFORMANCE_SOURCES
         ${SRC_CUDA_PERFORMANCE}/profiler.cpp
         ${SRC_CUDA_PERFORMANCE}/autotuner.cpp
+        ${SRC_CUDA_PERFORMANCE}/nvblox_metrics.cpp
+        ${SRC_CUDA_PERFORMANCE}/kernel_profiler.cpp
+        ${SRC_CUDA_PERFORMANCE}/metric_aggregators.cpp
+        ${SRC_CUDA_PERFORMANCE}/fusion/kernel_fusion_analyzer.cpp
+        ${SRC_CUDA_PERFORMANCE}/fusion/fusion_profitability.cpp
+        ${SRC_CUDA_PERFORMANCE}/fusion/fusion_patterns.cpp
+        ${SRC_CUDA_PERFORMANCE}/bandwidth/roofline_model.cpp
+        ${SRC_CUDA_PERFORMANCE}/bandwidth/cache_analyzer.cpp
+        ${SRC_CUDA_PERFORMANCE}/dashboard/dashboard_exporter.cpp
+        ${SRC_CUDA_PERFORMANCE}/dashboard/flame_graph.cpp
 )
 
 set(MEMORY_OPT_DIR ${CMAKE_SOURCE_DIR}/include/cuda/memory_opt)

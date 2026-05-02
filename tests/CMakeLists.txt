@@ -114,6 +114,11 @@ add_executable(nova-tests
     sparse/ilu_preconditioner_test.cpp
     sparse/preconditioned_solver_test.cpp
     sparse/preconditioner_benchmark_test.cpp
+    performance/nvblox_metrics_test.cpp
+    performance/fusion_analyzer_test.cpp
+    performance/bandwidth_analysis_test.cpp
+    performance/dashboard_test.cpp
+    performance/integration_test.cpp
 )
 
 set(CUDA_DEVICE_DIR ${CMAKE_SOURCE_DIR}/include/cuda/device)

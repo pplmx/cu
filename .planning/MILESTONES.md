@@ -420,4 +420,38 @@
 - `src/cuda/sparse/sparse_ops.cu` - GPU SpMV implementation
 - `tests/sparse/matrix_test.cpp`, `cusparse_test.cpp`, `krylov_gpu_test.cpp`, `integration_test.cpp`
 
+---
+
+## v2.11 Performance Tooling (Shipped: 2026-05-02)
+
+**Phases:** 5 (93-97), 14 requirements
+
+**Goal:** Comprehensive performance tooling — NVBlox integration, kernel fusion analysis, memory bandwidth optimization
+
+**Requirements delivered:**
+- NVBlox-01 to NVBlox-03: NVBloxMetricsCollector, KernelProfiler, MetricAggregators
+- FUSION-01 to FUSION-03: KernelFusionAnalyzer, FusionProfitabilityModel, FusionRecommendationEngine
+- BANDWIDTH-01 to BANDWIDTH-03: RooflineModel, BandwidthUtilizationTracker, CacheAnalyzer
+- DASH-01 to DASH-03: DashboardExporter, FlameGraphGenerator, JSON/CSV export
+- INT-01 to INT-02: nvbench integration, NVTX performance domains
+
+**Key accomplishments:**
+
+- **Phase 93: NVBlox Foundation** - KernelMetricsCollector, KernelProfiler, OccupancyCalculator, MetricAggregators
+- **Phase 94: Kernel Fusion Analysis** - 10+ fusion patterns, profitability model, confidence levels
+- **Phase 95: Memory Bandwidth Optimization** - RooflineModel, BandwidthUtilizationTracker, CacheAnalyzer
+- **Phase 96: Dashboard & Visualization** - DashboardExporter, FlameGraphGenerator, NVTX domains
+- **Phase 97: Integration & Validation** - Integration tests, PERFORMANCE_TOOLING.md
+
+**New modules:**
+- `cuda/performance/nvblox_metrics.h` - NVBlox metrics collection
+- `cuda/performance/kernel_profiler.h` - Kernel profiling hooks
+- `cuda/performance/metric_aggregators.h` - AI, FLOP/s, BW aggregators
+- `cuda/performance/fusion/` - Kernel fusion analysis
+- `cuda/performance/bandwidth/` - Roofline and cache analysis
+- `cuda/performance/dashboard/` - Dashboard export and flame graphs
+
+**Documentation:**
+- `docs/PERFORMANCE_TOOLING.md` - Comprehensive tooling guide
+
 **Next:** TBD

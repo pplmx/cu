@@ -4,11 +4,11 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: v2.11 TBD
+## Current Milestone: v2.11 Performance Tooling
 
-**Goal:** Next milestone to be determined
+**Goal:** Comprehensive performance tooling — NVBlox integration, kernel fusion analysis, and memory bandwidth optimization
 
-**Status:** Ready to start
+**Status:** Planning
 
 ## Completed (v2.6)
 
@@ -85,6 +85,23 @@ A production-ready CUDA parallel algorithms library with a five-layer architectu
 - ✓ CG solver with preconditioner support — Phase 91
 - ✓ E2E convergence tests — Phase 91
 - ✓ Performance benchmarks — Phase 92
+
+### Completed (v2.11)
+
+- ✓ NVBlox metrics integration header — Phase 93
+- ✓ Kernel-level profiling hooks — Phase 93
+- ✓ Custom metric aggregators (AI, FLOP/s, BW) — Phase 93
+- ✓ KernelFusionAnalyzer with 10+ patterns — Phase 94
+- ✓ Fusion profitability model (100us threshold) — Phase 94
+- ✓ Fusion recommendation engine with confidence — Phase 94
+- ✓ RooflineModel with device peaks — Phase 95
+- ✓ BandwidthUtilizationTracker — Phase 95
+- ✓ CacheAnalyzer with CUPTI fallback — Phase 95
+- ✓ DashboardExporter with JSON/CSV — Phase 96
+- ✓ FlameGraphGenerator from NVTX — Phase 96
+- ✓ NVTX performance domains — Phase 93/96
+- ✓ Integration tests — Phase 97
+- ✓ PERFORMANCE_TOOLING.md documentation — Phase 97
 
 **Next milestone:** TBD
 
@@ -364,6 +381,15 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state (users, feedback, metrics)
 
 ---
-*Last updated: 2026-05-01 after v2.10 Sparse Solver Acceleration completed*
-*v2.10: Preconditioners, Matrix Ordering, Solver Acceleration*
-*v2.11: TBD*
+### Completed (v2.11)
+
+- ✓ NVBlox integration for kernel-level analysis — Phase 93
+- ✓ Kernel fusion analysis with opportunity detection — Phase 94
+- ✓ Memory bandwidth optimization (roofline, utilization) — Phase 95
+- ✓ Dashboard & visualization with fusion impact — Phase 96
+- ✓ Integration tests and documentation — Phase 97
+
+---
+*Last updated: 2026-05-02 after v2.11 Performance Tooling completed*
+*v2.10: Preconditioners, Matrix Ordering, Solver Acceleration (COMPLETE)*
+*v2.11: Performance Tooling (COMPLETE)*
