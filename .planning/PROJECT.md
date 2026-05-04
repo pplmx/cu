@@ -4,13 +4,20 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: v2.12 Advanced Quantization (SHIPPED)
+## Current Milestone: v2.13 Transformer Optimization
+
+**Goal:** GPU-accelerated inference optimizations for transformer models — speculative decoding, beam search, and KV cache improvements
+
+**Target features:**
+- Speculative Decoding: Draft model speculation, tree-based verification, dynamic batch sizing
+- Advanced Beam Search: GPU beam search with score caching, length normalization, repetition penalty
+- KV Cache Improvements: Attention sink stabilization, streaming LLM patterns, partial reuse, compression
+
+## Previous Milestone: v2.12 Advanced Quantization (SHIPPED)
 
 **Goal:** FP8 support, CUDA kernels, production calibration, and QAT integration
 
 **Status:** Complete — archived at `.planning/milestones/v2.12-*`
-
-## Next Milestone: v2.13 (TBD)
 
 Run `/gsd-new-milestone` to start planning
 
@@ -403,8 +410,10 @@ This document evolves at phase transitions and milestone boundaries.
 
 ### Planned (v2.13)
 
-- [ ] Run `/gsd-new-milestone` to start planning
+- [ ] Speculative Decoding: Draft model speculation, tree-based verification, dynamic batch sizing
+- [ ] Advanced Beam Search: GPU beam search with score caching, length normalization, repetition penalty
+- [ ] KV Cache Improvements: Attention sink stabilization, streaming LLM patterns, partial reuse, compression
 
 ---
-*Last updated: 2026-05-03 after v2.12 Advanced Quantization shipped*
-*v2.12: Advanced Quantization (SHIPPED)*
+*Last updated: 2026-05-05 after v2.13 Transformer Optimization started*
+*v2.13: Transformer Optimization (ACTIVE)*
