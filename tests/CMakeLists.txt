@@ -85,6 +85,10 @@ add_executable(nova-tests
     algo/flash_attention_edge_test.cu
     memory/kv_cache_allocator_test.cpp
     memory/kv_cache_allocator_edge_test.cpp
+    memory/streaming_cache_test.cpp
+    memory/prefix_sharing_test.cpp
+    memory/attention_sink_test.cpp
+    memory/fragmentation_test.cpp
     inference/block_manager_test.cpp
     inference/block_manager_edge_test.cpp
     inference/scheduler_test.cpp

@@ -295,6 +295,7 @@ set(SRC_CUDA_MEMORY ${CMAKE_SOURCE_DIR}/src/cuda/memory)
 set(MEMORY_SOURCES
         ${MEMORY_DIR}/buffer.cpp
         ${MEMORY_DIR}/memory_pool.cpp
+        ${SRC_CUDA_MEMORY}/streaming_cache_manager.cpp
 )
 
 set(MEMORY_DISTRIBUTED_SOURCES

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cuda/memory/buffer.h"
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <memory>
@@ -21,6 +22,10 @@ struct KVCacheBlock {
     KVCacheBlock* prev = nullptr;
     KVCacheBlock* next = nullptr;
     bool in_use = false;
+    int ref_count = 1;
+    std::vector<int64_t> shared_by;
+    bool is_attention_sink = false;
+    int sink_position = -1;
 };
 
 struct KVCacheAllocatorConfig {
@@ -32,6 +37,11 @@ struct KVCacheAllocatorConfig {
     int eviction_threshold_pct = 10;
     bool enable_prefix_caching = true;
     int max_prefix_blocks = 256;
+    bool enable_sink_separation = true;
+    int num_sink_positions = 4;
+    int sink_eviction_bonus = 1000;
+    bool enable_l2_persistence = false;
+    int l2_persistence_scope = 0;
 };
 
 struct KVCacheStats {
@@ -39,6 +49,10 @@ struct KVCacheStats {
     int allocated_blocks = 0;
     int free_blocks = 0;
     float fragmentation_percent = 0.0f;
+    float fragmentation_ratio = 0.0f;
+    float avg_free_block_size = 0.0f;
+    int num_free_holes = 0;
+    float largest_free_hole_tokens = 0.0f;
     size_t total_memory = 0;
     size_t used_memory = 0;
     int prefix_cache_hits = 0;
@@ -63,8 +77,8 @@ public:
     void free(int64_t sequence_id);
 
     void evict(int num_blocks_needed);
-    std::vector<KVCacheBlock*> get_blocks(int64_t sequence_id) const;
-    KVCacheBlock* get_block(int64_t sequence_id, int block_index) const;
+    std::vector<const KVCacheBlock*> get_blocks(int64_t sequence_id) const;
+    const KVCacheBlock* get_block(int64_t sequence_id, int block_index) const;
 
     struct PrefixMatch {
         int64_t sequence_id;
@@ -75,7 +89,7 @@ public:
     std::optional<PrefixMatch> find_prefix_match(
         const void* prefix_tokens,
         int prefix_length
-    ) const;
+    );
 
     KVCacheStats get_stats() const;
     void reset_stats();
@@ -83,8 +97,39 @@ public:
     int get_num_free_blocks() const { return static_cast<int>(free_list_.size()); }
     int get_block_size_tokens() const { return config_.block_size_tokens; }
 
-    void* get_gpu_memory() const { return gpu_memory_.data(); }
+    void* get_gpu_memory() { return gpu_memory_.data(); }
     size_t get_gpu_memory_size() const { return gpu_memory_.size(); }
+
+    std::vector<KVCacheBlock*> fork_prefix_blocks(
+        int64_t source_sequence_id,
+        int64_t new_sequence_id,
+        int num_prefix_blocks
+    );
+
+    void merge_prefix_blocks(int64_t sequence_id);
+
+    uint64_t compute_content_hash(const void* tokens, int num_tokens) const;
+
+    std::vector<int64_t> find_sequences_with_prefix(int64_t reference_sequence_id) const;
+
+    struct FragmentationReport {
+        float ratio;
+        int num_holes;
+        float avg_hole_size;
+        float largest_hole_size;
+    };
+    FragmentationReport analyze_fragmentation() const;
+    bool needs_compaction(float threshold_pct = 30.0f) const;
+    void compact();
+
+    enum class L2PersistenceScope { None = 0, Iterative = 1, Persistent = 2 };
+    void set_l2_persistence_hint(void* ptr, size_t size, bool persist);
+    void configure_l2_persistence(L2PersistenceScope scope);
+
+    void promote_to_sink(int block_idx, int position);
+    void demote_from_sink(int block_idx);
+    bool is_sink_block(int block_idx) const;
+    const std::vector<KVCacheBlock*>& get_sink_blocks() const { return sink_blocks_; }
 
 private:
     void allocate_blocks_internal(int num_blocks);
@@ -107,6 +152,9 @@ private:
 
     size_t block_memory_size_ = 0;
     std::atomic<uint64_t> access_counter_{0};
+
+    std::vector<KVCacheBlock*> sink_blocks_;
+    L2PersistenceScope l2_scope_ = L2PersistenceScope::None;
 };
 
 KVCacheAllocator::KVCacheAllocator(const KVCacheAllocatorConfig& config)
@@ -309,7 +357,7 @@ void KVCacheAllocator::evict(int num_blocks_needed) {
     stats_.used_memory = stats_.allocated_blocks * block_memory_size_;
 }
 
-std::vector<KVCacheBlock*> KVCacheAllocator::get_blocks(
+std::vector<const KVCacheBlock*> KVCacheAllocator::get_blocks(
     int64_t sequence_id
 ) const {
     std::shared_lock lock(mutex_);
@@ -319,7 +367,7 @@ std::vector<KVCacheBlock*> KVCacheAllocator::get_blocks(
         return {};
     }
 
-    std::vector<KVCacheBlock*> result;
+    std::vector<const KVCacheBlock*> result;
     result.reserve(it->second.size());
 
     for (const int block_idx : it->second) {
@@ -329,7 +377,7 @@ std::vector<KVCacheBlock*> KVCacheAllocator::get_blocks(
     return result;
 }
 
-KVCacheBlock* KVCacheAllocator::get_block(
+const KVCacheBlock* KVCacheAllocator::get_block(
     int64_t sequence_id,
     int block_index
 ) const {
@@ -352,12 +400,12 @@ std::optional<KVCacheAllocator::PrefixMatch>
 KVCacheAllocator::find_prefix_match(
     const void* prefix_tokens,
     int prefix_length
-) const {
+) {
     if (!config_.enable_prefix_caching) {
         return std::nullopt;
     }
 
-    std::shared_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     const uint64_t hash = compute_prefix_hash(prefix_tokens, prefix_length);
     auto it = prefix_cache_.find(hash);
@@ -452,6 +500,235 @@ int KVCacheAllocator::find_oldest_sequence() const {
     }
 
     return oldest_sequence;
+}
+
+std::vector<KVCacheBlock*> KVCacheAllocator::fork_prefix_blocks(
+    int64_t source_sequence_id,
+    int64_t new_sequence_id,
+    int num_prefix_blocks
+) {
+    std::unique_lock lock(mutex_);
+
+    auto src_it = sequence_blocks_.find(source_sequence_id);
+    if (src_it == sequence_blocks_.end() ||
+        static_cast<int>(src_it->second.size()) < num_prefix_blocks) {
+        return {};
+    }
+
+    std::vector<KVCacheBlock*> result;
+    for (int i = 0; i < num_prefix_blocks; ++i) {
+        const int block_idx = src_it->second[i];
+        KVCacheBlock& block = blocks_[block_idx];
+
+        block.ref_count++;
+        block.shared_by.push_back(new_sequence_id);
+
+        result.push_back(&block);
+    }
+
+    sequence_blocks_[new_sequence_id] = std::vector<int>(
+        src_it->second.begin(),
+        src_it->second.begin() + num_prefix_blocks
+    );
+
+    return result;
+}
+
+void KVCacheAllocator::merge_prefix_blocks(int64_t sequence_id) {
+    std::unique_lock lock(mutex_);
+
+    auto it = sequence_blocks_.find(sequence_id);
+    if (it == sequence_blocks_.end()) return;
+
+    for (const int block_idx : it->second) {
+        KVCacheBlock& block = blocks_[block_idx];
+
+        if (block.ref_count > 1) {
+            block.ref_count--;
+
+            auto& shared = block.shared_by;
+            auto it2 = std::find(shared.begin(), shared.end(), sequence_id);
+            if (it2 != shared.end()) {
+                shared.erase(it2);
+            }
+
+            if (block.ref_count == 1 && !block.shared_by.empty()) {
+                block.ref_count = 1;
+                block.shared_by.clear();
+            }
+        }
+    }
+
+    sequence_blocks_.erase(it);
+}
+
+uint64_t KVCacheAllocator::compute_content_hash(
+    const void* tokens,
+    int num_tokens
+) const {
+    const uint64_t p1 = 0x9e3779b97f4a7c15ULL;
+    const uint64_t p2 = 0xbf58476d1ce4e5b9ULL;
+
+    uint64_t hash = 0xcbf29ce484222325ULL;
+
+    const float* data = static_cast<const float*>(tokens);
+    const int num_floats = num_tokens * config_.num_heads * config_.head_dim;
+
+    for (int i = 0; i < num_floats && i < 1024; i += 4) {
+        uint64_t val = static_cast<uint64_t>(data[i]);
+        hash ^= val + p1 + (hash << 6) + (hash >> 2);
+    }
+
+    return hash ^ p2;
+}
+
+std::vector<int64_t> KVCacheAllocator::find_sequences_with_prefix(
+    int64_t reference_sequence_id
+) const {
+    std::shared_lock lock(mutex_);
+
+    std::vector<int64_t> result;
+    auto ref_it = sequence_blocks_.find(reference_sequence_id);
+    if (ref_it == sequence_blocks_.end()) return result;
+
+    for (const auto& [seq_id, blocks] : sequence_blocks_) {
+        if (seq_id != reference_sequence_id &&
+            blocks.size() >= ref_it->second.size()) {
+            bool match = true;
+            for (size_t i = 0; i < ref_it->second.size() && match; ++i) {
+                if (blocks[i] != ref_it->second[i]) match = false;
+            }
+            if (match) result.push_back(seq_id);
+        }
+    }
+
+    return result;
+}
+
+KVCacheAllocator::FragmentationReport KVCacheAllocator::analyze_fragmentation() const {
+    std::shared_lock lock(mutex_);
+
+    FragmentationReport report;
+    report.num_holes = static_cast<int>(free_list_.size());
+
+    if (report.num_holes == 0) {
+        report.ratio = 0.0f;
+        report.avg_hole_size = 0.0f;
+        report.largest_hole_size = 0.0f;
+        return report;
+    }
+
+    int total_free = 0;
+    report.largest_hole_size = 0.0f;
+
+    for (const int block_idx : free_list_) {
+        total_free += config_.block_size_tokens;
+        report.largest_hole_size = std::max(
+            report.largest_hole_size,
+            static_cast<float>(config_.block_size_tokens)
+        );
+    }
+
+    report.avg_hole_size = static_cast<float>(total_free) / report.num_holes;
+    report.ratio = stats_.total_blocks > 0
+        ? (100.0f * report.num_holes / stats_.total_blocks)
+        : 0.0f;
+
+    return report;
+}
+
+bool KVCacheAllocator::needs_compaction(float threshold_pct) const {
+    auto report = analyze_fragmentation();
+    return report.ratio > threshold_pct;
+}
+
+void KVCacheAllocator::compact() {
+    std::unique_lock lock(mutex_);
+
+    std::vector<int> allocated_blocks;
+    for (const auto& [seq_id, blocks] : sequence_blocks_) {
+        for (const int block_idx : blocks) {
+            allocated_blocks.push_back(block_idx);
+        }
+    }
+
+    if (allocated_blocks.empty()) return;
+
+    std::sort(allocated_blocks.begin(), allocated_blocks.end());
+
+    for (size_t i = 0; i < allocated_blocks.size(); ++i) {
+        const int src_idx = allocated_blocks[i];
+        const int dst_idx = static_cast<int>(i);
+
+        if (src_idx != dst_idx) {
+            std::swap(blocks_[src_idx], blocks_[dst_idx]);
+            allocated_blocks[i] = dst_idx;
+        }
+    }
+
+    free_list_.clear();
+    for (int i = 0; i < config_.num_blocks; ++i) {
+        if (!blocks_[i].in_use) {
+            free_list_.push_back(i);
+        }
+    }
+}
+
+void KVCacheAllocator::set_l2_persistence_hint(void* ptr, size_t size, bool persist) {
+    if (!config_.enable_l2_persistence) return;
+
+#if defined(CUDA_FOUND)
+    cudaMemAccessDesc desc;
+    desc.location.type = cudaMemLocationTypeDevice;
+    desc.location.id = 0;
+    desc.flags = persist ? cudaMemAccessFlagsProtReadWrite : cudaMemAccessFlagsProtNone;
+
+    cudaMemSetAccess(ptr, size, &desc, 1);
+#endif
+}
+
+void KVCacheAllocator::configure_l2_persistence(L2PersistenceScope scope) {
+    l2_scope_ = scope;
+
+    if (scope != L2PersistenceScope::None) {
+        for (auto& block : blocks_) {
+            if (block.in_use && block.data) {
+                set_l2_persistence_hint(block.data, block_memory_size_, true);
+            }
+        }
+    }
+}
+
+void KVCacheAllocator::promote_to_sink(int block_idx, int position) {
+    std::unique_lock lock(mutex_);
+
+    KVCacheBlock& block = blocks_[block_idx];
+    if (!config_.enable_sink_separation || block.is_attention_sink) return;
+
+    block.is_attention_sink = true;
+    block.sink_position = position;
+    block.last_access += config_.sink_eviction_bonus;
+
+    sink_blocks_.push_back(&block);
+}
+
+void KVCacheAllocator::demote_from_sink(int block_idx) {
+    std::unique_lock lock(mutex_);
+
+    KVCacheBlock& block = blocks_[block_idx];
+    if (!block.is_attention_sink) return;
+
+    block.is_attention_sink = false;
+    block.sink_position = -1;
+
+    auto it = std::find(sink_blocks_.begin(), sink_blocks_.end(), &block);
+    if (it != sink_blocks_.end()) {
+        sink_blocks_.erase(it);
+    }
+}
+
+bool KVCacheAllocator::is_sink_block(int block_idx) const {
+    return blocks_[block_idx].is_attention_sink;
 }
 
 }  // namespace cuda::memory
