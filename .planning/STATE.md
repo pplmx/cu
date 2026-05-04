@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.13
 milestone_name: Transformer Optimization
-status: planning
+status: complete
 last_updated: "2026-05-05"
 progress:
   total_phases: 4
-  completed_phases: 2
-  current_phase: 105
-  total_plans: 0
-  completed_plans: 0
+  completed_phases: 4
+  current_phase: 106
+  total_plans: 4
+  completed_plans: 4
 ---
 
 # Project State
@@ -30,8 +30,8 @@ Last activity: 2026-05-05 — v2.13 roadmap created
 |-------|------|--------|--------------|
 | 103 | KV Cache Foundation | ✅ Complete | KV-01, KV-02, KV-03, KV-04, KV-07, KV-08 |
 | 104 | Beam Search Core | ✅ Complete | BEAM-01, BEAM-02, BEAM-03, BEAM-04, BEAM-05, BEAM-06, BEAM-08 |
-| 105 | Speculative Decoding | 🔄 In Progress | SPEC-01, SPEC-02, SPEC-03, SPEC-04, SPEC-05, SPEC-06, SPEC-07, SPEC-08, SPEC-09 |
-| 106 | Integration & CUDA Graph | Not started | BEAM-07, KV-05, KV-06 |
+| 105 | Speculative Decoding | ✅ Complete | SPEC-01, SPEC-02, SPEC-03, SPEC-04, SPEC-05, SPEC-06, SPEC-07, SPEC-08, SPEC-09 |
+| 106 | Integration & CUDA Graph | ✅ Complete | BEAM-07, KV-05, KV-06 |
 
 ## Milestone History
 

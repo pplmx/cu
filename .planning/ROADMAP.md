@@ -46,8 +46,8 @@ Archived: [v2.12-ROADMAP.md](milestones/v2.12-ROADMAP.md) | [v2.12-REQUIREMENTS.
 
 - [x] **Phase 103: KV Cache Foundation** — Streaming cache manager, prefix caching, attention sinks, fragmentation monitoring, L2 persistence, persistent attention ✅
 - [x] **Phase 104: Beam Search Core** — Beam search manager with scoring, reference-counted KV sharing, batch operations, sampling integration, score rebasing, trace export ✅
-- [ ] **Phase 105: Speculative Decoding** — Draft model speculation, tree verification, rejection sampling, KV isolation, log probability tracking, EAGLE3/SnapKV, async overlap, xGrammar
-- [ ] **Phase 106: Integration & CUDA Graph** — Dynamic block sizing, chunked prefill, beam + speculative combination, persistent KV with CUDA Graph
+- [x] **Phase 105: Speculative Decoding** — Draft model speculation, tree verification, rejection sampling, KV isolation, log probability tracking, EAGLE3/SnapKV, async overlap, xGrammar ✅
+- [x] **Phase 106: Integration & CUDA Graph** — Dynamic block sizing, chunked prefill, beam + speculative combination, persistent KV with CUDA Graph ✅
 
 ---
 
@@ -142,8 +142,8 @@ Archived: [v2.12-ROADMAP.md](milestones/v2.12-ROADMAP.md) | [v2.12-REQUIREMENTS.
 |-------|----------------|--------|-----------|
 | 103. KV Cache Foundation | 1/1 | ✅ Complete | 2026-05-05 |
 | 104. Beam Search Core | 1/1 | ✅ Complete | 2026-05-05 |
-| 105. Speculative Decoding | 0/1 | 🔄 In Progress | - |
-| 106. Integration & CUDA Graph | 0/1 | Not started | - |
+| 105. Speculative Decoding | 1/1 | ✅ Complete | 2026-05-05 |
+| 106. Integration & CUDA Graph | 1/1 | ✅ Complete | 2026-05-05 |
 
 ---
 
