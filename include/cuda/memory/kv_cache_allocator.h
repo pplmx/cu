@@ -4,6 +4,7 @@
 #include "cuda/stream/stream.h"
 #include <algorithm>
 #include <atomic>
+#include <bit>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -117,9 +118,9 @@ public:
 
     struct FragmentationReport {
         float ratio;
-        int num_holes;
-        float avg_hole_size;
-        float largest_hole_size;
+        int num_free_blocks;
+        float avg_free_block_size;
+        float largest_free_block_size;
     };
     FragmentationReport analyze_fragmentation() const;
     bool needs_compaction(float threshold_pct = 30.0f) const;
@@ -187,8 +188,10 @@ KVCacheAllocator::KVCacheAllocator(const KVCacheAllocatorConfig& config)
     }
 
     block_memory_size_ = static_cast<size_t>(config_.num_layers) *
-                         config_.num_heads * config_.head_dim *
-                         config_.block_size_tokens * sizeof(float) * 2;
+                         static_cast<size_t>(config_.num_heads) *
+                         static_cast<size_t>(config_.head_dim) *
+                         static_cast<size_t>(config_.block_size_tokens) *
+                         sizeof(float) * 2;
 
     const size_t total_memory = block_memory_size_ * config_.num_blocks;
 
@@ -330,8 +333,15 @@ void KVCacheAllocator::free(int64_t sequence_id) {
         return;
     }
 
+    if (config_.enable_prefix_caching) {
+        merge_prefix_blocks(sequence_id);
+    }
+
     for (const int block_idx : it->second) {
         KVCacheBlock& block = blocks_[block_idx];
+        if (block.ref_count > 1) {
+            continue;
+        }
         block.in_use = false;
         block.sequence_id = -1;
         block.prev = nullptr;
@@ -339,7 +349,7 @@ void KVCacheAllocator::free(int64_t sequence_id) {
         free_list_.push_back(block_idx);
 
         stats_.allocated_blocks--;
-        stats_.free_blocks--;
+        stats_.free_blocks++;
     }
 
     sequence_blocks_.erase(it);
@@ -490,9 +500,12 @@ uint64_t KVCacheAllocator::compute_prefix_hash(
     const int num_floats = num_tokens * config_.num_heads * config_.head_dim;
 
     for (int i = 0; i < num_floats && i < 1024; i += 4) {
-        uint64_t val = static_cast<uint64_t>(data[i]);
-        hash ^= val + p1 + (hash << 6) + (hash >> 2);
+        uint32_t bits = std::bit_cast<uint32_t>(data[i]);
+        hash ^= static_cast<uint64_t>(bits) + p1 + (hash << 6) + (hash >> 2);
     }
+
+    return hash ^ (p2 * (num_tokens + config_.num_heads * config_.head_dim));
+}
 
     return hash ^ (p2 * (num_tokens + config_.num_heads * config_.head_dim));
 }
@@ -595,9 +608,12 @@ uint64_t KVCacheAllocator::compute_content_hash(
     const int num_floats = num_tokens * config_.num_heads * config_.head_dim;
 
     for (int i = 0; i < num_floats && i < 1024; i += 4) {
-        uint64_t val = static_cast<uint64_t>(data[i]);
-        hash ^= val + p1 + (hash << 6) + (hash >> 2);
+        uint32_t bits = std::bit_cast<uint32_t>(data[i]);
+        hash ^= static_cast<uint64_t>(bits) + p1 + (hash << 6) + (hash >> 2);
     }
+
+    return hash ^ p2;
+}
 
     return hash ^ p2;
 }
@@ -629,29 +645,29 @@ KVCacheAllocator::FragmentationReport KVCacheAllocator::analyze_fragmentation() 
     std::shared_lock lock(mutex_);
 
     FragmentationReport report;
-    report.num_holes = static_cast<int>(free_list_.size());
+    report.num_free_blocks = static_cast<int>(free_list_.size());
 
-    if (report.num_holes == 0) {
+    if (report.num_free_blocks == 0) {
         report.ratio = 0.0f;
-        report.avg_hole_size = 0.0f;
-        report.largest_hole_size = 0.0f;
+        report.avg_free_block_size = 0.0f;
+        report.largest_free_block_size = 0.0f;
         return report;
     }
 
     int total_free = 0;
-    report.largest_hole_size = 0.0f;
+    report.largest_free_block_size = 0.0f;
 
     for (const int block_idx : free_list_) {
         total_free += config_.block_size_tokens;
-        report.largest_hole_size = std::max(
-            report.largest_hole_size,
+        report.largest_free_block_size = std::max(
+            report.largest_free_block_size,
             static_cast<float>(config_.block_size_tokens)
         );
     }
 
-    report.avg_hole_size = static_cast<float>(total_free) / report.num_holes;
+    report.avg_free_block_size = static_cast<float>(total_free) / report.num_free_blocks;
     report.ratio = stats_.total_blocks > 0
-        ? (100.0f * report.num_holes / stats_.total_blocks)
+        ? (100.0f * report.num_free_blocks / stats_.total_blocks)
         : 0.0f;
 
     return report;
@@ -666,6 +682,7 @@ void KVCacheAllocator::compact() {
     std::unique_lock lock(mutex_);
 
     std::vector<int> allocated_blocks;
+    std::unordered_map<int64_t, std::vector<int>> new_sequence_blocks;
     for (const auto& [seq_id, blocks] : sequence_blocks_) {
         for (const int block_idx : blocks) {
             allocated_blocks.push_back(block_idx);
@@ -681,8 +698,48 @@ void KVCacheAllocator::compact() {
         const int dst_idx = static_cast<int>(i);
 
         if (src_idx != dst_idx) {
-            std::swap(blocks_[src_idx], blocks_[dst_idx]);
+            std::swap(blocks_[src_idx].data, blocks_[dst_idx].data);
+            blocks_[src_idx].block_id = src_idx;
+            blocks_[dst_idx].block_id = dst_idx;
             allocated_blocks[i] = dst_idx;
+        }
+    }
+
+    for (auto& [seq_id, blocks] : sequence_blocks_) {
+        for (int& block_idx : blocks) {
+            block_idx = allocated_blocks[
+                std::find(allocated_blocks.begin(), allocated_blocks.end(), block_idx) - allocated_blocks.begin()
+            ];
+        }
+        new_sequence_blocks[seq_id] = blocks;
+    }
+    sequence_blocks_ = std::move(new_sequence_blocks);
+
+    free_list_.clear();
+    for (int i = 0; i < config_.num_blocks; ++i) {
+        if (!blocks_[i].in_use) {
+            free_list_.push_back(i);
+        }
+    }
+}
+    }
+
+    if (allocated_blocks.empty()) return;
+
+    std::sort(allocated_blocks.begin(), allocated_blocks.end());
+
+    for (size_t i = 0; i < allocated_blocks.size(); ++i) {
+        const int src_idx = allocated_blocks[i];
+        const int dst_idx = static_cast<int>(i);
+
+        if (src_idx != dst_idx) {
+            std::swap(blocks_[src_idx], blocks_[dst_idx]);
+            for (auto& [seq_id, indices] : sequence_blocks_) {
+                for (int& idx : indices) {
+                    if (idx == src_idx) idx = dst_idx;
+                    else if (idx == dst_idx) idx = src_idx;
+                }
+            }
         }
     }
 
@@ -701,7 +758,11 @@ void KVCacheAllocator::set_l2_persistence_hint(void* ptr, size_t size, bool pers
     cudaMemAccessDesc desc;
     desc.location.type = cudaMemLocationTypeDevice;
     desc.location.id = 0;
-    desc.flags = persist ? cudaMemAccessFlagsProtReadWrite : cudaMemAccessFlagsProtNone;
+    if (persist) {
+        desc.flags = cudaMemAccessFlagsPersistDefault;
+    } else {
+        desc.flags = cudaMemAccessFlagsProtNone;
+    }
 
     cudaMemSetAccess(ptr, size, &desc, 1);
 #endif
@@ -756,9 +817,9 @@ int KVCacheAllocator::select_optimal_block_size(int num_tokens) const {
         return config_.block_size_tokens;
     }
 
-    int best_size = config_.available_block_sizes.back();
+    int best_size = config_.block_size_tokens;
     for (int size : config_.available_block_sizes) {
-        if (size >= num_tokens) {
+        if (size >= num_tokens && size <= config_.block_size_tokens) {
             best_size = size;
             break;
         }
@@ -788,7 +849,6 @@ std::vector<KVCacheBlock*> KVCacheAllocator::allocate_with_dynamic_size(
         block.in_use = true;
         block.sequence_id = sequence_id;
         block.last_access = ++access_counter_;
-        block.num_tokens = block_size;
         block.ref_count = 1;
 
         result.push_back(&block);
@@ -810,16 +870,45 @@ void KVCacheAllocator::prefill_chunk(
     std::unique_lock lock(mutex_);
 
     auto it = sequence_blocks_.find(sequence_id);
+    std::vector<KVCacheBlock*> blocks;
+
     if (it == sequence_blocks_.end()) {
-        auto blocks = allocate_with_dynamic_size(sequence_id, chunk.length);
-        (void)blocks;
-        (void)stream;
+        blocks = allocate_with_dynamic_size(sequence_id, chunk.length);
     } else {
         int needed = (chunk.length + config_.block_size_tokens - 1) /
                      config_.block_size_tokens;
         int current = static_cast<int>(it->second.size());
         if (needed > current) {
-            allocate(sequence_id, (needed - current) * config_.block_size_tokens);
+            auto new_blocks = allocate(sequence_id, (needed - current) * config_.block_size_tokens);
+            blocks.insert(blocks.end(), new_blocks.begin(), new_blocks.end());
+        }
+        for (int idx : it->second) {
+            blocks.push_back(&blocks_[idx]);
+        }
+    }
+
+    if (!blocks.empty()) {
+        const float* embedding_data = chunk.embedding.data();
+        const int elements_per_token = config_.num_layers * config_.num_heads * config_.head_dim;
+        const size_t bytes_per_token = elements_per_token * sizeof(float);
+
+        int token_offset = 0;
+        for (KVCacheBlock* block : blocks) {
+            const int tokens_in_block = std::min(
+                block->num_tokens,
+                chunk.length - token_offset
+            );
+            if (tokens_in_block <= 0) break;
+
+            const float* src = embedding_data + (chunk.offset + token_offset) * elements_per_token;
+            CUDA_CHECK(cudaMemcpyAsync(
+                block->data,
+                src,
+                tokens_in_block * bytes_per_token,
+                cudaMemcpyHostToDevice,
+                stream.get()
+            ));
+            token_offset += tokens_in_block;
         }
     }
 }

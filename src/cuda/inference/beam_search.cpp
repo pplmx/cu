@@ -2,6 +2,7 @@
 #include "cuda/device/error.h"
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <sstream>
 
 namespace cuda::inference {
@@ -14,7 +15,8 @@ std::vector<std::pair<int, float>> TopKSampler::sample(
     float temperature,
     uint64_t seed
 ) {
-    std::vector<std::pair<int, float>> top_k(k_);
+    const int effective_k = std::min(k_, vocab_size);
+    std::vector<std::pair<int, float>> top_k(effective_k);
 
     std::vector<float> probs(vocab_size);
     float max_logit = logits[0];
@@ -36,12 +38,19 @@ std::vector<std::pair<int, float>> TopKSampler::sample(
     std::iota(indices.begin(), indices.end(), 0);
     std::partial_sort(
         indices.begin(),
-        indices.begin() + k_,
+        indices.begin() + effective_k,
         indices.end(),
         [&probs](int a, int b) { return probs[a] > probs[b]; }
     );
 
-    for (int i = 0; i < k_; ++i) {
+    std::mt19937 rng(static_cast<uint64_t>(seed));
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    for (int i = 0; i < effective_k; ++i) {
+        if (i > 0 && std::abs(probs[indices[i]] - probs[indices[i-1]]) < 1e-6f) {
+            if (dist(rng) < 0.5f) {
+                std::swap(indices[i], indices[i-1]);
+            }
+        }
         top_k[i] = {indices[i], probs[indices[i]]};
     }
 
@@ -89,7 +98,9 @@ int TopPSampler::sample(
         }
     }
 
-    float target = static_cast<float>(seed % 10000) / 10000.0f * cumsum;
+    std::mt19937 rng(seed);
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    float target = dist(rng) * cumsum;
     cumsum = 0.0f;
     for (int i = 0; i < cutoff; ++i) {
         cumsum += sorted[i].second;
@@ -154,6 +165,26 @@ void BeamSearchManager::prune_beams() {
     }
 }
 
+void BeamSearchManager::rebase_scores() {
+    if (hypotheses_.empty()) return;
+
+    float max_log_prob = hypotheses_[0].log_prob;
+    for (const auto& hyp : hypotheses_) {
+        max_log_prob = std::max(max_log_prob, hyp.log_prob);
+    }
+
+    const float threshold = -1e4f;
+    if (max_log_prob < threshold) {
+        const float rebase_factor = max_log_prob;
+        for (auto& hyp : hypotheses_) {
+            hyp.log_prob -= rebase_factor;
+        }
+        for (auto& entry : trace_) {
+            entry.score -= rebase_factor;
+        }
+    }
+}
+
 int BeamSearchManager::sample_token(
     const float* logits,
     int vocab_size,
@@ -186,6 +217,7 @@ void BeamSearchManager::clear_trace() {
 std::vector<BeamHypothesis> BeamSearchManager::search(
     const memory::Buffer<float>& prompt_embeddings,
     int prompt_length,
+    int vocab_size,
     const stream::Stream& stream,
     std::function<void(memory::Buffer<float>&, const std::vector<int64_t>&, const stream::Stream&)>
         forward_fn
@@ -193,7 +225,6 @@ std::vector<BeamHypothesis> BeamSearchManager::search(
     initialize_beams(prompt_length);
     clear_trace();
 
-    const int vocab_size = 32000;
     memory::Buffer<float> logits(vocab_size);
 
     for (int step = 0; step < config_.max_length - prompt_length; ++step) {
@@ -213,6 +244,20 @@ std::vector<BeamHypothesis> BeamSearchManager::search(
 
         const float* logits_data = static_cast<const float*>(logits.data());
 
+        std::vector<float> probs(vocab_size);
+        float max_logit = logits_data[0];
+        for (int i = 1; i < vocab_size; ++i) {
+            max_logit = std::max(max_logit, logits_data[i]);
+        }
+        float sum = 0.0f;
+        for (int i = 0; i < vocab_size; ++i) {
+            probs[i] = std::exp((logits_data[i] - max_logit) / config_.temperature);
+            sum += probs[i];
+        }
+        for (int i = 0; i < vocab_size; ++i) {
+            probs[i] /= sum;
+        }
+
         for (size_t i = 0; i < hypotheses_.size() && beam_idx < config_.max_beams; ++i) {
             auto& hyp = hypotheses_[i];
 
@@ -227,15 +272,18 @@ std::vector<BeamHypothesis> BeamSearchManager::search(
             new_hyp.parent_beam = static_cast<int>(i);
             new_hyp.kv_source_sequence = hyp.sequence_id;
 
-            float token_log_prob = logits_data[token];
+            float token_log_prob = std::log(probs[token] + 1e-10f);
             new_hyp.log_prob = hyp.log_prob + token_log_prob;
 
-            new_hyp.finished = (token == 0);
+            new_hyp.finished = (token == config_.eos_token_id);
 
             if (config_.enable_reuse && hyp.sequence_id >= 0) {
-                int num_blocks = 1;
-                block_manager_->get_kv_cache()->fork_prefix_blocks(
-                    hyp.sequence_id, new_hyp.sequence_id, num_blocks);
+                auto* kv_cache = block_manager_->get_kv_cache();
+                if (kv_cache) {
+                    int num_blocks = 1;
+                    kv_cache->fork_prefix_blocks(
+                        hyp.sequence_id, new_hyp.sequence_id, num_blocks);
+                }
             }
 
             float normalized = new_hyp.length > 0
@@ -259,6 +307,10 @@ std::vector<BeamHypothesis> BeamSearchManager::search(
 
         hypotheses_ = std::move(next_hypotheses_);
         prune_beams();
+
+        if (config_.rebase_threshold > 0 && step > 0 && step % config_.rebase_threshold == 0) {
+            rebase_scores();
+        }
     }
 
     compute_length_normalized_scores();
@@ -281,8 +333,8 @@ std::string BeamSearchManager::export_trace_json() const {
             << "\"step\":" << e.step
             << ",\"beam\":" << e.beam_id
             << ",\"token\":" << e.token
-            << ",\"score\":" << e.score
-            << ",\"norm_score\":" << e.normalized_score
+            << ",\"score\":" << (std::isfinite(e.score) ? e.score : 0.0f)
+            << ",\"norm_score\":" << (std::isfinite(e.normalized_score) ? e.normalized_score : 0.0f)
             << ",\"seq\":" << e.sequence_id
             << "}";
     }
@@ -319,26 +371,13 @@ BeamSearchManager::TraceStats BeamSearchManager::get_trace_stats() const {
         float sum_norm = 0.0f;
         int count = 0;
 
-        int current_step = -1;
-        int beams_in_step = 0;
-
         for (const auto& e : trace_) {
-            if (e.step != current_step) {
-                if (current_step >= 0) {
-                    if (count > 0) {
-                        sum_score += trace_[0].score;
-                    }
-                }
-                current_step = e.step;
-                beams_in_step = 0;
-            }
-            beams_in_step++;
             sum_score += e.score;
             sum_norm += e.normalized_score;
             count++;
         }
 
-        stats.avg_beam_width = trace_.size() / std::max(1, stats.total_steps);
+        stats.avg_beam_width = count > 0 ? count / std::max(1, stats.total_steps) : 0;
         stats.avg_score = count > 0 ? sum_score / count : 0.0f;
         stats.avg_length_norm = count > 0 ? sum_norm / count : 0.0f;
     }

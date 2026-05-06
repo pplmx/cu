@@ -84,6 +84,8 @@ public:
     int get_num_free_blocks() const;
     memory::KVCacheAllocator* get_kv_cache() const { return kv_cache_.get(); }
 
+    std::vector<std::pair<int64_t, Sequence*>> get_active_sequences() const;
+
 private:
     void allocate_blocks_for_sequence(Sequence* seq, int num_blocks);
     void validate_block_index(int block_idx) const;
@@ -91,6 +93,7 @@ private:
 
     BlockManagerConfig config_;
     std::unordered_map<int64_t, std::unique_ptr<Sequence>> sequences_;
+    std::unordered_map<int64_t, int> sequence_to_index_;
     mutable std::shared_mutex sequence_mutex_;
 
     std::unique_ptr<memory::KVCacheAllocator> kv_cache_;
@@ -99,6 +102,8 @@ private:
     memory::Buffer<int> block_table_gpu_;
     int max_blocks_per_sequence_;
     int num_allocated_sequences_ = 0;
+    std::vector<cudaEvent_t> pending_sync_events_;
+    cudaEvent_t last_update_event_ = nullptr;
 };
 
 class PagedAttention {
@@ -111,6 +116,20 @@ public:
         const std::vector<int>& block_table,
         int num_tokens,
         int num_heads,
+        int head_dim,
+        int block_size,
+        const stream::Stream& stream
+    );
+
+    static void forward_with_kvcache(
+        memory::Buffer<float>& output,
+        const memory::Buffer<float>& query,
+        const memory::Buffer<void>& key_cache,
+        const memory::Buffer<void>& value_cache,
+        const std::vector<int>& block_table,
+        int num_tokens,
+        int num_heads,
+        int num_kv_heads,
         int head_dim,
         int block_size,
         const stream::Stream& stream

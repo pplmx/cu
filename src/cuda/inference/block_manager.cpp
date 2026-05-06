@@ -20,9 +20,15 @@ BlockManager::BlockManager(const BlockManagerConfig& config)
     const size_t block_table_size = static_cast<size_t>(config_.num_cpu_blocks) *
                                      max_blocks_per_sequence_;
     block_table_gpu_ = memory::Buffer<int>(block_table_size);
+
+    CUDA_CHECK(cudaEventCreate(&last_update_event_));
 }
 
-BlockManager::~BlockManager() = default;
+BlockManager::~BlockManager() {
+    if (last_update_event_) {
+        cudaEventDestroy(last_update_event_);
+    }
+}
 
 Sequence* BlockManager::create_sequence(int64_t sequence_id, int max_tokens) {
     std::unique_lock lock(sequence_mutex_);
@@ -43,6 +49,7 @@ Sequence* BlockManager::create_sequence(int64_t sequence_id, int max_tokens) {
 
     Sequence* seq_ptr = seq.get();
     sequences_[sequence_id] = std::move(seq);
+    sequence_to_index_[sequence_id] = num_allocated_sequences_;
     num_allocated_sequences_++;
 
     allocate_blocks_for_sequence(seq_ptr, num_blocks);
@@ -107,6 +114,7 @@ void BlockManager::free_sequence(int64_t sequence_id) {
     }
 
     kv_cache_->free(sequence_id);
+    sequence_to_index_.erase(sequence_id);
     sequences_.erase(it);
     num_allocated_sequences_--;
 }
@@ -139,7 +147,10 @@ void BlockManager::forward_batch(
 }
 
 void BlockManager::sync_block_tables(const stream::Stream& stream) {
-    CUDA_CHECK(cudaStreamSynchronize(stream.get()));
+    cudaEvent_t event;
+    cudaEventCreate(&event);
+    cudaEventRecord(event, stream.get());
+    pending_sync_events_.push_back(event);
 }
 
 void BlockManager::maybe_evict() {
@@ -157,6 +168,16 @@ void BlockManager::maybe_evict() {
 
 int BlockManager::get_num_free_blocks() const {
     return kv_cache_->get_num_free_blocks();
+}
+
+std::vector<std::pair<int64_t, Sequence*>> BlockManager::get_active_sequences() const {
+    std::shared_lock lock(sequence_mutex_);
+    std::vector<std::pair<int64_t, Sequence*>> result;
+    result.reserve(sequences_.size());
+    for (const auto& [id, seq] : sequences_) {
+        result.emplace_back(id, seq.get());
+    }
+    return result;
 }
 
 void BlockManager::allocate_blocks_for_sequence(Sequence* seq, int num_blocks) {
@@ -190,7 +211,39 @@ void BlockManager::update_block_table_gpu(
     Sequence* seq,
     const stream::Stream& stream
 ) {
-    const int seq_offset = static_cast<int>(seq->id) * max_blocks_per_sequence_;
+    auto it = sequence_to_index_.find(seq->id);
+    if (it == sequence_to_index_.end()) {
+        throw std::runtime_error("Sequence index not found for ID " +
+                                 std::to_string(seq->id));
+    }
+
+    const int seq_index = it->second;
+    if (seq_index >= config_.num_cpu_blocks) {
+        throw std::out_of_range("Sequence index " + std::to_string(seq_index) +
+                                " exceeds allocated block table size");
+    }
+
+    const int seq_offset = seq_index * max_blocks_per_sequence_;
+    const int* h_table = seq->block_table.data();
+    const int num_blocks = static_cast<int>(seq->block_table.size());
+
+    CUDA_CHECK(cudaMemcpyAsync(
+        block_table_gpu_.data<int>() + seq_offset,
+        h_table,
+        num_blocks * sizeof(int),
+        cudaMemcpyHostToDevice,
+        stream.get()
+    ));
+
+    CUDA_CHECK(cudaEventRecord(last_update_event_, stream.get()));
+}
+
+void BlockManager::sync_block_tables(const stream::Stream& stream) {
+    if (last_update_event_) {
+        CUDA_CHECK(cudaStreamWaitEvent(stream.get(), last_update_event_));
+    }
+}
+    const int seq_offset = static_cast<int>(seq_id) * max_blocks_per_sequence_;
     const int* h_table = seq->block_table.data();
     const int num_blocks = static_cast<int>(seq->block_table.size());
 
@@ -227,6 +280,38 @@ void PagedAttention::forward(
     algo::FlashAttentionConfig config{
         .num_heads = num_heads,
         .num_kv_heads = num_heads,
+        .head_dim = head_dim,
+        .seq_len = num_tokens,
+        .batch_size = 1,
+        .dropout_rate = 0.0f,
+        .causal = true,
+        .is_fp16 = false
+    };
+
+    auto attention = algo::create_flash_attention(config);
+    attention->forward(output, softmax_lse, query, dummy_key, dummy_value, stream);
+}
+
+void PagedAttention::forward_with_kvcache(
+    memory::Buffer<float>& output,
+    const memory::Buffer<float>& query,
+    const memory::Buffer<void>& key_cache,
+    const memory::Buffer<void>& value_cache,
+    const std::vector<int>& block_table,
+    int num_tokens,
+    int num_heads,
+    int num_kv_heads,
+    int head_dim,
+    int block_size,
+    const stream::Stream& stream
+) {
+    memory::Buffer<float> softmax_lse(num_kv_heads);
+    memory::Buffer<float> dummy_key(num_tokens * num_heads * head_dim);
+    memory::Buffer<float> dummy_value(num_tokens * num_kv_heads * head_dim);
+
+    algo::FlashAttentionConfig config{
+        .num_heads = num_heads,
+        .num_kv_heads = num_kv_heads,
         .head_dim = head_dim,
         .seq_len = num_tokens,
         .batch_size = 1,

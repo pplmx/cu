@@ -38,25 +38,27 @@ void StreamingCacheManager::evict_importance_weighted(int num_blocks) {
         return;
     }
 
-    std::vector<std::pair<int64_t, float>> sequences;
+    std::vector<int64_t> sequences_to_evict;
     {
         std::lock_guard<std::mutex> lock(prefetch_mutex_);
         for (const auto& [seq_id, importance] : importance_weights_) {
-            sequences.emplace_back(seq_id, importance);
+            sequences_to_evict.emplace_back(seq_id);
         }
     }
 
-    std::sort(sequences.begin(), sequences.end(),
-        [](const auto& a, const auto& b) { return a.second < b.second; });
+    std::sort(sequences_to_evict.begin(), sequences_to_evict.end(),
+        [this](int64_t a, int64_t b) {
+            return importance_weights_[a] < importance_weights_[b];
+        });
 
     int evicted = 0;
-    for (const auto& [seq_id, _] : sequences) {
+    for (const int64_t seq_id : sequences_to_evict) {
         if (evicted >= num_blocks) break;
 
         auto blocks = allocator_->get_blocks(seq_id);
         if (!blocks.empty()) {
-            allocator_->free(seq_id);
             evicted += static_cast<int>(blocks.size());
+            allocator_->free(seq_id);
         }
     }
 }
@@ -67,8 +69,10 @@ bool StreamingCacheManager::should_evict_async() const {
     }
 
     const int free_blocks = allocator_->get_num_free_blocks();
-    const int total_blocks = 4096;
-    const float free_ratio = static_cast<float>(free_blocks) / total_blocks;
+    const int total_blocks = allocator_->get_stats().total_blocks;
+    const float free_ratio = total_blocks > 0
+        ? static_cast<float>(free_blocks) / total_blocks
+        : 0.0f;
 
     return free_ratio < 0.1f;
 }

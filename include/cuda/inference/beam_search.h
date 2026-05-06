@@ -21,6 +21,8 @@ struct BeamSearchConfig {
     int max_length = 2048;
     bool enable_length_norm = true;
     bool enable_reuse = true;
+    int eos_token_id = 0;
+    int rebase_threshold = 1000;
 };
 
 struct BeamHypothesis {
@@ -89,6 +91,7 @@ public:
     std::vector<BeamHypothesis> search(
         const memory::Buffer<float>& prompt_embeddings,
         int prompt_length,
+        int vocab_size,
         const stream::Stream& stream,
         std::function<void(memory::Buffer<float>&, const std::vector<int64_t>&, const stream::Stream&)>
             forward_fn
@@ -117,6 +120,7 @@ private:
     );
     void prune_beams();
     void compute_length_normalized_scores();
+    void rebase_scores();
     int sample_token(const float* logits, int vocab_size, uint64_t seed);
 
     BlockManager* block_manager_;

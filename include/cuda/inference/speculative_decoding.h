@@ -20,6 +20,8 @@ struct SpeculativeDecodingConfig {
     bool enable_eagle3 = false;
     bool enable_xgrammar = false;
     int max_draft_depth = 8;
+    int vocab_size = 0;
+    float temperature = 0.8f;
 };
 
 struct DraftToken {
