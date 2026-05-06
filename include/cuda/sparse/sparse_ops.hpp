@@ -1,7 +1,7 @@
 #ifndef NOVA_CUDA_SPARSE_OPS_HPP
 #define NOVA_CUDA_SPARSE_OPS_HPP
 
-#include <nova/sparse/sparse_matrix.hpp>
+#include <cuda/sparse/sparse_matrix.hpp>
 #include <memory>
 
 namespace nova {

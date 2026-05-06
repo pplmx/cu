@@ -2,6 +2,7 @@
 
 #include "cuda/distributed/common.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/stream/stream.h"
 #include <memory>
 
 #if defined(NOVA_NCCL_ENABLED)
@@ -9,6 +10,8 @@
 #endif
 
 namespace cuda::distributed {
+
+using cuda::stream::Stream;
 
 struct SequenceParallelConfig {
     int num_model_parallel_gpus = 1;
@@ -184,15 +187,27 @@ void SequenceParallelAttention::gather_kv(
     const Stream& stream
 ) {
     if (!has_sequence_parallelism()) {
-        gathered_k = local_k;
-        gathered_v = local_v;
+        if (gathered_k.size() < local_k.size()) {
+            gathered_k = memory::Buffer<float>(local_k.size());
+        }
+        if (gathered_v.size() < local_v.size()) {
+            gathered_v = memory::Buffer<float>(local_v.size());
+        }
+        gathered_k.copy_from(local_k.data(), local_k.size());
+        gathered_v.copy_from(local_v.data(), local_v.size());
         return;
     }
 
 #if defined(NOVA_NCCL_ENABLED)
     if (config_.comm == nullptr) {
-        gathered_k = local_k;
-        gathered_v = local_v;
+        if (gathered_k.size() < local_k.size()) {
+            gathered_k = memory::Buffer<float>(local_k.size());
+        }
+        if (gathered_v.size() < local_v.size()) {
+            gathered_v = memory::Buffer<float>(local_v.size());
+        }
+        gathered_k.copy_from(local_k.data(), local_k.size());
+        gathered_v.copy_from(local_v.data(), local_v.size());
         return;
     }
 
@@ -233,13 +248,19 @@ void SequenceParallelAttention::scatter_output(
     const Stream& stream
 ) {
     if (!has_sequence_parallelism()) {
-        local_output = full_output;
+        if (local_output.size() < full_output.size()) {
+            local_output = memory::Buffer<float>(full_output.size());
+        }
+        local_output.copy_from(full_output.data(), full_output.size());
         return;
     }
 
 #if defined(NOVA_NCCL_ENABLED)
     if (config_.comm == nullptr) {
-        local_output = full_output;
+        if (local_output.size() < full_output.size()) {
+            local_output = memory::Buffer<float>(full_output.size());
+        }
+        local_output.copy_from(full_output.data(), full_output.size());
         return;
     }
 
@@ -247,7 +268,10 @@ void SequenceParallelAttention::scatter_output(
     const size_t total_count = full_output.size();
 
     if (total_count != local_count * config_.sequence_parallel_size) {
-        local_output = full_output;
+        if (local_output.size() < full_output.size()) {
+            local_output = memory::Buffer<float>(full_output.size());
+        }
+        local_output.copy_from(full_output.data(), full_output.size());
         return;
     }
 
@@ -317,7 +341,10 @@ void RingSequenceParallelism::ring_attention(
     const Stream& stream
 ) {
     if (!has_ring_parallelism()) {
-        output = query;
+        if (output.size() < query.size()) {
+            output = memory::Buffer<float>(query.size());
+        }
+        output.copy_from(query.data(), query.size());
         return;
     }
 

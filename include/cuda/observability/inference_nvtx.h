@@ -2,6 +2,7 @@
 
 #include "cuda/observability/nvtx_extensions.h"
 #include <cstdint>
+#include <string>
 
 namespace cuda::observability {
 
@@ -13,42 +14,51 @@ public:
     }
 
     void begin_prefill() {
-        nvtx3::scoped_range range("Prefill");
+#if defined(NOVA_NVTX_ENABLED) && NOVA_NVTX_ENABLED
+        nvtx3::mark("Prefill");
+#endif
     }
 
     void end_prefill() {}
 
     void begin_decode() {
-        nvtx3::scoped_range range("Decode");
+#if defined(NOVA_NVTX_ENABLED) && NOVA_NVTX_ENABLED
+        nvtx3::mark("Decode");
+#endif
     }
 
     void end_decode() {}
 
     void begin_attention(const char* name = "Attention") {
-        nvtx3::scoped_range range(name);
+#if defined(NOVA_NVTX_ENABLED) && NOVA_NVTX_ENABLED
+        nvtx3::mark(name);
+#endif
     }
 
     void end_attention() {}
 
     void begin_scheduling() {
-        nvtx3::scoped_range range("Scheduling");
+#if defined(NOVA_NVTX_ENABLED) && NOVA_NVTX_ENABLED
+        nvtx3::mark("Scheduling");
+#endif
     }
 
     void end_scheduling() {}
 
     void record_batch_size(int size) {
+#if defined(NOVA_NVTX_ENABLED) && NOVA_NVTX_ENABLED
         nvtx3::mark(("BatchSize:" + std::to_string(size)).c_str());
+#endif
     }
 
     void record_sequence_length(int length) {
+#if defined(NOVA_NVTX_ENABLED) && NOVA_NVTX_ENABLED
         nvtx3::mark(("SeqLen:" + std::to_string(length)).c_str());
+#endif
     }
 
 private:
-    InferenceNVTXDomain() {
-        nvtx3::domain_handle_t domain = nvtxDomainCreateA("nova_inference");
-        (void)domain;
-    }
+    InferenceNVTXDomain() {}
 };
 
 class ScopedPrefill {

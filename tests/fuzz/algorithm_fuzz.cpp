@@ -1,7 +1,7 @@
 #include "fuzz_utils.hpp"
-#include <nova/algo/reduce.hpp>
-#include <nova/algo/scan.hpp>
-#include <nova/algo/sort.hpp>
+#include <cuda/algo/reduce.hpp>
+#include <cuda/algo/scan.hpp>
+#include <cuda/algo/sort.hpp>
 #include <vector>
 #include <algorithm>
 

@@ -10,10 +10,10 @@
 
 namespace cuda::device {
 
-    class CudaException : public std::runtime_error {
+    class CudaException : public ::std::runtime_error {
     public:
         explicit CudaException(cudaError_t err, const char* file, int line)
-            : std::runtime_error(format_error(err, file, line)),
+            : ::std::runtime_error(format_error(err, file, line)),
               error_(err) {}
 
         [[nodiscard]] auto error() const noexcept -> cudaError_t { return error_; }
@@ -21,15 +21,15 @@ namespace cuda::device {
     private:
         cudaError_t error_;
 
-        static auto format_error(cudaError_t err, const char* file, int line) -> std::string {
-            return std::string(file) + ":" + std::to_string(line) + " - CUDA error: " + std::string(cudaGetErrorString(err));
+        static auto format_error(cudaError_t err, const char* file, int line) -> ::std::string {
+            return ::std::string(file) + ":" + ::std::to_string(line) + " - CUDA error: " + ::std::string(cudaGetErrorString(err));
         }
     };
 
-    class CublasException : public std::runtime_error {
+    class CublasException : public ::std::runtime_error {
     public:
         explicit CublasException(cublasStatus_t status, const char* file, int line)
-            : std::runtime_error(format_error(status, file, line)),
+            : ::std::runtime_error(format_error(status, file, line)),
               status_(status) {}
 
         [[nodiscard]] auto error() const noexcept -> cublasStatus_t { return status_; }
@@ -37,16 +37,16 @@ namespace cuda::device {
     private:
         cublasStatus_t status_;
 
-        static auto format_error(cublasStatus_t status, const char* file, int line) -> std::string {
-            return std::string(file) + ":" + std::to_string(line) + " - cuBLAS error: " + std::to_string(static_cast<int>(status));
+        static auto format_error(cublasStatus_t status, const char* file, int line) -> ::std::string {
+            return ::std::string(file) + ":" + ::std::to_string(line) + " - cuBLAS error: " + ::std::to_string(static_cast<int>(status));
         }
     };
 
     struct OperationContext {
         const char* operation_name = nullptr;
-        std::variant<size_t, std::pair<size_t, size_t>> dimensions;
+        ::std::variant<size_t, ::std::pair<size_t, size_t>> dimensions;
         int device_id = -1;
-        std::string extra;
+        ::std::string extra;
     };
 
     class CudaExceptionWithContext : public CudaException {

@@ -53,8 +53,8 @@ class retry_executor {
 public:
     explicit retry_executor(retry_config config);
 
-    template<typename Func>
-    auto execute(Func&& func) -> decltype(func());
+    template<typename Func, typename... Args>
+    std::invoke_result_t<Func, Args...> execute(Func&& func, Args&&... args);
 
     void set_circuit_breaker(circuit_breaker cb);
     [[nodiscard]] int attempt_count() const noexcept { return attempts_; }

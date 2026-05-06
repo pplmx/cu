@@ -32,6 +32,33 @@ __global__ void spmv_csr_kernel(const T* __restrict__ values,
             const int col = col_indices[i];
             sum += values[i] * x[col];
         }
+
+        y[row] = sum;
+    }
+}
+
+template <typename T>
+__global__ void spmv_csc_kernel(const T* __restrict__ values,
+                                 const int* __restrict__ col_offsets,
+                                 const int* __restrict__ row_indices,
+                                 const T* __restrict__ x,
+                                 T* __restrict__ y,
+                                 int num_cols) {
+    const int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (col < num_cols) {
+        T sum = T{0};
+        const int col_start = col_offsets[col];
+        const int col_end = col_offsets[col + 1];
+
+        for (int i = col_start; i < col_end; ++i) {
+            const int row_idx = row_indices[i];
+            sum += values[i] * x[col];
+        }
+        const int row_idx_global = blockIdx.x * blockDim.x + threadIdx.x;
+        y[row_idx_global] += sum;
+    }
+}
         y[row] = sum;
     }
 }

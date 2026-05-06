@@ -1,7 +1,7 @@
 #ifndef NOVA_CUDA_GNN_ATTENTION_HPP
 #define NOVA_CUDA_GNN_ATTENTION_HPP
 
-#include <nova/gnn/message_passing.hpp>
+#include <cuda/gnn/message_passing.hpp>
 #include <cmath>
 #include <vector>
 

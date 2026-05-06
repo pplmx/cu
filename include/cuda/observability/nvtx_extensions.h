@@ -1,12 +1,8 @@
 #pragma once
 
+#if defined(NOVA_NVTX_ENABLED) && NOVA_NVTX_ENABLED
+
 #include <nvtx3/nvtx3.hpp>
-
-#ifndef NOVA_NVTX_ENABLED
-#define NOVA_NVTX_ENABLED 1
-#endif
-
-#if NOVA_NVTX_ENABLED
 
 #define NOVA_NVTX_SCOPED_RANGE(name) nvtx3::scoped_range name(name)
 #define NOVA_NVTX_PUSH_RANGE(name) nvtx3::mark(name)
@@ -14,34 +10,35 @@
 
 namespace cuda::observability {
 
+using NVTXDomainHandle = void*;
+
 struct NVTXDomains {
-    static constexpr nvtx3::domain_handle_t Memory = nvtx3::domain_create("nova.memory");
-    static constexpr nvtx3::domain_handle_t Device = nvtx3::domain_create("nova.device");
-    static constexpr nvtx3::domain_handle_t Algo = nvtx3::domain_create("nova.algo");
-    static constexpr nvtx3::domain_handle_t API = nvtx3::domain_create("nova.api");
-    static constexpr nvtx3::domain_handle_t Production = nvtx3::domain_create("nova.production");
-    static constexpr nvtx3::domain_handle_t Performance = nvtx3::domain_create("nova.performance");
-    static constexpr nvtx3::domain_handle_t NVBlox = nvtx3::domain_create("nova.performance.nvblox");
-    static constexpr nvtx3::domain_handle_t Fusion = nvtx3::domain_create("nova.performance.fusion");
-    static constexpr nvtx3::domain_handle_t Bandwidth = nvtx3::domain_create("nova.performance.bandwidth");
+    static constexpr NVTXDomainHandle Memory = nullptr;
+    static constexpr NVTXDomainHandle Device = nullptr;
+    static constexpr NVTXDomainHandle Algo = nullptr;
+    static constexpr NVTXDomainHandle API = nullptr;
+    static constexpr NVTXDomainHandle Production = nullptr;
+    static constexpr NVTXDomainHandle Performance = nullptr;
+    static constexpr NVTXDomainHandle NVBlox = nullptr;
+    static constexpr NVTXDomainHandle Fusion = nullptr;
+    static constexpr NVTXDomainHandle Bandwidth = nullptr;
 };
 
-template <nvtx3::domain_handle_t Domain>
+template <NVTXDomainHandle Domain>
 class ScopedRange {
 public:
     explicit ScopedRange(const char* name) {
-        nvtx3::scoped_range range(nvtx3::event<Domain>{name});
+        nvtx3::mark(name);
     }
 };
 
-template <nvtx3::domain_handle_t Domain>
+template <NVTXDomainHandle Domain>
 void push_range(const char* name) {
-    nvtx3::mark(nvtx3::event<Domain>{name});
+    nvtx3::mark(name);
 }
 
-template <nvtx3::domain_handle_t Domain>
+template <NVTXDomainHandle Domain>
 void pop_range() {
-    nvtx3::pop_range();
 }
 
 }  // namespace cuda::observability

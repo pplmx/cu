@@ -1,7 +1,7 @@
 #ifndef NOVA_CUDA_QUANTIZE_OPS_HPP
 #define NOVA_CUDA_QUANTIZE_OPS_HPP
 
-#include <nova/quantize/quantize_tensor.hpp>
+#include <cuda/quantize/quantize_tensor.hpp>
 #include <vector>
 #include <cmath>
 

@@ -260,7 +260,7 @@ static void BM_FFTForward(benchmark::State& state) {
 
     for (auto _ : state) {
         NOVA_NVTX_SCOPED_RANGE("fft_forward");
-        plan.execute(d_data, d_data);
+        plan.forward(d_data, reinterpret_cast<cuComplex*>(d_data));
     }
     cudaDeviceSynchronize();
 
@@ -280,7 +280,7 @@ static void BM_FFTInverse(benchmark::State& state) {
 
     for (auto _ : state) {
         NOVA_NVTX_SCOPED_RANGE("fft_inverse");
-        plan.execute(d_data, d_data);
+        plan.inverse(reinterpret_cast<const cuComplex*>(d_data), d_data);
     }
     cudaDeviceSynchronize();
 

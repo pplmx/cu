@@ -1,4 +1,4 @@
-#include <nova/quantize/calibrator.hpp>
+#include <cuda/quantize/calibrator.hpp>
 
 #include <gtest/gtest.h>
 #include <vector>

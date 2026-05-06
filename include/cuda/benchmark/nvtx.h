@@ -43,18 +43,20 @@ struct BenchmarkDomain {
 template <typename Domain = BenchmarkDomain>
 class ScopedRange {
 public:
-    explicit ScopedRange(const char* name) : range_(name, Domain{}) {}
+    explicit ScopedRange(const char* name) {
+        nvtx3::mark(name);
+    }
 
     void set_payload(int64_t payload) {
-        nvtx3::mark_in<Domain>(range_.name(), nvtx3::payload{payload});
+        nvtx3::mark(name_, nvtx3::payload{payload});
     }
 
     void set_message(const char* message) {
-        nvtx3::mark_in<Domain>(message);
+        nvtx3::mark(message);
     }
 
 private:
-    nvtx3::scoped_range range_;
+    const char* name_;
 };
 
 template <typename Domain = BenchmarkDomain>

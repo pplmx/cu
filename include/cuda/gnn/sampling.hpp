@@ -1,7 +1,7 @@
 #ifndef NOVA_CUDA_GNN_SAMPLING_HPP
 #define NOVA_CUDA_GNN_SAMPLING_HPP
 
-#include <nova/sparse/sparse_matrix.hpp>
+#include <cuda/sparse/sparse_matrix.hpp>
 #include <random>
 #include <vector>
 

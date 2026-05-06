@@ -1,7 +1,7 @@
 #ifndef NOVA_CUDA_QUANTIZE_TENSOR_HPP
 #define NOVA_CUDA_QUANTIZE_TENSOR_HPP
 
-#include <nova/memory/buffer.hpp>
+#include <cuda/memory/buffer.hpp>
 #include <vector>
 #include <cstdint>
 #include <type_traits>
