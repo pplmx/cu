@@ -1,6 +1,7 @@
 #include <cuda/quantize/benchmark.hpp>
 #include <cuda/quantize/int8_kernels.hpp>
 #include <cuda/quantize/fp8_types.hpp>
+#include <cuda/quantize/fp8_kernels.hpp>
 #include <cuda/quantize/fp8_gemm.hpp>
 #include <cuda/quantize/calibrator.hpp>
 #include <cuda_runtime.h>
@@ -32,14 +33,14 @@ BenchmarkResult QuantizationBenchmark::benchmark_fp8_quantization(
     cudaMemcpy(d_data, data.data(), data.size() * sizeof(float), cudaMemcpyHostToDevice);
 
     for (int i = 0; i < config_.warmup_runs; ++i) {
-        cuda::quantize_f32_to_fp8e4m3(d_data, quantized.data(), data.size(), stream_);
+        nova::quantize::cuda::quantize_f32_to_fp8e4m3(d_data, quantized.data(), data.size(), stream_);
     }
     cudaStreamSynchronize(stream_);
 
     auto start = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < config_.benchmark_runs; ++i) {
-        cuda::quantize_f32_to_fp8e4m3(d_data, quantized.data(), data.size(), stream_);
+        nova::quantize::cuda::quantize_f32_to_fp8e4m3(d_data, quantized.data(), data.size(), stream_);
     }
     cudaStreamSynchronize(stream_);
 

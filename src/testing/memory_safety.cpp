@@ -1,15 +1,11 @@
 #include "cuda/testing/memory_safety.h"
+#include "cuda/testing/boundary_testing.h"
 
 #include <cstring>
 
 namespace cuda::testing {
 
 static constexpr uint8_t POISON_BYTE = 0xFE;
-static constexpr size_t CUDA_MEMORY_ALIGNMENT = 256;
-
-bool is_memory_aligned(const void* ptr) {
-    return (reinterpret_cast<uintptr_t>(ptr) & (CUDA_MEMORY_ALIGNMENT - 1)) == 0;
-}
 
 MemorySafetyValidator& MemorySafetyValidator::instance() {
     static MemorySafetyValidator instance;

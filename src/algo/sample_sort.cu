@@ -71,10 +71,33 @@ SortResult<T> sort_large_dataset(const T* input, size_t count,
     return result;
 }
 
+template <typename T>
+void sort_inplace(T* data, size_t count, Order order, cudaStream_t stream) {
+    T* d_data;
+    cudaMalloc(&d_data, count * sizeof(T));
+    cudaMemcpyAsync(d_data, data, count * sizeof(T), cudaMemcpyHostToDevice, stream);
+
+    thrust::device_ptr<T> d_ptr(d_data);
+    if (order == Order::Ascending) {
+        thrust::sort(d_ptr, d_ptr + count);
+    } else {
+        thrust::sort(d_ptr, d_ptr + count, thrust::greater<T>());
+    }
+
+    cudaMemcpy(data, d_data, count * sizeof(T), cudaMemcpyDeviceToHost);
+    cudaFree(d_data);
+}
+
+template SortResult<int> sort<int>(const int*, size_t, Order, cudaStream_t);
 template SortResult<float> sort<float>(const float*, size_t, Order, cudaStream_t);
 template SortResult<double> sort<double>(const double*, size_t, Order, cudaStream_t);
 
+template SortResult<int> sort_large_dataset<int>(const int*, size_t, Order, size_t, cudaStream_t);
 template SortResult<float> sort_large_dataset<float>(const float*, size_t, Order, size_t, cudaStream_t);
 template SortResult<double> sort_large_dataset<double>(const double*, size_t, Order, size_t, cudaStream_t);
+
+template void sort_inplace<int>(int*, size_t, Order, cudaStream_t);
+template void sort_inplace<float>(float*, size_t, Order, cudaStream_t);
+template void sort_inplace<double>(double*, size_t, Order, cudaStream_t);
 
 }  // namespace cuda::algo::sample_sort
