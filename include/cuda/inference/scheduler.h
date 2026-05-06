@@ -97,12 +97,12 @@ private:
     int current_batch_size_ = 0;
 };
 
-SequenceManager::SequenceManager(const SchedulerConfig& config)
+inline SequenceManager::SequenceManager(const SchedulerConfig& config)
     : config_(config), next_seq_id_(0), num_active_(0), num_finished_(0) {}
 
-SequenceManager::~SequenceManager() = default;
+inline SequenceManager::~SequenceManager() = default;
 
-int64_t SequenceManager::add_sequence(int max_tokens) {
+inline int64_t SequenceManager::add_sequence(int max_tokens) {
     std::unique_lock lock(mutex_);
 
     const int64_t seq_id = next_seq_id_++;
@@ -114,7 +114,7 @@ int64_t SequenceManager::add_sequence(int max_tokens) {
     return seq_id;
 }
 
-void SequenceManager::update_sequence(int64_t seq_id, int new_length) {
+inline void SequenceManager::update_sequence(int64_t seq_id, int new_length) {
     std::unique_lock lock(mutex_);
 
     auto it = sequence_lengths_.find(seq_id);
@@ -123,7 +123,7 @@ void SequenceManager::update_sequence(int64_t seq_id, int new_length) {
     }
 }
 
-void SequenceManager::complete_sequence(int64_t seq_id) {
+inline void SequenceManager::complete_sequence(int64_t seq_id) {
     std::unique_lock lock(mutex_);
 
     auto it = states_.find(seq_id);
@@ -134,7 +134,7 @@ void SequenceManager::complete_sequence(int64_t seq_id) {
     }
 }
 
-void SequenceManager::remove_sequence(int64_t seq_id) {
+inline void SequenceManager::remove_sequence(int64_t seq_id) {
     std::unique_lock lock(mutex_);
 
     auto state_it = states_.find(seq_id);
@@ -151,7 +151,7 @@ void SequenceManager::remove_sequence(int64_t seq_id) {
     sequence_max_tokens_.erase(seq_id);
 }
 
-std::vector<int64_t> SequenceManager::get_running_sequences() const {
+inline std::vector<int64_t> SequenceManager::get_running_sequences() const {
     std::shared_lock lock(mutex_);
 
     std::vector<int64_t> result;
@@ -163,7 +163,7 @@ std::vector<int64_t> SequenceManager::get_running_sequences() const {
     return result;
 }
 
-std::vector<int64_t> SequenceManager::get_waiting_sequences() const {
+inline std::vector<int64_t> SequenceManager::get_waiting_sequences() const {
     std::shared_lock lock(mutex_);
 
     std::vector<int64_t> result;
@@ -175,7 +175,7 @@ std::vector<int64_t> SequenceManager::get_waiting_sequences() const {
     return result;
 }
 
-std::vector<int64_t> SequenceManager::get_finished_sequences() const {
+inline std::vector<int64_t> SequenceManager::get_finished_sequences() const {
     std::shared_lock lock(mutex_);
 
     std::vector<int64_t> result;
@@ -187,7 +187,7 @@ std::vector<int64_t> SequenceManager::get_finished_sequences() const {
     return result;
 }
 
-SequenceState SequenceManager::get_state(int64_t seq_id) const {
+inline SequenceState SequenceManager::get_state(int64_t seq_id) const {
     std::shared_lock lock(mutex_);
 
     auto it = states_.find(seq_id);
@@ -197,17 +197,17 @@ SequenceState SequenceManager::get_state(int64_t seq_id) const {
     return it->second;
 }
 
-size_t SequenceManager::get_num_active_sequences() const {
+inline size_t SequenceManager::get_num_active_sequences() const {
     std::shared_lock lock(mutex_);
     return num_active_;
 }
 
-size_t SequenceManager::get_num_finished_sequences() const {
+inline size_t SequenceManager::get_num_finished_sequences() const {
     std::shared_lock lock(mutex_);
     return num_finished_;
 }
 
-Scheduler::Scheduler(const SchedulerConfig& config)
+inline Scheduler::Scheduler(const SchedulerConfig& config)
     : config_(config),
       seq_manager_(config),
       block_manager_(BlockManagerConfig{
@@ -230,23 +230,23 @@ Scheduler::Scheduler(const SchedulerConfig& config)
           }
       }) {}
 
-Scheduler::~Scheduler() = default;
+inline Scheduler::~Scheduler() = default;
 
-int64_t Scheduler::add_request(int max_tokens) {
+inline int64_t Scheduler::add_request(int max_tokens) {
     const int64_t seq_id = seq_manager_.add_sequence(max_tokens);
     block_manager_.create_sequence(seq_id, max_tokens);
     pending_requests_.push_back(seq_id);
     return seq_id;
 }
 
-std::vector<int64_t> Scheduler::get_batch() {
+inline std::vector<int64_t> Scheduler::get_batch() {
     if (config_.enable_continuous_batching) {
         recompose_batch();
     }
     return active_batch_;
 }
 
-void Scheduler::on_token_generated(int64_t seq_id) {
+inline void Scheduler::on_token_generated(int64_t seq_id) {
     auto length_it = seq_manager_.config().max_sequence_length;
     (void)length_it;
 
@@ -260,7 +260,7 @@ void Scheduler::on_token_generated(int64_t seq_id) {
     }
 }
 
-void Scheduler::on_sequence_complete(int64_t seq_id) {
+inline void Scheduler::on_sequence_complete(int64_t seq_id) {
     seq_manager_.complete_sequence(seq_id);
 
     auto it = std::find(active_batch_.begin(), active_batch_.end(), seq_id);
@@ -273,13 +273,13 @@ void Scheduler::on_sequence_complete(int64_t seq_id) {
     }
 }
 
-void Scheduler::step() {
+inline void Scheduler::step() {
     if (config_.enable_continuous_batching) {
         recompose_batch();
     }
 }
 
-void Scheduler::forward_batch(
+inline void Scheduler::forward_batch(
     const memory::Buffer<float>& query,
     memory::Buffer<float>& output,
     const stream::Stream& stream
@@ -291,7 +291,7 @@ void Scheduler::forward_batch(
     block_manager_.forward_batch(active_batch_, query, output, stream);
 }
 
-void Scheduler::recompose_batch() {
+inline void Scheduler::recompose_batch() {
     std::vector<int64_t> to_remove;
     for (const int64_t seq_id : active_batch_) {
         const SequenceState state = seq_manager_.get_state(seq_id);
@@ -322,7 +322,7 @@ void Scheduler::recompose_batch() {
     current_batch_size_ = static_cast<int>(active_batch_.size());
 }
 
-bool Scheduler::should_preempt() const {
+inline bool Scheduler::should_preempt() const {
     return static_cast<int>(active_batch_.size()) >= config_.max_batch_size;
 }
 

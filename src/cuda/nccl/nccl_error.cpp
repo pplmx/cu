@@ -58,7 +58,7 @@ NcclResult safe_stream_wait(ncclComm_t comm, cudaStream_t stream,
 
     // Timeout
     result.timed_out = true;
-    result.code = ncclTimeout;
+    result.code = static_cast<ncclResult_t>(-2);
     result.error_message = "Stream wait timed out after " +
                            std::to_string(timeout_ms) + "ms";
 

@@ -174,13 +174,13 @@ ncclResult_t nccl_all_reduce(
 
 #endif
 
-SequenceParallelAttention::SequenceParallelAttention(
+inline SequenceParallelAttention::SequenceParallelAttention(
     const SequenceParallelConfig& config
 ) : config_(config) {}
 
-SequenceParallelAttention::~SequenceParallelAttention() = default;
+inline SequenceParallelAttention::~SequenceParallelAttention() = default;
 
-void SequenceParallelAttention::gather_kv(
+inline void SequenceParallelAttention::gather_kv(
     memory::Buffer<float>& gathered_k,
     memory::Buffer<float>& gathered_v,
     const memory::Buffer<float>& local_k,
@@ -243,7 +243,7 @@ void SequenceParallelAttention::gather_kv(
 #endif
 }
 
-void SequenceParallelAttention::scatter_output(
+inline void SequenceParallelAttention::scatter_output(
     memory::Buffer<float>& local_output,
     const memory::Buffer<float>& full_output,
     const Stream& stream
@@ -300,7 +300,7 @@ void SequenceParallelAttention::scatter_output(
 #endif
 }
 
-void SequenceParallelAttention::all_reduce_sequence(
+inline void SequenceParallelAttention::all_reduce_sequence(
     memory::Buffer<float>& data,
     const Stream& stream
 ) {
@@ -325,16 +325,16 @@ void SequenceParallelAttention::all_reduce_sequence(
 #endif
 }
 
-RingSequenceParallelism::RingSequenceParallelism(
+inline RingSequenceParallelism::RingSequenceParallelism(
     const SequenceParallelConfig& config
 ) : config_(config) {
     prev_rank_ = (config_.rank - 1 + config_.world_size) % config_.world_size;
     next_rank_ = (config_.rank + 1) % config_.world_size;
 }
 
-RingSequenceParallelism::~RingSequenceParallelism() = default;
+inline RingSequenceParallelism::~RingSequenceParallelism() = default;
 
-void RingSequenceParallelism::ring_attention(
+inline void RingSequenceParallelism::ring_attention(
     memory::Buffer<float>& query,
     memory::Buffer<float>& key,
     memory::Buffer<float>& value,

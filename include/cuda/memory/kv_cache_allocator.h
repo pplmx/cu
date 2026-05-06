@@ -179,7 +179,7 @@ private:
     L2PersistenceScope l2_scope_ = L2PersistenceScope::None;
 };
 
-KVCacheAllocator::KVCacheAllocator(const KVCacheAllocatorConfig& config)
+inline KVCacheAllocator::KVCacheAllocator(const KVCacheAllocatorConfig& config)
     : config_(config) {
 
     if (config_.block_size_tokens != 16 && config_.block_size_tokens != 32 &&
@@ -215,9 +215,9 @@ KVCacheAllocator::KVCacheAllocator(const KVCacheAllocatorConfig& config)
     stats_.total_memory = total_memory;
 }
 
-KVCacheAllocator::~KVCacheAllocator() = default;
+inline KVCacheAllocator::~KVCacheAllocator() = default;
 
-std::vector<KVCacheBlock*> KVCacheAllocator::allocate(
+inline std::vector<KVCacheBlock*> KVCacheAllocator::allocate(
     int64_t sequence_id,
     int num_tokens
 ) {
@@ -263,7 +263,7 @@ std::vector<KVCacheBlock*> KVCacheAllocator::allocate(
     return result;
 }
 
-std::vector<KVCacheBlock*> KVCacheAllocator::append(
+inline std::vector<KVCacheBlock*> KVCacheAllocator::append(
     int64_t sequence_id,
     int num_tokens
 ) {
@@ -326,7 +326,7 @@ std::vector<KVCacheBlock*> KVCacheAllocator::append(
     return result;
 }
 
-void KVCacheAllocator::free(int64_t sequence_id) {
+inline void KVCacheAllocator::free(int64_t sequence_id) {
     std::unique_lock lock(mutex_);
 
     auto it = sequence_blocks_.find(sequence_id);
@@ -357,7 +357,7 @@ void KVCacheAllocator::free(int64_t sequence_id) {
     stats_.used_memory = stats_.allocated_blocks * block_memory_size_;
 }
 
-void KVCacheAllocator::evict(int num_blocks_needed) {
+inline void KVCacheAllocator::evict(int num_blocks_needed) {
     while (static_cast<int>(free_list_.size()) < num_blocks_needed &&
            !sequence_blocks_.empty()) {
         const int oldest_seq = find_oldest_sequence();
@@ -388,7 +388,7 @@ void KVCacheAllocator::evict(int num_blocks_needed) {
     stats_.used_memory = stats_.allocated_blocks * block_memory_size_;
 }
 
-std::vector<const KVCacheBlock*> KVCacheAllocator::get_blocks(
+inline std::vector<const KVCacheBlock*> KVCacheAllocator::get_blocks(
     int64_t sequence_id
 ) const {
     std::shared_lock lock(mutex_);
@@ -408,7 +408,7 @@ std::vector<const KVCacheBlock*> KVCacheAllocator::get_blocks(
     return result;
 }
 
-const KVCacheBlock* KVCacheAllocator::get_block(
+inline const KVCacheBlock* KVCacheAllocator::get_block(
     int64_t sequence_id,
     int block_index
 ) const {
@@ -427,7 +427,7 @@ const KVCacheBlock* KVCacheAllocator::get_block(
     return &blocks_[it->second[block_index]];
 }
 
-std::optional<KVCacheAllocator::PrefixMatch>
+inline std::optional<KVCacheAllocator::PrefixMatch>
 KVCacheAllocator::find_prefix_match(
     const void* prefix_tokens,
     int prefix_length
@@ -459,7 +459,7 @@ KVCacheAllocator::find_prefix_match(
     return std::nullopt;
 }
 
-KVCacheStats KVCacheAllocator::get_stats() const {
+inline KVCacheStats KVCacheAllocator::get_stats() const {
     std::shared_lock lock(mutex_);
 
     KVCacheStats stats = stats_;
@@ -470,7 +470,7 @@ KVCacheStats KVCacheAllocator::get_stats() const {
     return stats;
 }
 
-void KVCacheAllocator::reset_stats() {
+inline void KVCacheAllocator::reset_stats() {
     std::unique_lock lock(mutex_);
     stats_.prefix_cache_hits = 0;
     stats_.prefix_cache_misses = 0;
@@ -479,7 +479,7 @@ void KVCacheAllocator::reset_stats() {
     stats_.allocation_failures = 0;
 }
 
-void KVCacheAllocator::update_lru(int64_t sequence_id) {
+inline void KVCacheAllocator::update_lru(int64_t sequence_id) {
     auto it = sequence_blocks_.find(sequence_id);
     if (it == sequence_blocks_.end()) return;
 
@@ -488,7 +488,7 @@ void KVCacheAllocator::update_lru(int64_t sequence_id) {
     }
 }
 
-uint64_t KVCacheAllocator::compute_prefix_hash(
+inline uint64_t KVCacheAllocator::compute_prefix_hash(
     const void* tokens,
     int num_tokens
 ) const {
@@ -508,15 +508,15 @@ uint64_t KVCacheAllocator::compute_prefix_hash(
     return hash ^ (p2 * (num_tokens + config_.num_heads * config_.head_dim));
 }
 
-void KVCacheAllocator::add_to_sequence(int64_t sequence_id, int block_idx) {
+inline void KVCacheAllocator::add_to_sequence(int64_t sequence_id, int block_idx) {
     sequence_blocks_[sequence_id].push_back(block_idx);
 }
 
-void KVCacheAllocator::remove_from_sequence(int64_t sequence_id) {
+inline void KVCacheAllocator::remove_from_sequence(int64_t sequence_id) {
     sequence_blocks_.erase(sequence_id);
 }
 
-int KVCacheAllocator::find_oldest_sequence() const {
+inline int KVCacheAllocator::find_oldest_sequence() const {
     uint64_t oldest_access = UINT64_MAX;
     int64_t oldest_sequence = -1;
 
@@ -533,7 +533,7 @@ int KVCacheAllocator::find_oldest_sequence() const {
     return oldest_sequence;
 }
 
-std::vector<KVCacheBlock*> KVCacheAllocator::fork_prefix_blocks(
+inline std::vector<KVCacheBlock*> KVCacheAllocator::fork_prefix_blocks(
     int64_t source_sequence_id,
     int64_t new_sequence_id,
     int num_prefix_blocks
@@ -565,7 +565,7 @@ std::vector<KVCacheBlock*> KVCacheAllocator::fork_prefix_blocks(
     return result;
 }
 
-void KVCacheAllocator::merge_prefix_blocks(int64_t sequence_id) {
+inline void KVCacheAllocator::merge_prefix_blocks(int64_t sequence_id) {
     std::unique_lock lock(mutex_);
 
     auto it = sequence_blocks_.find(sequence_id);
@@ -593,7 +593,7 @@ void KVCacheAllocator::merge_prefix_blocks(int64_t sequence_id) {
     sequence_blocks_.erase(it);
 }
 
-uint64_t KVCacheAllocator::compute_content_hash(
+inline uint64_t KVCacheAllocator::compute_content_hash(
     const void* tokens,
     int num_tokens
 ) const {
@@ -613,7 +613,7 @@ uint64_t KVCacheAllocator::compute_content_hash(
     return hash ^ p2;
 }
 
-std::vector<int64_t> KVCacheAllocator::find_sequences_with_prefix(
+inline std::vector<int64_t> KVCacheAllocator::find_sequences_with_prefix(
     int64_t reference_sequence_id
 ) const {
     std::shared_lock lock(mutex_);
@@ -636,7 +636,7 @@ std::vector<int64_t> KVCacheAllocator::find_sequences_with_prefix(
     return result;
 }
 
-KVCacheAllocator::FragmentationReport KVCacheAllocator::analyze_fragmentation() const {
+inline KVCacheAllocator::FragmentationReport KVCacheAllocator::analyze_fragmentation() const {
     std::shared_lock lock(mutex_);
 
     FragmentationReport report;
@@ -668,12 +668,12 @@ KVCacheAllocator::FragmentationReport KVCacheAllocator::analyze_fragmentation() 
     return report;
 }
 
-bool KVCacheAllocator::needs_compaction(float threshold_pct) const {
+inline bool KVCacheAllocator::needs_compaction(float threshold_pct) const {
     auto report = analyze_fragmentation();
     return report.ratio > threshold_pct;
 }
 
-void KVCacheAllocator::compact() {
+inline void KVCacheAllocator::compact() {
     std::unique_lock lock(mutex_);
 
     std::vector<int> allocated_blocks;
@@ -718,7 +718,7 @@ void KVCacheAllocator::compact() {
     }
 }
 
-void KVCacheAllocator::set_l2_persistence_hint(void* ptr, size_t size, bool persist) {
+inline void KVCacheAllocator::set_l2_persistence_hint(void* ptr, size_t size, bool persist) {
     if (!config_.enable_l2_persistence) return;
 
 #if defined(CUDA_FOUND)
@@ -735,7 +735,7 @@ void KVCacheAllocator::set_l2_persistence_hint(void* ptr, size_t size, bool pers
 #endif
 }
 
-void KVCacheAllocator::configure_l2_persistence(L2PersistenceScope scope) {
+inline void KVCacheAllocator::configure_l2_persistence(L2PersistenceScope scope) {
     l2_scope_ = scope;
 
     if (scope != L2PersistenceScope::None) {
@@ -747,7 +747,7 @@ void KVCacheAllocator::configure_l2_persistence(L2PersistenceScope scope) {
     }
 }
 
-void KVCacheAllocator::promote_to_sink(int block_idx, int position) {
+inline void KVCacheAllocator::promote_to_sink(int block_idx, int position) {
     std::unique_lock lock(mutex_);
 
     KVCacheBlock& block = blocks_[block_idx];
@@ -760,7 +760,7 @@ void KVCacheAllocator::promote_to_sink(int block_idx, int position) {
     sink_blocks_.push_back(&block);
 }
 
-void KVCacheAllocator::demote_from_sink(int block_idx) {
+inline void KVCacheAllocator::demote_from_sink(int block_idx) {
     std::unique_lock lock(mutex_);
 
     KVCacheBlock& block = blocks_[block_idx];
@@ -775,11 +775,11 @@ void KVCacheAllocator::demote_from_sink(int block_idx) {
     }
 }
 
-bool KVCacheAllocator::is_sink_block(int block_idx) const {
+inline bool KVCacheAllocator::is_sink_block(int block_idx) const {
     return blocks_[block_idx].is_attention_sink;
 }
 
-int KVCacheAllocator::select_optimal_block_size(int num_tokens) const {
+inline int KVCacheAllocator::select_optimal_block_size(int num_tokens) const {
     if (!config_.enable_dynamic_block_sizing) {
         return config_.block_size_tokens;
     }
@@ -794,7 +794,7 @@ int KVCacheAllocator::select_optimal_block_size(int num_tokens) const {
     return best_size;
 }
 
-std::vector<KVCacheBlock*> KVCacheAllocator::allocate_with_dynamic_size(
+inline std::vector<KVCacheBlock*> KVCacheAllocator::allocate_with_dynamic_size(
     int64_t sequence_id,
     int num_tokens
 ) {
@@ -829,7 +829,7 @@ std::vector<KVCacheBlock*> KVCacheAllocator::allocate_with_dynamic_size(
     return result;
 }
 
-void KVCacheAllocator::prefill_chunk(
+inline void KVCacheAllocator::prefill_chunk(
     int64_t sequence_id,
     const ChunkedPrefill& chunk,
     const stream::Stream& stream

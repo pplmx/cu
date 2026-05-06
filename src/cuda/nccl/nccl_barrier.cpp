@@ -25,12 +25,11 @@ NcclResult NcclBarrier::barrier_async(cudaStream_t stream) {
                           .error_message = "NCCL context not initialized"};
     }
 
-    // Use device 0's communicator for the barrier
-    // ncclBarrier uses the communicator to sync all ranks
     return safe_nccl_call(
         [&]() {
             ncclComm_t comm = get_comm(0);
-            return ncclBarrier(comm, stream);
+            int dummy = 0;
+            return ncclAllReduce(&dummy, &dummy, 1, ncclInt, ncclMin, comm, stream);
         },
         get_comm(0),
         30000);
@@ -50,7 +49,8 @@ NcclResult NcclBarrier::barrier_async(int device, cudaStream_t stream) {
     return safe_nccl_call(
         [&]() {
             ncclComm_t comm = get_comm(device);
-            return ncclBarrier(comm, stream);
+            int dummy = 0;
+            return ncclAllReduce(&dummy, &dummy, 1, ncclInt, ncclMin, comm, stream);
         },
         get_comm(device),
         30000);

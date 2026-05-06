@@ -139,3 +139,7 @@ build-ninja/
 
 # Fuzzing
 tests/fuzz/crashes/
+
+# Core dumps
+core.*
+*.core

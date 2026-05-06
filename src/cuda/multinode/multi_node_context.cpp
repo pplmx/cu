@@ -154,14 +154,12 @@ HierarchicalBarrier::HierarchicalBarrier(void* local_comm,
 
 void HierarchicalBarrier::wait() {
 #if NOVA_NCCL_ENABLED
-    if (local_comm_) {
-        NCCL_CHECK(ncclBarrier(static_cast<ncclComm_t>(local_comm_), stream_));
-    }
     if (stream_) {
         cudaStreamSynchronize(stream_);
     }
     if (global_comm_) {
-        NCCL_CHECK(ncclBarrier(static_cast<ncclComm_t>(global_comm_), stream_));
+        int dummy = 0;
+        NCCL_CHECK(ncclAllReduce(&dummy, &dummy, 1, ncclInt, ncclMin, static_cast<ncclComm_t>(global_comm_), stream_));
     }
 #endif
 }

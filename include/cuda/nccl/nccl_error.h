@@ -166,7 +166,7 @@ NcclResult safe_nccl_call(Fn&& fn, ncclComm_t comm, int timeout_ms = 30000) {
 
     // Timeout
     result.timed_out = true;
-    result.code = ncclTimeout;
+    result.code = static_cast<ncclResult_t>(-2);
     result.error_message = "NCCL operation timed out after " +
                            std::to_string(timeout_ms) + "ms";
 
