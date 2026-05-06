@@ -110,15 +110,15 @@ std::vector<BoundaryConditionTest::TestResult> test_alignment_boundaries() {
 
 std::vector<BoundaryConditionTest::TestResult> test_warp_boundaries() {
     BoundaryConditionTest test;
-    std::vector<TestResult> results;
+    std::vector<BoundaryConditionTest::TestResult> results;
 
-    TestResult r1;
+    BoundaryConditionTest::TestResult r1;
     r1.condition_name = "warp_aligned";
     r1.passed = is_warp_aligned(CUDA_WARP_SIZE);
     r1.error_message = nullptr;
     results.push_back(r1);
 
-    TestResult r2;
+    BoundaryConditionTest::TestResult r2;
     r2.condition_name = "warp_misaligned";
     r2.passed = !is_warp_aligned(CUDA_WARP_SIZE + 1);
     r2.error_message = nullptr;

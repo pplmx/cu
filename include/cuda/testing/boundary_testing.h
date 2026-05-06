@@ -2,6 +2,8 @@
 
 #include <cuda_runtime.h>
 #include <cstddef>
+#include <cstdint>
+#include <limits>
 #include <vector>
 
 namespace cuda::testing {

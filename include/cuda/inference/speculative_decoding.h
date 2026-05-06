@@ -105,13 +105,6 @@ public:
     void rollback_kv_state();
     void commit_kv_state();
 
-    float compute_kl_divergence(
-        const std::vector<DraftToken>& tokens,
-        const memory::Buffer<float>& draft_logits,
-        const memory::Buffer<float>& target_logits
-    ) const;
-
-private:
     std::vector<int> generate_draft_tokens(
         const memory::Buffer<float>& prompt_embeddings,
         int prompt_length,
@@ -125,6 +118,13 @@ private:
         const stream::Stream& stream
     );
 
+    float compute_kl_divergence(
+        const std::vector<DraftToken>& tokens,
+        const memory::Buffer<float>& draft_logits,
+        const memory::Buffer<float>& target_logits
+    ) const;
+
+private:
     BlockManager* block_manager_;
     SpeculativeDecodingConfig config_;
 

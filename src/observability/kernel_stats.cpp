@@ -21,8 +21,8 @@ void KernelStatsCollector::record_kernel(const char* name,
             found = true;
             stat.invocations++;
             stat.total_time_us += elapsed_us;
-            stat.min_time_us = std::min(stat.min_time_us, elapsed_us);
-            stat.max_time_us = std::max(stat.max_time_us, elapsed_us);
+            stat.min_time_us = std::min(stat.min_time_us, static_cast<double>(elapsed_us));
+            stat.max_time_us = std::max(stat.max_time_us, static_cast<double>(elapsed_us));
             stat.avg_time_us = stat.total_time_us / stat.invocations;
             stat.blocks_launched += blocks;
             stat.threads_per_block = threads_per_block;

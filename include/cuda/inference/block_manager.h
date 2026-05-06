@@ -106,34 +106,4 @@ private:
     cudaEvent_t last_update_event_ = nullptr;
 };
 
-class PagedAttention {
-public:
-    static void forward(
-        memory::Buffer<float>& output,
-        const memory::Buffer<float>& query,
-        const memory::Buffer<void>& key_cache,
-        const memory::Buffer<void>& value_cache,
-        const std::vector<int>& block_table,
-        int num_tokens,
-        int num_heads,
-        int head_dim,
-        int block_size,
-        const stream::Stream& stream
-    );
-
-    static void forward_with_kvcache(
-        memory::Buffer<float>& output,
-        const memory::Buffer<float>& query,
-        const memory::Buffer<void>& key_cache,
-        const memory::Buffer<void>& value_cache,
-        const std::vector<int>& block_table,
-        int num_tokens,
-        int num_heads,
-        int num_kv_heads,
-        int head_dim,
-        int block_size,
-        const stream::Stream& stream
-    );
-};
-
 }  // namespace cuda::inference

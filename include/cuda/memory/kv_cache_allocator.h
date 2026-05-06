@@ -507,9 +507,6 @@ uint64_t KVCacheAllocator::compute_prefix_hash(
     return hash ^ (p2 * (num_tokens + config_.num_heads * config_.head_dim));
 }
 
-    return hash ^ (p2 * (num_tokens + config_.num_heads * config_.head_dim));
-}
-
 void KVCacheAllocator::add_to_sequence(int64_t sequence_id, int block_idx) {
     sequence_blocks_[sequence_id].push_back(block_idx);
 }
@@ -615,9 +612,6 @@ uint64_t KVCacheAllocator::compute_content_hash(
     return hash ^ p2;
 }
 
-    return hash ^ p2;
-}
-
 std::vector<int64_t> KVCacheAllocator::find_sequences_with_prefix(
     int64_t reference_sequence_id
 ) const {
@@ -714,34 +708,6 @@ void KVCacheAllocator::compact() {
         new_sequence_blocks[seq_id] = blocks;
     }
     sequence_blocks_ = std::move(new_sequence_blocks);
-
-    free_list_.clear();
-    for (int i = 0; i < config_.num_blocks; ++i) {
-        if (!blocks_[i].in_use) {
-            free_list_.push_back(i);
-        }
-    }
-}
-    }
-
-    if (allocated_blocks.empty()) return;
-
-    std::sort(allocated_blocks.begin(), allocated_blocks.end());
-
-    for (size_t i = 0; i < allocated_blocks.size(); ++i) {
-        const int src_idx = allocated_blocks[i];
-        const int dst_idx = static_cast<int>(i);
-
-        if (src_idx != dst_idx) {
-            std::swap(blocks_[src_idx], blocks_[dst_idx]);
-            for (auto& [seq_id, indices] : sequence_blocks_) {
-                for (int& idx : indices) {
-                    if (idx == src_idx) idx = dst_idx;
-                    else if (idx == dst_idx) idx = src_idx;
-                }
-            }
-        }
-    }
 
     free_list_.clear();
     for (int i = 0; i < config_.num_blocks; ++i) {

@@ -13,9 +13,7 @@ BlockManager::BlockManager(const BlockManagerConfig& config)
 
     kv_cache_ = std::make_unique<memory::KVCacheAllocator>(config_.kv_cache_config);
 
-    auto attention_cfg = config_.attention_config;
-    attention_cfg.block_size_tokens = config_.block_size;
-    attention_ = algo::create_flash_attention(attention_cfg);
+    attention_ = algo::create_flash_attention(config_.attention_config);
 
     const size_t block_table_size = static_cast<size_t>(config_.num_cpu_blocks) *
                                      max_blocks_per_sequence_;
@@ -147,10 +145,9 @@ void BlockManager::forward_batch(
 }
 
 void BlockManager::sync_block_tables(const stream::Stream& stream) {
-    cudaEvent_t event;
-    cudaEventCreate(&event);
-    cudaEventRecord(event, stream.get());
-    pending_sync_events_.push_back(event);
+    if (last_update_event_) {
+        CUDA_CHECK(cudaStreamWaitEvent(stream.get(), last_update_event_));
+    }
 }
 
 void BlockManager::maybe_evict() {
@@ -228,7 +225,7 @@ void BlockManager::update_block_table_gpu(
     const int num_blocks = static_cast<int>(seq->block_table.size());
 
     CUDA_CHECK(cudaMemcpyAsync(
-        block_table_gpu_.data<int>() + seq_offset,
+        block_table_gpu_.data() + seq_offset,
         h_table,
         num_blocks * sizeof(int),
         cudaMemcpyHostToDevice,
@@ -236,92 +233,6 @@ void BlockManager::update_block_table_gpu(
     ));
 
     CUDA_CHECK(cudaEventRecord(last_update_event_, stream.get()));
-}
-
-void BlockManager::sync_block_tables(const stream::Stream& stream) {
-    if (last_update_event_) {
-        CUDA_CHECK(cudaStreamWaitEvent(stream.get(), last_update_event_));
-    }
-}
-    const int seq_offset = static_cast<int>(seq_id) * max_blocks_per_sequence_;
-    const int* h_table = seq->block_table.data();
-    const int num_blocks = static_cast<int>(seq->block_table.size());
-
-    CUDA_CHECK(cudaMemcpyAsync(
-        block_table_gpu_.data<int>() + seq_offset,
-        h_table,
-        num_blocks * sizeof(int),
-        cudaMemcpyHostToDevice,
-        stream.get()
-    ));
-}
-
-void PagedAttention::forward(
-    memory::Buffer<float>& output,
-    const memory::Buffer<float>& query,
-    const memory::Buffer<void>& key_cache,
-    const memory::Buffer<void>& value_cache,
-    const std::vector<int>& block_table,
-    int num_tokens,
-    int num_heads,
-    int head_dim,
-    int block_size,
-    const stream::Stream& stream
-) {
-    (void)key_cache;
-    (void)value_cache;
-    (void)block_table;
-    (void)block_size;
-
-    memory::Buffer<float> softmax_lse(num_heads);
-    memory::Buffer<float> dummy_key(num_tokens * num_heads * head_dim);
-    memory::Buffer<float> dummy_value(num_tokens * num_heads * head_dim);
-
-    algo::FlashAttentionConfig config{
-        .num_heads = num_heads,
-        .num_kv_heads = num_heads,
-        .head_dim = head_dim,
-        .seq_len = num_tokens,
-        .batch_size = 1,
-        .dropout_rate = 0.0f,
-        .causal = true,
-        .is_fp16 = false
-    };
-
-    auto attention = algo::create_flash_attention(config);
-    attention->forward(output, softmax_lse, query, dummy_key, dummy_value, stream);
-}
-
-void PagedAttention::forward_with_kvcache(
-    memory::Buffer<float>& output,
-    const memory::Buffer<float>& query,
-    const memory::Buffer<void>& key_cache,
-    const memory::Buffer<void>& value_cache,
-    const std::vector<int>& block_table,
-    int num_tokens,
-    int num_heads,
-    int num_kv_heads,
-    int head_dim,
-    int block_size,
-    const stream::Stream& stream
-) {
-    memory::Buffer<float> softmax_lse(num_kv_heads);
-    memory::Buffer<float> dummy_key(num_tokens * num_heads * head_dim);
-    memory::Buffer<float> dummy_value(num_tokens * num_kv_heads * head_dim);
-
-    algo::FlashAttentionConfig config{
-        .num_heads = num_heads,
-        .num_kv_heads = num_kv_heads,
-        .head_dim = head_dim,
-        .seq_len = num_tokens,
-        .batch_size = 1,
-        .dropout_rate = 0.0f,
-        .causal = true,
-        .is_fp16 = false
-    };
-
-    auto attention = algo::create_flash_attention(config);
-    attention->forward(output, softmax_lse, query, dummy_key, dummy_value, stream);
 }
 
 }  // namespace cuda::inference

@@ -1,10 +1,13 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 
 namespace cuda::testing {
+
+bool is_memory_aligned(const void* ptr);
 
 enum class MemorySafetyTool {
     ComputeSanitizer,
