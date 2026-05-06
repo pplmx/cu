@@ -3,6 +3,8 @@
 #include <thread>
 #include <atomic>
 #include <vector>
+#include <limits>
+#include <cmath>
 
 namespace cuda::memory::test {
 
@@ -291,6 +293,274 @@ TEST_F(KVCacheAllocatorTest, FragmentationPercent) {
     auto stats = allocator->get_stats();
     EXPECT_GT(stats.fragmentation_percent, 0.0f);
     EXPECT_LT(stats.fragmentation_percent, 100.0f);
+}
+
+TEST_F(KVCacheAllocatorTest, CompactReallocatesBlocks) {
+    auto allocator = std::make_unique<KVCacheAllocator>(config_);
+
+    for (int i = 0; i < 64; ++i) {
+        allocator->allocate(i, 16);
+    }
+
+    allocator->free(1);
+    allocator->free(3);
+    allocator->free(5);
+
+    auto stats_before = allocator->get_stats();
+    ASSERT_GT(stats_before.free_blocks, 0);
+
+    allocator->compact();
+
+    auto stats_after = allocator->get_stats();
+    EXPECT_EQ(stats_after.free_blocks, stats_before.free_blocks);
+
+    auto blocks = allocator->get_blocks(2);
+    ASSERT_FALSE(blocks.empty());
+    EXPECT_GE(blocks[0]->block_id, 0);
+}
+
+TEST_F(KVCacheAllocatorTest, CompactWithNoAllocations) {
+    auto allocator = std::make_unique<KVCacheAllocator>(config_);
+
+    EXPECT_NO_THROW(allocator->compact());
+
+    auto stats = allocator->get_stats();
+    EXPECT_EQ(stats.free_blocks, config_.num_blocks);
+}
+
+TEST_F(KVCacheAllocatorTest, CompactMaintainsSequenceOwnership) {
+    auto allocator = std::make_unique<KVCacheAllocator>(config_);
+
+    allocator->allocate(1, 32);
+    allocator->allocate(2, 32);
+
+    allocator->free(1);
+
+    allocator->compact();
+
+    auto blocks2 = allocator->get_blocks(2);
+    ASSERT_EQ(blocks2.size(), 2);
+    EXPECT_EQ(blocks2[0]->sequence_id, 2);
+    EXPECT_EQ(blocks2[1]->sequence_id, 2);
+}
+
+TEST_F(KVCacheAllocatorTest, ComputeContentHashDeterministic) {
+    auto allocator = std::make_unique<KVCacheAllocator>(config_);
+
+    std::vector<float> data(32 * config_.num_heads * config_.head_dim, 1.0f);
+
+    auto hash1 = allocator->compute_content_hash(data.data(), 32);
+    auto hash2 = allocator->compute_content_hash(data.data(), 32);
+
+    EXPECT_EQ(hash1, hash2);
+}
+
+TEST_F(KVCacheAllocatorTest, ComputeContentHashDifferentData) {
+    auto allocator = std::make_unique<KVCacheAllocator>(config_);
+
+    std::vector<float> data1(32 * config_.num_heads * config_.head_dim, 1.0f);
+    std::vector<float> data2(32 * config_.num_heads * config_.head_dim, 2.0f);
+
+    auto hash1 = allocator->compute_content_hash(data1.data(), 32);
+    auto hash2 = allocator->compute_content_hash(data2.data(), 32);
+
+    EXPECT_NE(hash1, hash2);
+}
+
+TEST_F(KVCacheAllocatorTest, ComputeContentHashWithNaN) {
+    auto allocator = std::make_unique<KVCacheAllocator>(config_);
+
+    std::vector<float> data(32 * config_.num_heads * config_.head_dim, 0.0f);
+    data[0] = std::nanf("");
+
+    auto hash = allocator->compute_content_hash(data.data(), 32);
+    EXPECT_NE(hash, 0);
+}
+
+TEST_F(KVCacheAllocatorTest, ComputeContentHashWithInf) {
+    auto allocator = std::make_unique<KVCacheAllocator>(config_);
+
+    std::vector<float> data(32 * config_.num_heads * config_.head_dim, 0.0f);
+    data[0] = std::numeric_limits<float>::infinity();
+
+    auto hash = allocator->compute_content_hash(data.data(), 32);
+    EXPECT_NE(hash, 0);
+}
+
+TEST_F(KVCacheAllocatorTest, ComputeContentHashWithNegativeInf) {
+    auto allocator = std::make_unique<KVCacheAllocator>(config_);
+
+    std::vector<float> data(32 * config_.num_heads * config_.head_dim, 0.0f);
+    data[0] = -std::numeric_limits<float>::infinity();
+
+    auto hash = allocator->compute_content_hash(data.data(), 32);
+    EXPECT_NE(hash, 0);
+}
+
+TEST_F(KVCacheAllocatorTest, ComputeContentHashZeroTokens) {
+    auto allocator = std::make_unique<KVCacheAllocator>(config_);
+
+    std::vector<float> data(config_.num_heads * config_.head_dim, 1.0f);
+
+    auto hash = allocator->compute_content_hash(data.data(), 0);
+    EXPECT_NE(hash, 0);
+}
+
+TEST_F(KVCacheAllocatorTest, ComputePrefixHashConsistency) {
+    auto allocator = std::make_unique<KVCacheAllocator>(config_);
+
+    std::vector<float> data(16 * config_.num_heads * config_.head_dim, 0.5f);
+
+    auto hash1 = allocator->compute_content_hash(data.data(), 16);
+    auto hash2 = allocator->compute_content_hash(data.data(), 16);
+
+    EXPECT_EQ(hash1, hash2);
+}
+
+TEST_F(KVCacheAllocatorTest, ConfigureL2PersistenceNone) {
+    auto config = config_;
+    config.enable_l2_persistence = false;
+    auto allocator = std::make_unique<KVCacheAllocator>(config);
+
+    allocator->allocate(1, 32);
+    auto blocks = allocator->get_blocks(1);
+
+    EXPECT_NO_THROW(
+        allocator->configure_l2_persistence(KVCacheAllocator::L2PersistenceScope::None);
+    );
+}
+
+TEST_F(KVCacheAllocatorTest, ConfigureL2PersistenceIterative) {
+    auto config = config_;
+    config.enable_l2_persistence = true;
+    auto allocator = std::make_unique<KVCacheAllocator>(config);
+
+    allocator->allocate(1, 32);
+
+    EXPECT_NO_THROW(
+        allocator->configure_l2_persistence(KVCacheAllocator::L2PersistenceScope::Iterative);
+    );
+}
+
+TEST_F(KVCacheAllocatorTest, ConfigureL2PersistencePersistent) {
+    auto config = config_;
+    config.enable_l2_persistence = true;
+    auto allocator = std::make_unique<KVCacheAllocator>(config);
+
+    allocator->allocate(1, 32);
+
+    EXPECT_NO_THROW(
+        allocator->configure_l2_persistence(KVCacheAllocator::L2PersistenceScope::Persistent);
+    );
+}
+
+TEST_F(KVCacheAllocatorTest, SetL2PersistenceHintWithDisabledConfig) {
+    auto config = config_;
+    config.enable_l2_persistence = false;
+    auto allocator = std::make_unique<KVCacheAllocator>(config);
+
+    allocator->allocate(1, 16);
+    auto blocks = allocator->get_blocks(1);
+    ASSERT_FALSE(blocks.empty());
+
+    EXPECT_NO_THROW(
+        allocator->set_l2_persistence_hint(blocks[0]->data, 1024, true);
+    );
+}
+
+TEST_F(KVCacheAllocatorTest, EvictionThreshold10Percent) {
+    auto config = config_;
+    config.num_blocks = 100;
+    config.eviction_threshold_pct = 10;
+    auto allocator = std::make_unique<KVCacheAllocator>(config);
+
+    for (int i = 0; i < 85; ++i) {
+        allocator->allocate(i, 16);
+    }
+
+    auto stats = allocator->get_stats();
+    EXPECT_EQ(stats.free_blocks, 15);
+}
+
+TEST_F(KVCacheAllocatorTest, EvictionThreshold5Percent) {
+    auto config = config_;
+    config.num_blocks = 100;
+    config.eviction_threshold_pct = 5;
+    auto allocator = std::make_unique<KVCacheAllocator>(config);
+
+    for (int i = 0; i < 90; ++i) {
+        allocator->allocate(i, 16);
+    }
+
+    auto stats = allocator->get_stats();
+    EXPECT_EQ(stats.free_blocks, 10);
+}
+
+TEST_F(KVCacheAllocatorTest, EvictionThreshold20Percent) {
+    auto config = config_;
+    config.num_blocks = 100;
+    config.eviction_threshold_pct = 20;
+    auto allocator = std::make_unique<KVCacheAllocator>(config);
+
+    for (int i = 0; i < 70; ++i) {
+        allocator->allocate(i, 16);
+    }
+
+    auto stats = allocator->get_stats();
+    EXPECT_EQ(stats.free_blocks, 30);
+}
+
+TEST_F(KVCacheAllocatorTest, NeedsCompactionBelowThreshold) {
+    auto allocator = std::make_unique<KVCacheAllocator>(config_);
+
+    allocator->allocate(1, 32);
+    allocator->free(1);
+
+    EXPECT_FALSE(allocator->needs_compaction(30.0f));
+}
+
+TEST_F(KVCacheAllocatorTest, NeedsCompactionAboveThreshold) {
+    auto config = config_;
+    config.num_blocks = 100;
+    auto allocator = std::make_unique<KVCacheAllocator>(config);
+
+    for (int i = 0; i < 50; ++i) {
+        allocator->allocate(i, 16);
+    }
+    for (int i = 0; i < 50; ++i) {
+        allocator->free(i);
+    }
+
+    auto report = allocator->analyze_fragmentation();
+    if (report.ratio > 30.0f) {
+        EXPECT_TRUE(allocator->needs_compaction(30.0f));
+    }
+}
+
+TEST_F(KVCacheAllocatorTest, AnalyzeFragmentationReport) {
+    auto allocator = std::make_unique<KVCacheAllocator>(config_);
+
+    allocator->allocate(1, 32);
+    allocator->free(1);
+
+    auto report = allocator->analyze_fragmentation();
+
+    EXPECT_GE(report.num_free_blocks, 0);
+    EXPECT_GE(report.ratio, 0.0f);
+    EXPECT_LE(report.ratio, 100.0f);
+}
+
+TEST_F(KVCacheAllocatorTest, AnalyzeFragmentationWithAllocations) {
+    auto allocator = std::make_unique<KVCacheAllocator>(config_);
+
+    for (int i = 0; i < 10; ++i) {
+        allocator->allocate(i, 32);
+    }
+
+    auto report = allocator->analyze_fragmentation();
+
+    EXPECT_LT(report.num_free_blocks, config_.num_blocks);
+    EXPECT_GT(report.ratio, 0.0f);
 }
 
 }  // namespace cuda::memory::test
