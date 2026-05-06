@@ -1,8 +1,11 @@
+#include <cusparse.h>
+#include <cuda_runtime.h>
+#include <library_types.h>
+
 #include "cuda/sparse/matrix.hpp"
 #include "cuda/sparse/cusparse_context.hpp"
 #include "cuda/memory/buffer.h"
-
-#include <cusparse.h>
+#include "cuda/memory/buffer-inl.h"
 
 namespace nova::sparse {
 
@@ -13,14 +16,12 @@ struct CusparseTraits;
 
 template<>
 struct CusparseTraits<float> {
-    static constexpr cusparseDataType_t type = CUDA_R_32F;
-    static constexpr cudaDataType cuda_type = CUDA_R_32F;
+    static constexpr cudaDataType_t type = CUDA_R_32F;
 };
 
 template<>
 struct CusparseTraits<double> {
-    static constexpr cusparseDataType_t type = CUDA_R_64F;
-    static constexpr cudaDataType cuda_type = CUDA_R_64F;
+    static constexpr cudaDataType_t type = CUDA_R_64F;
 };
 
 template<typename T>
@@ -65,18 +66,18 @@ void spmv_impl(const SparseMatrix<T>& A, const T* x, T* y, cudaStream_t stream) 
         CUSPARSE_OPERATION_NON_TRANSPOSE,
         &alpha, mat_desc, vec_x_desc, &beta, vec_y_desc,
         CusparseTraits<T>::type,
-        CUSPARSE_MV_ALG_DEFAULT,
+        CUSPARSE_SPMV_ALG_DEFAULT,
         &buffer_size
     ));
 
-    memory::Buffer<void> buffer(buffer_size);
+    cuda::memory::Buffer<void> buffer(buffer_size);
 
     CUSPARSE_CHECK(cusparseSpMV(
         ctx.handle(),
         CUSPARSE_OPERATION_NON_TRANSPOSE,
         &alpha, mat_desc, vec_x_desc, &beta, vec_y_desc,
         CusparseTraits<T>::type,
-        CUSPARSE_MV_ALG_DEFAULT,
+        CUSPARSE_SPMV_ALG_DEFAULT,
         buffer.data()
     ));
 
@@ -129,18 +130,18 @@ void spmv_transpose_impl(const SparseMatrix<T>& A, const T* x, T* y, cudaStream_
         CUSPARSE_OPERATION_TRANSPOSE,
         &alpha, mat_desc, vec_x_desc, &beta, vec_y_desc,
         CusparseTraits<T>::type,
-        CUSPARSE_MV_ALG_DEFAULT,
+        CUSPARSE_SPMV_ALG_DEFAULT,
         &buffer_size
     ));
 
-    memory::Buffer<void> buffer(buffer_size);
+    cuda::memory::Buffer<void> buffer(buffer_size);
 
     CUSPARSE_CHECK(cusparseSpMV(
         ctx.handle(),
         CUSPARSE_OPERATION_TRANSPOSE,
         &alpha, mat_desc, vec_x_desc, &beta, vec_y_desc,
         CusparseTraits<T>::type,
-        CUSPARSE_MV_ALG_DEFAULT,
+        CUSPARSE_SPMV_ALG_DEFAULT,
         buffer.data()
     ));
 

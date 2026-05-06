@@ -6,6 +6,7 @@
 
 #include "cuda/algo/reduce.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 
 class Timer {
 public:

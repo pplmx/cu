@@ -38,7 +38,7 @@ private:
 
     std::vector<int> bfs_level_order(const SparseMatrix<T>& A, int start_node);
 
-    int compute_matrix_bandwidth(const SparseMatrix<T>& A);
+    static int compute_matrix_bandwidth(const SparseMatrix<T>& A);
 
     void apply_permutation(std::vector<T>& values,
                           std::vector<int>& row_offsets,

@@ -1,11 +1,14 @@
 #include "cuda/algo/kernel_launcher.h"
 #include "parallel/scan.h"
 
-namespace {
+namespace cuda::algo {
 
-    template <typename T>
-    __global__ __launch_bounds__(MAX_SCAN_SIZE, 1) void exclusiveScanKernel(const T* input, T* output, size_t size) {
-        extern __shared__ T temp[];
+namespace detail {
+
+    template <typename T, int KernelId>
+    __global__ __launch_bounds__(MAX_SCAN_SIZE, 1) void exclusiveScanKernelImpl(const T* input, T* output, size_t size) {
+        extern __shared__ char shared_mem[];
+        T* temp = reinterpret_cast<T*>(shared_mem);
         const size_t tid = threadIdx.x;
 
         if (tid < size) {
@@ -33,9 +36,10 @@ namespace {
         }
     }
 
-    template <typename T>
-    __global__ __launch_bounds__(MAX_SCAN_SIZE, 1) void inclusiveScanKernel(const T* input, T* output, size_t size) {
-        extern __shared__ T temp[];
+    template <typename T, int KernelId>
+    __global__ __launch_bounds__(MAX_SCAN_SIZE, 1) void inclusiveScanKernelImpl(const T* input, T* output, size_t size) {
+        extern __shared__ char shared_mem[];
+        T* temp = reinterpret_cast<T*>(shared_mem);
         const size_t tid = threadIdx.x;
 
         if (tid < size) {
@@ -63,9 +67,10 @@ namespace {
         }
     }
 
-    template <typename T>
-    __global__ __launch_bounds__(MAX_SCAN_SIZE, 1) void exclusiveScanOptimizedKernel(const T* input, T* output, size_t size) {
-        extern __shared__ T temp[];
+    template <typename T, int KernelId>
+    __global__ __launch_bounds__(MAX_SCAN_SIZE, 1) void exclusiveScanOptimizedKernelImpl(const T* input, T* output, size_t size) {
+        extern __shared__ char shared_mem[];
+        T* temp = reinterpret_cast<T*>(shared_mem);
         const size_t tid = threadIdx.x;
 
         if (tid < size) {
@@ -87,9 +92,7 @@ namespace {
         }
     }
 
-}  // namespace
-
-namespace cuda::algo {
+}  // namespace detail
 
     template <typename T>
     void exclusiveScan(const memory::Buffer<T>& input, memory::Buffer<T>& output, size_t size) {
@@ -100,11 +103,11 @@ namespace cuda::algo {
             throw ScanSizeException(size, MAX_SCAN_SIZE);
         }
 
-        detail::KernelLauncher launcher;
+        cuda::detail::KernelLauncher launcher;
         launcher.block({MAX_SCAN_SIZE, 1, 1});
         launcher.shared(MAX_SCAN_SIZE * sizeof(T));
 
-        launcher.launch(exclusiveScanKernel<T>, input.data(), output.data(), size);
+        launcher.launch(detail::exclusiveScanKernelImpl<T, 0>, input.data(), output.data(), size);
         launcher.synchronize();
     }
 
@@ -117,11 +120,11 @@ namespace cuda::algo {
             throw ScanSizeException(size, MAX_SCAN_SIZE);
         }
 
-        detail::KernelLauncher launcher;
+        cuda::detail::KernelLauncher launcher;
         launcher.block({MAX_SCAN_SIZE, 1, 1});
         launcher.shared(MAX_SCAN_SIZE * sizeof(T));
 
-        launcher.launch(inclusiveScanKernel<T>, input.data(), output.data(), size);
+        launcher.launch(detail::inclusiveScanKernelImpl<T, 1>, input.data(), output.data(), size);
         launcher.synchronize();
     }
 
@@ -134,16 +137,19 @@ namespace cuda::algo {
             throw ScanSizeException(size, MAX_SCAN_SIZE);
         }
 
-        detail::KernelLauncher launcher;
+        cuda::detail::KernelLauncher launcher;
         launcher.block({MAX_SCAN_SIZE, 1, 1});
         launcher.shared(MAX_SCAN_SIZE * sizeof(T));
 
-        launcher.launch(exclusiveScanOptimizedKernel<T>, input.data(), output.data(), size);
+        launcher.launch(detail::exclusiveScanOptimizedKernelImpl<T, 2>, input.data(), output.data(), size);
         launcher.synchronize();
     }
 
     template void exclusiveScan<int>(const memory::Buffer<int>&, memory::Buffer<int>&, size_t);
     template void inclusiveScan<int>(const memory::Buffer<int>&, memory::Buffer<int>&, size_t);
     template void exclusiveScanOptimized<int>(const memory::Buffer<int>&, memory::Buffer<int>&, size_t);
+
+    template void exclusiveScan<float>(const memory::Buffer<float>&, memory::Buffer<float>&, size_t);
+    template void inclusiveScan<float>(const memory::Buffer<float>&, memory::Buffer<float>&, size_t);
 
 }  // namespace cuda::algo

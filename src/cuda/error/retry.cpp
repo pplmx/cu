@@ -76,37 +76,6 @@ void circuit_breaker::transition_to_closed() {
 retry_executor::retry_executor(retry_config config)
     : config_(config), circuit_breaker_({}), dist_(0, 1000) {}
 
-template<typename Func>
-auto retry_executor::execute(Func&& func) -> decltype(func()) {
-    success_ = false;
-    attempts_ = 0;
-
-    while (attempts_ < config_.max_attempts) {
-        if (!circuit_breaker_.allow_request()) {
-            throw std::runtime_error("Circuit breaker is open");
-        }
-
-        ++attempts_;
-        try {
-            auto result = func();
-            circuit_breaker_.record_success();
-            success_ = true;
-            return result;
-        } catch (...) {
-            circuit_breaker_.record_failure();
-            if (attempts_ < config_.max_attempts) {
-                auto delay = calculate_delay(attempts_);
-                if (config_.jitter_enabled) {
-                    delay = apply_jitter(delay);
-                }
-                std::this_thread::sleep_for(delay);
-            }
-        }
-    }
-
-    throw std::runtime_error("Max retry attempts exceeded");
-}
-
 void retry_executor::set_circuit_breaker(circuit_breaker cb) {
     circuit_breaker_ = std::move(cb);
 }

@@ -96,6 +96,8 @@ if(NOVA_COVERAGE)
     endif()
 endif()
 
+
+
 if(NOVA_USE_CCACHE)
     find_program(CCACHE_PROGRAM ccache)
     if(CCACHE_PROGRAM)
@@ -228,10 +230,10 @@ set(DEVICE_SOURCES
 set(ALGO_SOURCES
         ${CUDA_SRC_ALGO}/reduce.cu
         ${CUDA_SRC_ALGO}/sort.cu
-        ${CMAKE_SOURCE_DIR}/src/algo/segmented_sort.cpp
-        ${CMAKE_SOURCE_DIR}/src/algo/spmv.cu
-        ${CMAKE_SOURCE_DIR}/src/algo/sample_sort.cpp
-        ${CMAKE_SOURCE_DIR}/src/algo/sssp.cpp
+        ${CMAKE_SOURCE_DIR}/src/algo/segmented_sort.cu
+        ${CMAKE_SOURCE_DIR}/src/algo/sample_sort.cu
+        ${CMAKE_SOURCE_DIR}/src/algo/sssp.cu
+        ${CMAKE_SOURCE_DIR}/src/algo/flash_attention.cpp
 )
 
 set(SRC_CUDA_LINALG ${CMAKE_SOURCE_DIR}/src/cuda/linalg)

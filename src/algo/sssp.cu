@@ -4,6 +4,9 @@
 #include <thrust/device_ptr.h>
 #include <thrust/fill.h>
 #include <thrust/transform.h>
+#include <thrust/execution_policy.h>
+#include <thrust/iterator/permutation_iterator.h>
+#include <thrust/iterator/counting_iterator.h>
 
 namespace cuda::algo::sssp {
 
@@ -20,8 +23,8 @@ SSSPConfig get_config() {
 template <typename Weight>
 __global__ void sssp_relax_kernel(const int* row_offsets,
                                    const int* col_indices,
-                                   const Weight* weights,
-                                   const Weight* distances_in,
+                                   const float* weights,
+                                   Weight* distances_in,
                                    Weight* distances_out,
                                    const int* frontier,
                                    int frontier_size,
@@ -36,7 +39,7 @@ __global__ void sssp_relax_kernel(const int* row_offsets,
 
         for (int i = row_start; i < row_end; ++i) {
             const int neighbor = col_indices[i];
-            const Weight edge_weight = weights[i];
+            const Weight edge_weight = static_cast<Weight>(weights[i]);
             const Weight new_dist = node_dist + edge_weight;
 
             if (new_dist < distances_out[neighbor] && new_dist <= delta * 1000) {
@@ -50,18 +53,14 @@ __global__ void sssp_relax_kernel(const int* row_offsets,
 template <typename Weight>
 void delta_stepping(const graph::CSRGraph& graph, int source, Weight* distances,
                     Weight delta, cudaStream_t stream) {
-    const int num_vertices = static_cast<int>(graph.num_vertices());
-    const int* row_offsets = graph.row_offsets();
-    const int* col_indices = graph.column_indices();
-    const Weight* weights = nullptr;
-
-    if (graph.has_values()) {
-        weights = reinterpret_cast<const Weight*>(graph.values());
-    }
+    const int num_vertices = static_cast<int>(graph.num_vertices);
+    const int* row_offsets = graph.row_offsets;
+    const int* col_indices = graph.columns;
+    const float* graph_weights = graph.weights;
 
     thrust::device_ptr<Weight> d_distances(distances);
 
-    thrust::fill(thrust::device, d_distances, d_distances + num_vertices,
+    thrust::fill(thrust::seq, d_distances, d_distances + num_vertices,
                  static_cast<Weight>(INF));
 
     distances[source] = Weight{0};
@@ -84,19 +83,15 @@ void delta_stepping(const graph::CSRGraph& graph, int source, Weight* distances,
         int next_frontier_size = 0;
 
         sssp_relax_kernel<Weight><<<1, current_frontier_size, 0, stream>>>(
-            row_offsets, col_indices, weights,
-            d_distances, d_distances,
+            row_offsets, col_indices, graph_weights,
+            distances, distances,
             d_frontier_current, current_frontier_size,
             delta);
 
         cudaStreamSynchronize(stream);
 
         thrust::device_ptr<Weight> d_dist(distances);
-        auto it = thrust::make_permutation_iterator(
-            d_frontier_next,
-            thrust::make_transform_iterator(
-                thrust::make_counting_iterator(0),
-                [] __device__ (int i) { return i; }));
+        thrust::copy(thrust::seq, d_dist, d_dist + current_frontier_size, d_frontier_next);
 
         current_frontier_size = 0;
         iterations++;
@@ -106,18 +101,14 @@ void delta_stepping(const graph::CSRGraph& graph, int source, Weight* distances,
 template <typename Weight>
 void bellman_ford(const graph::CSRGraph& graph, int source, Weight* distances,
                   cudaStream_t stream) {
-    const int num_vertices = static_cast<int>(graph.num_vertices());
-    const int* row_offsets = graph.row_offsets();
-    const int* col_indices = graph.column_indices();
-    const Weight* weights = nullptr;
-
-    if (graph.has_values()) {
-        weights = reinterpret_cast<const Weight*>(graph.values());
-    }
+    const int num_vertices = static_cast<int>(graph.num_vertices);
+    const int* row_offsets = graph.row_offsets;
+    const int* col_indices = graph.columns;
+    const float* graph_weights = graph.weights;
 
     thrust::device_ptr<Weight> d_distances(distances);
 
-    thrust::fill(thrust::device, d_distances, d_distances + num_vertices,
+    thrust::fill(thrust::seq, d_distances, d_distances + num_vertices,
                  static_cast<Weight>(INF));
 
     distances[source] = Weight{0};
@@ -133,7 +124,7 @@ void bellman_ford(const graph::CSRGraph& graph, int source, Weight* distances,
 
             for (int i = row_start; i < row_end; ++i) {
                 int v = col_indices[i];
-                Weight w = weights ? weights[i] : Weight{1};
+                Weight w = graph_weights ? static_cast<Weight>(graph_weights[i]) : Weight{1};
 
                 if (distances[u] + w < distances[v]) {
                     distances[v] = distances[u] + w;
@@ -149,7 +140,7 @@ void bellman_ford(const graph::CSRGraph& graph, int source, Weight* distances,
 template <typename Weight>
 memory::Buffer<Weight> compute_distances(const graph::CSRGraph& graph, int source,
                                          Weight delta, cudaStream_t stream) {
-    const int num_vertices = static_cast<int>(graph.num_vertices());
+    const int num_vertices = static_cast<int>(graph.num_vertices);
     memory::Buffer<Weight> distances(num_vertices);
 
     if (g_config.use_delta_stepping) {
@@ -164,7 +155,7 @@ memory::Buffer<Weight> compute_distances(const graph::CSRGraph& graph, int sourc
 SSSPResult run(const graph::CSRGraph& graph, int source,
                float delta, cudaStream_t stream) {
     SSSPResult result;
-    result.num_vertices = static_cast<int>(graph.num_vertices());
+    result.num_vertices = static_cast<int>(graph.num_vertices);
     result.converged = true;
     result.iterations = 0;
 
@@ -174,10 +165,8 @@ SSSPResult run(const graph::CSRGraph& graph, int source,
 }
 
 template void delta_stepping<float>(const graph::CSRGraph&, int, float*, float, cudaStream_t);
-template void delta_stepping<double>(const graph::CSRGraph&, int, double*, double, cudaStream_t);
 
 template void bellman_ford<float>(const graph::CSRGraph&, int, float*, cudaStream_t);
-template void bellman_ford<double>(const graph::CSRGraph&, int, double*, cudaStream_t);
 
 template memory::Buffer<float> compute_distances<float>(const graph::CSRGraph&, int, float, cudaStream_t);
 

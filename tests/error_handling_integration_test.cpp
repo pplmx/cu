@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <cuda_runtime.h>
 #include <thread>
 #include <atomic>
 #include "cuda/error/timeout.hpp"

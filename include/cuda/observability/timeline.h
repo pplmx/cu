@@ -88,8 +88,15 @@ private:
     std::chrono::high_resolution_clock::time_point start_time_;
 };
 
+#ifdef __COUNTER__
+#define NOVA_TIMELINE_SCOPED(name, category) \
+    cuda::observability::ScopedTimelineEvent NOVA_CONCAT(_nova_timeline_event_, __COUNTER__)(name, category)
+#define NOVA_CONCAT(a, b) NOVA_CONCAT_IMPL(a, b)
+#define NOVA_CONCAT_IMPL(a, b) a##b
+#else
 #define NOVA_TIMELINE_SCOPED(name, category) \
     cuda::observability::ScopedTimelineEvent _nova_timeline_event_(name, category)
+#endif
 
 #define NOVA_TIMELINE_BEGIN(name, category) \
     cuda::observability::TimelineExporter::instance().begin_event(name, category)

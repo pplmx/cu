@@ -196,14 +196,15 @@ TEST_F(PreconditionedSolverTest, GMRESIterations) {
     auto A = create_tridiagonal_matrix(20);
     auto b = create_rhs(20);
 
-    GMRES<double> gmres;
+    SolverConfig<double> config;
+    GMRES<double> gmres(config);
     std::vector<double> x(A.cols(), 0.0);
 
     auto result = gmres.solve(A, b.data(), x.data());
 
     EXPECT_TRUE(result.converged);
     EXPECT_GT(result.iterations, 0);
-    EXPECT_LE(result.iterations, result.max_iterations);
+    EXPECT_LE(result.iterations, config.max_iterations);
 }
 
 TEST_F(PreconditionedSolverTest, GMRESGPUConvergesOnTridiagonal) {

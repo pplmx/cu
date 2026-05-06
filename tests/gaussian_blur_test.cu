@@ -1,3 +1,6 @@
+#include <cuda_runtime.h>
+#include <cublas_v2.h>
+
 #include <gtest/gtest.h>
 #include <memory>
 #include <cstddef>
@@ -5,6 +8,7 @@
 #include <vector>
 
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 #include "image/gaussian_blur.h"
 #include "test_patterns.cuh"
 

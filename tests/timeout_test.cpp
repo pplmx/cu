@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <chrono>
 #include <thread>
+#include <cuda_runtime.h>
 #include "cuda/error/timeout.hpp"
 
 using namespace nova::error;

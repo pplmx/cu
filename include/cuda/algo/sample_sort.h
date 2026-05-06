@@ -4,6 +4,7 @@
 #include <cstddef>
 
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 
 namespace cuda::algo::sample_sort {
 

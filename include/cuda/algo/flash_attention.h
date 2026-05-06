@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 #include "cuda/stream/stream.h"
 #include <cstddef>
 #include <cstdint>

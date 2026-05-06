@@ -1,3 +1,6 @@
+#include <cuda_runtime.h>
+#include <cublas_v2.h>
+
 #include <gtest/gtest.h>
 #include "image/morphology.h"
 #include "image/types.h"

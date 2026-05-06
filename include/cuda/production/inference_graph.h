@@ -18,7 +18,7 @@ public:
         const std::vector<int64_t>& sequence_ids,
         const memory::Buffer<float>& query,
         memory::Buffer<float>& output,
-        const stream::Stream& capture_stream
+        stream::Stream& capture_stream
     );
 
     void replay_inference(
@@ -41,26 +41,20 @@ InferenceGraphExecutor::InferenceGraphExecutor(
     const inference::BlockManager& block_manager,
     int max_batch_size,
     int max_seq_len
-) : block_manager_(block_manager),
+) : GraphExecutor(),
+    block_manager_(block_manager),
     current_batch_size_(max_batch_size) {
-
-    GraphExecutorConfig config{
-        .max_batch_size = max_batch_size,
-        .enable_monitoring = true
-    };
-
-    init(config);
 }
 
 void InferenceGraphExecutor::capture_inference_pass(
     const std::vector<int64_t>& sequence_ids,
     const memory::Buffer<float>& query,
     memory::Buffer<float>& output,
-    const stream::Stream& capture_stream
+    stream::Stream& capture_stream
 ) {
     begin_capture(capture_stream);
 
-    block_manager_.forward_batch(sequence_ids, query, output, capture_stream);
+    const_cast<inference::BlockManager&>(block_manager_).forward_batch(sequence_ids, query, output, capture_stream);
 
     CUDA_CHECK(cudaStreamSynchronize(capture_stream.get()));
 
@@ -78,7 +72,7 @@ void InferenceGraphExecutor::replay_inference(
         throw std::runtime_error("Graph not captured - call capture_inference_pass first");
     }
 
-    replay();
+    launch();
 }
 
 void InferenceGraphExecutor::update_batch_size(int new_batch_size) {

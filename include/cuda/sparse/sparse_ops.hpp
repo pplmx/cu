@@ -2,6 +2,7 @@
 #define NOVA_CUDA_SPARSE_OPS_HPP
 
 #include <cuda/sparse/sparse_matrix.hpp>
+#include <cuda/sparse/matrix.hpp>
 #include <memory>
 
 namespace nova {
@@ -9,6 +10,9 @@ namespace sparse {
 
 template<typename T>
 void sparse_mv(const SparseMatrixCSR<T>& matrix, const T* x, T* y);
+
+template<typename T>
+void sparse_mv(const SparseMatrix<T>& matrix, const T* x, T* y);
 
 template<typename T>
 void sparse_mm(const SparseMatrixCSR<T>& matrix, const T* B, T* C, int num_vecs);
@@ -55,6 +59,11 @@ void SparseOps<T>::spmm(const SparseMatrixCSR<T>& matrix, const T* B, T* C, int 
 template<typename T>
 void sparse_mv(const SparseMatrixCSR<T>& matrix, const T* x, T* y) {
     SparseOps<T>::spmv(matrix, x, y);
+}
+
+template<typename T>
+void sparse_mv(const SparseMatrix<T>& matrix, const T* x, T* y) {
+    spmv(matrix, x, y);
 }
 
 template<typename T>

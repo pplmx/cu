@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
+#include <cuda_runtime.h>
 
 #include "cuda/production/error_injection.h"
+#include "cuda/device/error.h"
 
 namespace {
 
@@ -72,7 +74,7 @@ TEST_F(ErrorInjectionTest, ScopedErrorInjection) {
                 cuda::production::ErrorTarget::Allocation,
                 cudaErrorMemoryAllocation);
         },
-        cuda::production::device::CudaException);
+        cuda::device::CudaException);
 }
 
 TEST_F(ErrorInjectionTest, CountTracking) {

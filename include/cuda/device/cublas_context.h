@@ -1,10 +1,20 @@
 #pragma once
 
 #include <cublas_v2.h>
+#include <stdexcept>
 
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 
 namespace cuda::device {
+
+#define CUBLAS_CHECK(call) \
+    do { \
+        cublasStatus_t status = call; \
+        if (status != CUBLAS_STATUS_SUCCESS) { \
+            throw std::runtime_error("CUBLAS error"); \
+        } \
+    } while (0)
 
     class CublasContext {
     public:

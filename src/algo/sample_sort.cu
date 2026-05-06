@@ -1,0 +1,80 @@
+#include "cuda/algo/sample_sort.h"
+
+#include <cuda_runtime.h>
+#include <thrust/device_ptr.h>
+#include <thrust/sort.h>
+#include <thrust/functional.h>
+
+namespace cuda::algo::sample_sort {
+
+static SampleSortConfig g_config;
+
+void set_config(const SampleSortConfig& config) {
+    g_config = config;
+}
+
+SampleSortConfig get_config() {
+    return g_config;
+}
+
+template <typename T>
+SortResult<T> sort(const T* input, size_t count, Order order, cudaStream_t stream) {
+    SortResult<T> result;
+
+    T* d_output;
+    cudaMalloc(&d_output, count * sizeof(T));
+    cudaMemcpyAsync(d_output, input, count * sizeof(T), cudaMemcpyHostToDevice, stream);
+
+    thrust::device_ptr<T> d_ptr(d_output);
+    if (order == Order::Ascending) {
+        thrust::sort(d_ptr, d_ptr + count);
+    } else {
+        thrust::sort(d_ptr, d_ptr + count, thrust::greater<T>());
+    }
+
+    result.data = cuda::memory::Buffer<T>(count);
+    cudaMemcpy(result.data.data(), d_output, count * sizeof(T), cudaMemcpyDeviceToHost);
+    cudaFree(d_output);
+    result.actual_count = count;
+
+    return result;
+}
+
+template <typename T>
+SortResult<T> sort_large_dataset(const T* input, size_t count,
+                                 Order order, size_t sample_rate,
+                                 cudaStream_t stream) {
+    if (count <= g_config.threshold_large_dataset) {
+        return sort(input, count, order, stream);
+    }
+
+    SortResult<T> result;
+
+    T* d_output;
+    cudaMalloc(&d_output, count * sizeof(T));
+    cudaMemcpyAsync(d_output, input, count * sizeof(T), cudaMemcpyHostToDevice, stream);
+
+    size_t num_samples = count / sample_rate;
+
+    thrust::device_ptr<T> d_ptr(d_output);
+    if (order == Order::Ascending) {
+        thrust::sort(d_ptr, d_ptr + count);
+    } else {
+        thrust::sort(d_ptr, d_ptr + count, thrust::greater<T>());
+    }
+
+    result.data = cuda::memory::Buffer<T>(count);
+    cudaMemcpy(result.data.data(), d_output, count * sizeof(T), cudaMemcpyDeviceToHost);
+    cudaFree(d_output);
+    result.actual_count = count;
+
+    return result;
+}
+
+template SortResult<float> sort<float>(const float*, size_t, Order, cudaStream_t);
+template SortResult<double> sort<double>(const double*, size_t, Order, cudaStream_t);
+
+template SortResult<float> sort_large_dataset<float>(const float*, size_t, Order, size_t, cudaStream_t);
+template SortResult<double> sort_large_dataset<double>(const double*, size_t, Order, size_t, cudaStream_t);
+
+}  // namespace cuda::algo::sample_sort

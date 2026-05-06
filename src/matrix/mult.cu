@@ -6,6 +6,7 @@
 
 #include "cuda/device/device_utils.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 #include "matrix/mult.h"
 
 // Function to perform matrix multiplication on the GPU using cuBLAS

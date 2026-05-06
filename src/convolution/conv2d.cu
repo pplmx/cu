@@ -4,6 +4,7 @@
 #include "convolution/conv2d.h"
 #include "cuda/algo/kernel_launcher.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 
 namespace {
 

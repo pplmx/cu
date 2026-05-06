@@ -92,7 +92,7 @@ TEST_F(KernelStatsTest, MinMaxAvgCalculatedCorrectly) {
         cudaEventSynchronize(start);
         cudaEvent_t dummy_end;
         cudaEventCreate(&dummy_end);
-        cudaSleep(0, t);
+        std::this_thread::sleep_for(std::chrono::microseconds(t));
         cudaEventRecord(dummy_end);
         cudaEventSynchronize(dummy_end);
         collector_.record_kernel("test_kernel", start, dummy_end, 1, 256);

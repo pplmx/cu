@@ -12,8 +12,6 @@
  * eliminate dead code when disabled.
  */
 
-#include <cuda_runtime.h>
-
 #if defined(NOVA_NVTX_ENABLED) && NOVA_NVTX_ENABLED
 
 #include <nvtx3/nvtx3.hpp>

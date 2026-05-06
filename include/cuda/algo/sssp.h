@@ -6,6 +6,7 @@
 
 #include "cuda/graph/csr_graph.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 
 namespace cuda::algo::sssp {
 

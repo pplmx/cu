@@ -1,5 +1,6 @@
 #include "cuda/device/cublas_context.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 
 namespace cuda::algo {
 

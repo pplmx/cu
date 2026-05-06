@@ -51,7 +51,7 @@ TEST_F(RetryTest, CircuitBreakerOpensAfterThresholdFailures) {
 TEST_F(RetryTest, CircuitBreakerTransitionsToHalfOpenAfterTimeout) {
     circuit_breaker_config config;
     config.failure_threshold = 1;
-    config.reset_timeout = std::chrono::milliseconds{10};
+    config.reset_timeout = std::chrono::seconds{1};
     circuit_breaker cb(config);
 
     cb.record_failure();

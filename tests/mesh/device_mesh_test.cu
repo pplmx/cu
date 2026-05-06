@@ -1,3 +1,6 @@
+#include <cuda_runtime.h>
+#include <cublas_v2.h>
+
 /**
  * @file device_mesh_test.cu
  * @brief Tests for DeviceMesh, PeerCapabilityMap, PeerCopy components
@@ -15,6 +18,7 @@
 
 #include "cuda/device/error.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 #include "cuda/mesh/device_mesh.h"
 #include "cuda/mesh/peer_copy.h"
 #include "cuda/async/stream_manager.h"

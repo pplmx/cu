@@ -101,7 +101,7 @@ public:
     explicit KrylovSolver(const SolverConfig<T>& config = {}) : config_(config) {}
     virtual ~KrylovSolver() = default;
 
-    virtual SolverResult<T> solve(const SparseMatrixCSR<T>& A, const T* b, T* x) = 0;
+    virtual SolverResult<T> solve(const SparseMatrix<T>& A, const T* b, T* x) = 0;
 
     void set_preconditioner(std::unique_ptr<Preconditioner<T>> prec) {
         preconditioner_ = std::move(prec);
@@ -119,83 +119,7 @@ class ConjugateGradient : public KrylovSolver<T> {
 public:
     using KrylovSolver<T>::KrylovSolver;
 
-    SolverResult<T> solve(const SparseMatrixCSR<T>& A, const T* b, T* x) override {
-        SolverResult<T> result;
-        const int n = A.num_rows();
-
-        if (A.num_rows() != A.num_cols()) {
-            result.error_code = SolverError::INVALID_MATRIX;
-            return result;
-        }
-
-        std::vector<T> r(n), p(n), Ap(n);
-
-        sparse_mv(A, x, Ap.begin());
-        for (int i = 0; i < n; ++i) {
-            r[i] = b[i] - Ap[i];
-        }
-
-        T b_norm = detail::norm2(b, n);
-        if (b_norm < std::numeric_limits<T>::epsilon()) {
-            result.converged = true;
-            result.iterations = 0;
-            result.error_code = SolverError::SUCCESS;
-            return result;
-        }
-
-        detail::copy(r.data(), p.data(), n);
-        T r_dot_old = detail::dot_product(r.data(), r.data(), n);
-        T residual_init = std::sqrt(r_dot_old);
-
-        result.residual_history.reserve(this->config_.max_iterations);
-
-        for (int iter = 0; iter < this->config_.max_iterations; ++iter) {
-            sparse_mv(A, p.data(), Ap.begin());
-
-            T p_Ap = detail::dot_product(p.data(), Ap.data(), n);
-            if (std::abs(p_Ap) < std::numeric_limits<T>::epsilon()) {
-                result.error_code = SolverError::BREAKDOWN;
-                break;
-            }
-
-            T alpha = r_dot_old / p_Ap;
-
-            detail::axpy(alpha, p.data(), x, n);
-            detail::axpy(-alpha, Ap.data(), r.data(), n);
-
-            T r_dot_new = detail::dot_product(r.data(), r.data(), n);
-            T residual = std::sqrt(r_dot_new);
-
-            result.residual_history.push_back(residual);
-            result.relative_residual = residual / b_norm;
-
-            if (this->config_.verbose) {
-                std::printf("CG iter %d: residual = %.6e, relative = %.6e\n",
-                           iter, residual, result.relative_residual);
-            }
-
-            if (result.relative_residual < this->config_.relative_tolerance) {
-                result.converged = true;
-                result.iterations = iter + 1;
-                result.residual_norm = residual;
-                result.error_code = SolverError::SUCCESS;
-                return result;
-            }
-
-            T beta = r_dot_new / r_dot_old;
-            detail::scale(p.data(), beta, n);
-            detail::axpy(T{1}, r.data(), p.data(), n);
-
-            r_dot_old = r_dot_new;
-        }
-
-        result.iterations = this->config_.max_iterations;
-        result.residual_norm = detail::norm2(r.data(), n);
-        result.error_code = SolverError::MAX_ITERATIONS;
-        return result;
-    }
-
-    SolverResult<T> solve(const SparseMatrix<T>& A, const T* b, T* x) {
+    SolverResult<T> solve(const SparseMatrix<T>& A, const T* b, T* x) override {
         SolverResult<T> result;
         const int n = A.rows();
 
@@ -317,11 +241,11 @@ public:
     GMRES(const SolverConfig<T>& config = {}, int restart = 50)
         : KrylovSolver<T>(config), restart_(restart) {}
 
-    SolverResult<T> solve(const SparseMatrixCSR<T>& A, const T* b, T* x) override {
+    SolverResult<T> solve(const SparseMatrix<T>& A, const T* b, T* x) override {
         SolverResult<T> result;
-        const int n = A.num_rows();
+        const int n = A.rows();
 
-        if (A.num_rows() != A.num_cols()) {
+        if (A.rows() != A.cols()) {
             result.error_code = SolverError::INVALID_MATRIX;
             return result;
         }
@@ -340,7 +264,7 @@ public:
         std::vector<T> cos_sin(restart_);
         std::vector<T> s(restart_ + 1), cs(restart_), sn(restart_);
 
-        sparse_mv(A, x, v.begin());
+        spmv(A, x, v.data());
         for (int i = 0; i < n; ++i) {
             r[i] = b[i] - v[i];
         }
@@ -375,7 +299,7 @@ public:
                     v[i] = V[j * n + i];
                 }
 
-                sparse_mv(A, v.begin(), w.begin());
+                spmv(A, v.data(), w.data());
 
                 T h_ij = T{0};
                 for (int i = 0; i < n; ++i) {
@@ -481,7 +405,7 @@ public:
                 }
             }
 
-            sparse_mv(A, x, v.begin());
+            spmv(A, x, v.data());
             for (int i = 0; i < n; ++i) {
                 r[i] = b[i] - v[i];
             }
@@ -731,136 +655,7 @@ class BiCGSTAB : public KrylovSolver<T> {
 public:
     using KrylovSolver<T>::KrylovSolver;
 
-    SolverResult<T> solve(const SparseMatrixCSR<T>& A, const T* b, T* x) override {
-        SolverResult<T> result;
-        const int n = A.num_rows();
-
-        if (A.num_rows() != A.num_cols()) {
-            result.error_code = SolverError::INVALID_MATRIX;
-            return result;
-        }
-
-        std::vector<T> r(n), r_tilde(n), p(n), p_hat(n), s(n), t(n);
-
-        sparse_mv(A, x, p.begin());
-        for (int i = 0; i < n; ++i) {
-            r[i] = b[i] - p[i];
-        }
-
-        detail::copy(r.data(), r_tilde.data(), n);
-
-        T b_norm = detail::norm2(b, n);
-        if (b_norm < std::numeric_limits<T>::epsilon()) {
-            result.converged = true;
-            result.iterations = 0;
-            result.error_code = SolverError::SUCCESS;
-            return result;
-        }
-
-        detail::copy(r.data(), p.data(), n);
-
-        T r_r_tilde = detail::dot_product(r.data(), r_tilde.data(), n);
-
-        result.residual_history.reserve(this->config_.max_iterations);
-
-        for (int iter = 0; iter < this->config_.max_iterations; ++iter) {
-            detail::copy(p.data(), p_hat.data(), n);
-
-            sparse_mv(A, p_hat.data(), s.begin());
-
-            T s_r_tilde = detail::dot_product(s.data(), r_tilde.data(), n);
-            if (std::abs(s_r_tilde) < std::numeric_limits<T>::epsilon()) {
-                result.error_code = SolverError::BREAKDOWN;
-                break;
-            }
-
-            T alpha = r_r_tilde / s_r_tilde;
-
-            for (int i = 0; i < n; ++i) {
-                s[i] = r[i] - alpha * s[i];
-            }
-
-            for (int i = 0; i < n; ++i) {
-                x[i] += alpha * p_hat[i];
-            }
-
-            T s_norm = detail::norm2(s.data(), n);
-            result.relative_residual = s_norm / b_norm;
-
-            result.residual_history.push_back(s_norm);
-
-            if (this->config_.verbose) {
-                std::printf("BiCGSTAB iter %d: residual = %.6e, relative = %.6e\n",
-                           iter, s_norm, result.relative_residual);
-            }
-
-            if (result.relative_residual < this->config_.relative_tolerance) {
-                result.converged = true;
-                result.iterations = iter + 1;
-                result.residual_norm = s_norm;
-                result.error_code = SolverError::SUCCESS;
-                return result;
-            }
-
-            sparse_mv(A, s.data(), t.begin());
-
-            T t_s = detail::dot_product(t.data(), s.data(), n);
-            T t_t = detail::dot_product(t.data(), t.data(), n);
-
-            if (std::abs(t_t) < std::numeric_limits<T>::epsilon()) {
-                result.error_code = SolverError::BREAKDOWN;
-                break;
-            }
-
-            T omega = t_s / t_t;
-
-            for (int i = 0; i < n; ++i) {
-                x[i] += omega * s[i];
-            }
-
-            for (int i = 0; i < n; ++i) {
-                r[i] = s[i] - omega * t[i];
-            }
-
-            T r_norm = detail::norm2(r.data(), n);
-            result.relative_residual = r_norm / b_norm;
-            result.residual_history.push_back(r_norm);
-
-            if (this->config_.verbose) {
-                std::printf("BiCGSTAB iter %d: residual = %.6e, relative = %.6e\n",
-                           iter + 1, r_norm, result.relative_residual);
-            }
-
-            if (result.relative_residual < this->config_.relative_tolerance) {
-                result.converged = true;
-                result.iterations = iter + 2;
-                result.residual_norm = r_norm;
-                result.error_code = SolverError::SUCCESS;
-                return result;
-            }
-
-            T r_new_r_tilde = detail::dot_product(r.data(), r_tilde.data(), n);
-
-            if (std::abs(r_r_tilde) < std::numeric_limits<T>::epsilon()) {
-                result.error_code = SolverError::BREAKDOWN;
-                break;
-            }
-
-            T beta = (r_new_r_tilde / r_r_tilde) * (alpha / omega);
-
-            r_r_tilde = r_new_r_tilde;
-
-            for (int i = 0; i < n; ++i) {
-                p[i] = r[i] + beta * (p[i] - omega * s[i]);
-            }
-        }
-        result.iterations = this->config_.max_iterations;
-        result.residual_norm = detail::norm2(r.data(), n);
-        result.error_code = SolverError::MAX_ITERATIONS;
-        return result;
-    }
-
-    SolverResult<T> solve(const SparseMatrix<T>& A, const T* b, T* x) {
+    SolverResult<T> solve(const SparseMatrix<T>& A, const T* b, T* x) override {
         SolverResult<T> result;
         const int n = A.rows();
 
@@ -869,13 +664,12 @@ public:
             return result;
         }
 
-        memory::Buffer<T> d_b(n), d_x(n), d_s(n);
-        std::vector<T> h_x(n, T{0}), h_r(n), h_r_tilde(n), h_p(n), h_s(n), h_t(n);
+        memory::Buffer<T> d_b(n), d_x(n), d_s(n), d_p(n), d_temp(n);
+        std::vector<T> h_x(n, T{0}), h_r(n), h_r_tilde(n), h_p(n), h_s(n), h_t(n), h_temp(n);
 
         d_b.copy_from(b, n);
         d_x.fill(T{0});
 
-        memory::Buffer<T> d_temp(n);
         spmv(A, d_x.data(), d_temp.data());
         d_temp.copy_to(h_temp.data(), n);
 

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "cuda/benchmark/benchmark.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 
 class ThroughputTest : public ::testing::Test {
 protected:

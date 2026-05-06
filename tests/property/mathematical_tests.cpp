@@ -1,6 +1,6 @@
 #include "property_test.hpp"
 #include <cuda/neural/matmul.h>
-#include <cuda/fft/fft.hpp>
+#include <cuda/fft/fft.h>
 #include <cassert>
 #include <iostream>
 #include <iomanip>

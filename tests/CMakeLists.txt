@@ -198,13 +198,6 @@ target_include_directories(nova-tests PRIVATE
     ${DISTRIBUTED_TESTS_DIR}
 )
 
-target_compile_options(nova-tests PRIVATE
-    $<$<COMPILE_LANGUAGE:CUDA>:
-        --expt-relaxed-constexpr
-        -lineinfo
-    >
-)
-
 include(GoogleTest)
 gtest_discover_tests(nova-tests)
 

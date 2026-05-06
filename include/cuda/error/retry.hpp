@@ -53,8 +53,8 @@ class retry_executor {
 public:
     explicit retry_executor(retry_config config);
 
-    template<typename Func, typename... Args>
-    std::invoke_result_t<Func, Args...> execute(Func&& func, Args&&... args);
+    template<typename Func>
+    std::invoke_result_t<Func> execute(Func&& func);
 
     void set_circuit_breaker(circuit_breaker cb);
     [[nodiscard]] int attempt_count() const noexcept { return attempts_; }
@@ -85,6 +85,37 @@ inline std::chrono::milliseconds full_jitter(std::chrono::milliseconds delay) {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> dist(0, static_cast<int>(delay.count()));
     return std::chrono::milliseconds(dist(gen));
+}
+
+template<typename Func>
+std::invoke_result_t<Func> retry_executor::execute(Func&& func) {
+    success_ = false;
+    attempts_ = 0;
+
+    while (attempts_ < config_.max_attempts) {
+        if (!circuit_breaker_.allow_request()) {
+            throw std::runtime_error("Circuit breaker is open");
+        }
+
+        ++attempts_;
+        try {
+            auto result = func();
+            circuit_breaker_.record_success();
+            success_ = true;
+            return result;
+        } catch (...) {
+            circuit_breaker_.record_failure();
+            if (attempts_ < config_.max_attempts) {
+                auto delay = calculate_delay(attempts_);
+                if (config_.jitter_enabled) {
+                    delay = apply_jitter(delay);
+                }
+                std::this_thread::sleep_for(delay);
+            }
+        }
+    }
+
+    throw std::runtime_error("Max retry attempts exceeded");
 }
 
 } // namespace nova::error

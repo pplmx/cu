@@ -5,6 +5,8 @@
 
 namespace nova::sparse::test {
 
+using cuda::memory::Buffer;
+
 template<typename T>
 bool approx_equal(T a, T b, T tol = T{1e-4}) {
     return std::abs(a - b) < tol;
@@ -20,8 +22,8 @@ TEST(SparseOpsGPUTest, SpmvSimple) {
     ASSERT_TRUE(matrix.has_value());
 
     std::vector<float> x = {1.0f, 2.0f, 3.0f};
-    memory::Buffer<float> d_x(3);
-    memory::Buffer<float> d_y(3);
+    Buffer<float> d_x(3);
+    Buffer<float> d_y(3);
     std::vector<float> h_y(3);
 
     d_x.copy_from(x.data(), 3);
@@ -50,8 +52,8 @@ TEST(SparseOpsGPUTest, SpmvLarger) {
     ASSERT_TRUE(matrix.has_value());
 
     std::vector<float> x(n, 1.0f);
-    memory::Buffer<float> d_x(n);
-    memory::Buffer<float> d_y(n);
+    Buffer<float> d_x(n);
+    Buffer<float> d_y(n);
     std::vector<float> h_y(n);
 
     d_x.copy_from(x.data(), n);
@@ -76,8 +78,8 @@ TEST(SparseOpsGPUTest, SpmvTranspose) {
     ASSERT_TRUE(matrix.has_value());
 
     std::vector<float> x = {1.0f, 2.0f, 3.0f};
-    memory::Buffer<float> d_x(3);
-    memory::Buffer<float> d_y(3);
+    Buffer<float> d_x(3);
+    Buffer<float> d_y(3);
     std::vector<float> h_y(3);
 
     d_x.copy_from(x.data(), 3);
@@ -102,8 +104,8 @@ TEST(SparseOpsGPUTest, DoublePrecision) {
     ASSERT_TRUE(matrix.has_value());
 
     std::vector<double> x = {1.0, 2.0, 3.0};
-    memory::Buffer<double> d_x(3);
-    memory::Buffer<double> d_y(3);
+    Buffer<double> d_x(3);
+    Buffer<double> d_y(3);
     std::vector<double> h_y(3);
 
     d_x.copy_from(x.data(), 3);

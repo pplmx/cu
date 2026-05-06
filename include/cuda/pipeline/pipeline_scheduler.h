@@ -10,6 +10,7 @@
 
 #include "cuda/nccl/nccl_context.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 
 #include <cuda_runtime.h>
 

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 #include "cuda/memory/memory_pool.h"
 #include "cuda/memory/unique_ptr.h"
 #include <vector>

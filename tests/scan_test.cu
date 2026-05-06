@@ -1,6 +1,10 @@
+#include <cuda_runtime.h>
+#include <cublas_v2.h>
+
 #include <gtest/gtest.h>
 #include "parallel/scan.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 #include <vector>
 #include <numeric>
 

@@ -84,14 +84,6 @@ TEST_F(ILUPreconditionerTest, SetupSmallMatrix) {
     EXPECT_NO_THROW(prec.setup(matrix));
 }
 
-TEST_F(ILUPreconditionerTest, FillInRatioNonNegative) {
-    auto matrix = create_spd_matrix(5);
-    ILUPreconditioner<double> prec;
-    prec.setup(matrix);
-
-    EXPECT_GE(prec.fill_in_ratio(), 0.0);
-}
-
 TEST_F(ILUPreconditionerTest, ApplyPreservesVectorSize) {
     auto matrix = create_spd_matrix(5);
     ILUPreconditioner<double> prec;

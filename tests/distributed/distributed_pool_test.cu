@@ -2,10 +2,19 @@
 #include <cuda_runtime.h>
 
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 #include "cuda/memory/distributed_pool.h"
 #include "cuda/mesh/device_mesh.h"
+
+#define CUDA_CHECK(call) \
+    do { \
+        cudaError_t err = call; \
+        if (err != cudaSuccess) { \
+            throw std::runtime_error("CUDA error"); \
+        } \
+    } while (0)
 
 using cuda::memory::DistributedMemoryPool;
 

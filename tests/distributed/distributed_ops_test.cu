@@ -1,3 +1,6 @@
+#include <cuda_runtime.h>
+#include <cublas_v2.h>
+
 /**
  * @file distributed_ops_test.cu
  * @brief Tests for multi-GPU distributed operations
@@ -17,6 +20,7 @@
 #include "cuda/distributed/common.h"
 #include "cuda/mesh/device_mesh.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 
 #include <cuda_runtime.h>
 

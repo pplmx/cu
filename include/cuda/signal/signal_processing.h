@@ -7,11 +7,10 @@
  * @version 2.3
  */
 
-#include <cuda_runtime.h>
-#include <cufft.h>
 #include <cstddef>
 
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 
 namespace cuda::signal {
 

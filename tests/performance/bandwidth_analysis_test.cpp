@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <cuda/performance/bandwidth/roofline_model.h>
+#include <cuda/performance/bandwidth/cache_analyzer.h>
 
 namespace cuda::performance::bandwidth::test {
 

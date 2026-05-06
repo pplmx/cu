@@ -1,5 +1,6 @@
 #include "cuda/algo/kernel_launcher.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 #include "matrix/add.h"
 
 namespace cuda::algo {

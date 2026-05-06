@@ -17,7 +17,8 @@ TEST_F(TestIsolationTest, CreateContext) {
 
 TEST_F(TestIsolationTest, ExecuteIsolated) {
     int counter = 0;
-    TestIsolationContext::execute_isolated([&counter]() {
+    auto context = TestIsolationContext::create();
+    context->execute_isolated([&counter]() {
         counter = 42;
     });
     EXPECT_EQ(counter, 42);

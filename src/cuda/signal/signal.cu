@@ -1,5 +1,6 @@
-#include "cuda/signal/signal.h"
+#include "cuda/signal/signal_processing.h"
 
+#include <cufft.h>
 #include <cmath>
 #include <cstdlib>
 

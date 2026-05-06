@@ -1,6 +1,10 @@
+#include <cuda_runtime.h>
+#include <cublas_v2.h>
+
 #include <gtest/gtest.h>
 #include "cuda/device/cublas_context.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 #include <vector>
 
 using cuda::memory::Buffer;

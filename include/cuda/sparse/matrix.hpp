@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cuda_runtime.h>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -9,8 +10,6 @@
 #include "cuda/memory/buffer.h"
 
 namespace nova::sparse {
-
-enum class SparseFormat { CSR, CSC, ELL, SELL, HYB };
 
 template<typename T>
 class SparseMatrix {
@@ -48,22 +47,22 @@ public:
     const int* row_offsets() const { return row_offsets_.data(); }
     const int* col_indices() const { return col_indices_.data(); }
 
-    memory::Buffer<T>& values_buffer() { return values_; }
-    memory::Buffer<int>& row_offsets_buffer() { return row_offsets_; }
-    memory::Buffer<int>& col_indices_buffer() { return col_indices_; }
+    cuda::memory::Buffer<T>& values_buffer() { return values_; }
+    cuda::memory::Buffer<int>& row_offsets_buffer() { return row_offsets_; }
+    cuda::memory::Buffer<int>& col_indices_buffer() { return col_indices_; }
 
-    const memory::Buffer<T>& values_buffer() const { return values_; }
-    const memory::Buffer<int>& row_offsets_buffer() const { return row_offsets_; }
-    const memory::Buffer<int>& col_indices_buffer() const { return col_indices_; }
+    const cuda::memory::Buffer<T>& values_buffer() const { return values_; }
+    const cuda::memory::Buffer<int>& row_offsets_buffer() const { return row_offsets_; }
+    const cuda::memory::Buffer<int>& col_indices_buffer() const { return col_indices_; }
 
     void copy_to_host(std::vector<T>& out_values,
                       std::vector<int>& out_row_offsets,
                       std::vector<int>& out_col_indices) const;
 
 private:
-    memory::Buffer<T> values_;
-    memory::Buffer<int> row_offsets_;
-    memory::Buffer<int> col_indices_;
+    cuda::memory::Buffer<T> values_;
+    cuda::memory::Buffer<int> row_offsets_;
+    cuda::memory::Buffer<int> col_indices_;
     int num_rows_ = 0;
     int num_cols_ = 0;
 };

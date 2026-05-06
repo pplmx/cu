@@ -3,6 +3,7 @@
 
 #include "cuda/algo/sample_sort.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 
 namespace cuda::algo::sample_sort::test {
 

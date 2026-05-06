@@ -54,8 +54,11 @@ public:
         bool verbose{false};
     };
 
-    explicit QuantizationBenchmark(const Config& config = Config{})
+    explicit QuantizationBenchmark(const Config& config)
         : config_(config), stream_(0) {}
+
+    QuantizationBenchmark()
+        : config_(), stream_(0) {}
 
     void set_stream(cudaStream_t stream) { stream_ = stream; }
 
@@ -85,14 +88,14 @@ public:
     void save_results_json(const std::string& path) const;
     void print_summary() const;
 
+    float compute_l2_error(const std::vector<float>& a, const std::vector<float>& b);
+    float compute_kl_divergence(const std::vector<float>& a, const std::vector<float>& b);
+    std::vector<float> generate_random_data(size_t n, float scale = 1.0f);
+
 private:
     Config config_;
     cudaStream_t stream_;
     std::vector<BenchmarkResult> results_;
-
-    std::vector<float> generate_random_data(size_t n, float scale = 1.0f);
-    float compute_l2_error(const std::vector<float>& a, const std::vector<float>& b);
-    float compute_kl_divergence(const std::vector<float>& a, const std::vector<float>& b);
 };
 
 BenchmarkResult benchmark_fp8_roundtrip(

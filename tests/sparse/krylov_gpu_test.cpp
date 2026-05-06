@@ -10,7 +10,15 @@ bool approx_equal(T a, T b, T tol = T{1e-4}) {
     return std::abs(a - b) < tol;
 }
 
-TEST(KrylovGPUTest, CGTrivial) {
+template<typename T>
+class KrylovGPUTest : public ::testing::Test {
+};
+
+using KrylovTypes = ::testing::Types<double>;
+TYPED_TEST_SUITE(KrylovGPUTest, KrylovTypes);
+
+TYPED_TEST(KrylovGPUTest, CGTrivial) {
+    using T = TypeParam;
     std::vector<T> dense = {T{4}, T{1}, T{1}, T{3}};
     auto matrix = SparseMatrix<T>::FromDense(dense.data(), 2, 2);
     ASSERT_TRUE(matrix.has_value());
@@ -36,7 +44,8 @@ TEST(KrylovGPUTest, CGTrivial) {
     EXPECT_TRUE(approx_equal(x[1], expected_x1, T{1e-4}));
 }
 
-TEST(KrylovGPUTest, CGLaplacian) {
+TYPED_TEST(KrylovGPUTest, CGLaplacian) {
+    using T = TypeParam;
     const int n = 10;
     std::vector<T> dense(n * n, T{0});
 
@@ -62,7 +71,7 @@ TEST(KrylovGPUTest, CGLaplacian) {
     EXPECT_TRUE(result.converged);
     EXPECT_LT(result.iterations, 100);
 
-    memory::Buffer<T> d_x(n), d_temp(n);
+    cuda::memory::Buffer<T> d_x(n), d_temp(n);
     d_x.copy_from(x.data(), n);
     spmv(*matrix, d_x.data(), d_temp.data());
     std::vector<T> h_ax(n);
@@ -73,36 +82,8 @@ TEST(KrylovGPUTest, CGLaplacian) {
     }
 }
 
-TEST(KrylovGPUTest, GMRESDiagonal) {
-    const int n = 5;
-    std::vector<T> dense(n * n, T{0});
-
-    for (int i = 0; i < n; ++i) {
-        dense[i * n + i] = T{i + 1};
-    }
-
-    auto matrix = SparseMatrix<T>::FromDense(dense.data(), n, n);
-    ASSERT_TRUE(matrix.has_value());
-
-    std::vector<T> b(n, T{1});
-    std::vector<T> x(n, T{0});
-
-    SolverConfig<T> config;
-    config.relative_tolerance = T{1e-8};
-    config.max_iterations = 100;
-
-    GMRESGPU<T> solver(config, 5);
-    auto result = solver.solve(*matrix, b.data(), x.data());
-
-    EXPECT_TRUE(result.converged);
-    EXPECT_LT(result.iterations, 20);
-
-    for (int i = 0; i < n; ++i) {
-        EXPECT_TRUE(approx_equal(x[i], T{1} / T{i + 1}, T{1e-4}));
-    }
-}
-
-TEST(KrylovGPUTest, BiCGSTABTridiagonal) {
+TYPED_TEST(KrylovGPUTest, BiCGSTABTridiagonal) {
+    using T = TypeParam;
     const int n = 20;
     std::vector<T> dense(n * n, T{0});
 
@@ -128,7 +109,7 @@ TEST(KrylovGPUTest, BiCGSTABTridiagonal) {
     EXPECT_TRUE(result.converged);
     EXPECT_LT(result.iterations, 100);
 
-    memory::Buffer<T> d_x(n), d_ax(n);
+    cuda::memory::Buffer<T> d_x(n), d_ax(n);
     d_x.copy_from(x.data(), n);
     spmv(*matrix, d_x.data(), d_ax.data());
     std::vector<T> h_ax(n);

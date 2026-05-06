@@ -3,6 +3,7 @@
 #include "cuda/inference/block_manager.h"
 #include "cuda/inference/beam_search.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 #include "cuda/stream/stream.h"
 #include <cstdint>
 #include <functional>

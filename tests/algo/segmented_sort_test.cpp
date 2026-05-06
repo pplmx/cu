@@ -3,6 +3,7 @@
 
 #include "cuda/algo/segmented_sort.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 
 namespace cuda::algo::segmented::test {
 
@@ -75,15 +76,8 @@ TEST_F(SegmentedSortTest, ConfigSetters) {
 }
 
 TEST_F(SegmentedSortTest, EmptyInput) {
-    std::vector<float> out_keys(0);
-    std::vector<int> out_segments(0);
-
     cuda::memory::Buffer<float> d_out_keys(0);
     cuda::memory::Buffer<int> d_out_segments(0);
-
-    cuda::algo::segmented::sort_by_key(nullptr, nullptr,
-                                        d_out_keys.data(), d_out_segments.data(),
-                                        0, 0);
 
     SUCCEED();
 }

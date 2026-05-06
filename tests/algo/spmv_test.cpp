@@ -3,6 +3,7 @@
 
 #include "cuda/algo/spmv.h"
 #include "cuda/memory/buffer.h"
+#include "cuda/memory/buffer-inl.h"
 
 namespace cuda::algo::spmv::test {
 
