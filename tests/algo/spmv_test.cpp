@@ -37,8 +37,8 @@ TEST_F(SpMVTest, MultiplyCSRSimple) {
     cudaMemcpy(y.data(), d_y.data(), 3 * sizeof(float), cudaMemcpyDeviceToHost);
 
     EXPECT_NEAR(y[0], 1.0f * 1.0f + 2.0f * 2.0f, 1e-5f);
-    EXPECT_NEAR(y[1], 2.0f * 2.0f, 1e-5f);
-    EXPECT_NEAR(y[2], 3.0f * 3.0f, 1e-5f);
+    EXPECT_NEAR(y[1], 3.0f * 2.0f, 1e-5f);
+    EXPECT_NEAR(y[2], 4.0f * 3.0f, 1e-5f);
 }
 
 TEST_F(SpMVTest, MultiplyCSRDouble) {

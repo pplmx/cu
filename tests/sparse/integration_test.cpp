@@ -11,7 +11,7 @@ bool approx_equal(T a, T b, T tol = T{1e-4}) {
     return std::abs(a - b) < tol;
 }
 
-TEST(IntegrationTest, CSRToSparseMatrixConversion) {
+TEST(SparseIntegrationTest, CSRToSparseMatrixConversion) {
     std::vector<float> values = {1.0f, 2.0f, 3.0f, 4.0f};
     std::vector<int> row_offsets = {0, 2, 4};
     std::vector<int> col_indices = {0, 1, 1, 2};
@@ -36,7 +36,7 @@ TEST(IntegrationTest, CSRToSparseMatrixConversion) {
     EXPECT_EQ(out_col_indices, col_indices);
 }
 
-TEST(IntegrationTest, SpmvResultConsistency) {
+TEST(SparseIntegrationTest, SpmvResultConsistency) {
     std::vector<float> dense = {
         4.0f, 1.0f, 0.0f,
         1.0f, 3.0f, 1.0f,
@@ -67,7 +67,7 @@ TEST(IntegrationTest, SpmvResultConsistency) {
     EXPECT_TRUE(approx_equal(h_y[2], expected[2]));
 }
 
-TEST(IntegrationTest, CGSolverWithConvertedMatrix) {
+TEST(SparseIntegrationTest, CGSolverWithConvertedMatrix) {
     std::vector<float> dense = {
         4.0f, 1.0f,
         1.0f, 3.0f
@@ -99,7 +99,7 @@ TEST(IntegrationTest, CGSolverWithConvertedMatrix) {
     EXPECT_TRUE(approx_equal(h_ax[1], b[1], 1e-4f));
 }
 
-TEST(IntegrationTest, LargeSparseMatrixSpMV) {
+TEST(SparseIntegrationTest, LargeSparseMatrixSpMV) {
     const int n = 1000;
     const float sparsity = 0.99f;
 
@@ -131,7 +131,7 @@ TEST(IntegrationTest, LargeSparseMatrixSpMV) {
     }
 }
 
-TEST(IntegrationTest, DoublePrecisionSolver) {
+TEST(SparseIntegrationTest, DoublePrecisionSolver) {
     std::vector<double> dense = {
         4.0, 1.0,
         1.0, 3.0
@@ -157,7 +157,7 @@ TEST(IntegrationTest, DoublePrecisionSolver) {
     EXPECT_TRUE(approx_equal(x[1], 7.0/11.0, 1e-8));
 }
 
-TEST(IntegrationTest, BiCGSTABConvergence) {
+TEST(SparseIntegrationTest, BiCGSTABConvergence) {
     const int n = 50;
     std::vector<float> dense(n * n, 0.0f);
 
@@ -195,7 +195,7 @@ TEST(IntegrationTest, BiCGSTABConvergence) {
     }
 }
 
-TEST(IntegrationTest, GMRESRestart) {
+TEST(SparseIntegrationTest, GMRESRestart) {
     const int n = 30;
     std::vector<float> dense(n * n, 0.0f);
 
