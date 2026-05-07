@@ -4,16 +4,17 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: v2.13 Transformer Optimization
+## Current Milestone: v2.14 Documentation Quality
 
-**Goal:** GPU-accelerated inference optimizations for transformer models — speculative decoding, beam search, and KV cache improvements
+**Goal:** Comprehensive documentation sweep — API docs, code comments, error/log messages, and user-facing documentation
 
 **Target features:**
-- Speculative Decoding: Draft model speculation, tree-based verification, dynamic batch sizing
-- Advanced Beam Search: GPU beam search with score caching, length normalization, repetition penalty
-- KV Cache Improvements: Attention sink stabilization, streaming LLM patterns, partial reuse, compression
+- API Documentation: Doxygen comments, function docs, parameter descriptions
+- Code Comments: Explain complex logic, add missing comments, clarify intent
+- Error/Log Messages: Improve error messages, add structured logging, better diagnostics
+- README/docs: Update user-facing docs, tutorials, guides
 
-## Previous Milestone: v2.12 Advanced Quantization (SHIPPED)
+## Previous Milestone: v2.13 Transformer Optimization (SHIPPED)
 
 **Goal:** FP8 support, CUDA kernels, production calibration, and QAT integration
 
@@ -408,12 +409,15 @@ This document evolves at phase transitions and milestone boundaries.
 - ✓ QAT patterns (FakeQuantize, STE gradients) and AMP manager — Phase 101
 - ✓ Benchmark suite and accuracy comparison tools — Phase 102
 
-### Planned (v2.13)
+### Planned (v2.14)
 
-- [ ] Speculative Decoding: Draft model speculation, tree-based verification, dynamic batch sizing
-- [ ] Advanced Beam Search: GPU beam search with score caching, length normalization, repetition penalty
-- [ ] KV Cache Improvements: Attention sink stabilization, streaming LLM patterns, partial reuse, compression
+- [ ] API Documentation: Doxygen comments, function docs, parameter descriptions
+- [ ] Code Comments: Explain complex logic, add missing comments, clarify intent
+- [ ] Error/Log Messages: Improve error messages, add structured logging, better diagnostics
+- [ ] README/docs: Update user-facing docs, tutorials, guides
 
 ---
-*Last updated: 2026-05-05 after v2.13 Transformer Optimization started*
-*v2.13: Transformer Optimization (ACTIVE)*
+*Last updated: 2026-05-07 after v2.14 Documentation Quality started*
+*v2.14: Documentation Quality (ACTIVE)*
+
+
