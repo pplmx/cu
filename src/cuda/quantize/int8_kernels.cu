@@ -304,15 +304,17 @@ void compute_minmax(
         return;
     }
 
-    bool data_is_host = false;
+    bool data_needs_copy = false;
     cudaPointerAttributes attr;
-    if (cudaPointerGetAttributes(&attr, data) == cudaSuccess) {
-        data_is_host = (attr.type == cudaMemoryTypeHost);
+    if (cudaPointerGetAttributes(&attr, data) != cudaSuccess ||
+        attr.type == cudaMemoryTypeUnregistered ||
+        attr.type == cudaMemoryTypeHost) {
+        data_needs_copy = true;
     }
 
     const float* d_data = data;
     float* d_data_alloc = nullptr;
-    if (data_is_host) {
+    if (data_needs_copy) {
         cudaMalloc(&d_data_alloc, n * sizeof(float));
         cudaMemcpy(d_data_alloc, data, n * sizeof(float), cudaMemcpyHostToDevice);
         d_data = d_data_alloc;
@@ -326,6 +328,10 @@ void compute_minmax(
     detail::compute_minmax_kernel<<<grid_size, block_size, 0, stream>>>(
         d_data, n, d_block_mins, d_block_maxs);
 
+    if (stream == 0) {
+        cudaDeviceSynchronize();
+    }
+
     std::vector<float> h_block_mins(grid_size);
     std::vector<float> h_block_maxs(grid_size);
     cudaMemcpy(h_block_mins.data(), d_block_mins, grid_size * sizeof(float), cudaMemcpyDeviceToHost);
@@ -338,12 +344,12 @@ void compute_minmax(
         local_max = std::fmax(local_max, h_block_maxs[i]);
     }
 
-    bool min_is_host = false;
+    bool min_is_host = true;
     if (cudaPointerGetAttributes(&attr, min_val) == cudaSuccess) {
-        min_is_host = (attr.type == cudaMemoryTypeHost);
+        min_is_host = (attr.type == cudaMemoryTypeDevice);
     }
 
-    if (min_is_host) {
+    if (!min_is_host) {
         *min_val = local_min;
         *max_val = local_max;
     } else {
