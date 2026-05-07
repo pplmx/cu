@@ -178,10 +178,11 @@ private:
 
         if (mantissa_bits >= (1 << MANTISSA_BITS)) {
             mantissa_bits = 0;
-            exp_bits += (1 << MANTISSA_BITS);
-            if (exp_bits >= (31 << MANTISSA_BITS)) {
+            ++exp;
+            if (exp >= 31) {
                 return sign | POS_INF;
             }
+            exp_bits = static_cast<uint8_t>(exp) << MANTISSA_BITS;
         }
 
         return sign | exp_bits | mantissa_bits;

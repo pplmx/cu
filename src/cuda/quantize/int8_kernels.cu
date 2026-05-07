@@ -301,6 +301,11 @@ void build_histogram(
     detail::build_histogram_kernel<<<grid_size, block_size, 0, stream>>>(
         d_data, histogram, n, min_val, max_val, num_bins);
 
+    if (stream == 0) {
+        cudaDeviceSynchronize();
+    } else {
+        cudaStreamSynchronize(stream);
+    }
     if (d_data_alloc) cudaFree(d_data_alloc);
 
     cudaError_t err = cudaGetLastError();
@@ -375,7 +380,14 @@ void compute_minmax(
         cudaMemcpy(max_val, &local_max, sizeof(float), cudaMemcpyHostToDevice);
     }
 
-    if (d_data_alloc) cudaFree(d_data_alloc);
+    if (d_data_alloc) {
+        if (stream == 0) {
+            cudaDeviceSynchronize();
+        } else {
+            cudaStreamSynchronize(stream);
+        }
+        cudaFree(d_data_alloc);
+    }
     cudaFree(d_block_mins);
     cudaFree(d_block_maxs);
 }
