@@ -2,6 +2,8 @@
 #include <cuda_runtime.h>
 #include <cstdio>
 #include <cfloat>
+#include <vector>
+#include <algorithm>
 
 namespace nova {
 namespace quantize {
@@ -128,14 +130,15 @@ __global__ void build_histogram_kernel(
 __global__ void compute_minmax_kernel(
     const float* __restrict__ data,
     size_t n,
-    float* __restrict__ min_out,
-    float* __restrict__ max_out) {
+    float* __restrict__ block_mins,
+    float* __restrict__ block_maxs) {
 
     __shared__ float smin[256];
     __shared__ float smax[256];
 
     size_t tid = threadIdx.x;
     size_t idx = blockIdx.x * blockDim.x + tid;
+    size_t block_id = blockIdx.x;
 
     float local_min = FLT_MAX;
     float local_max = -FLT_MAX;
@@ -159,12 +162,8 @@ __global__ void compute_minmax_kernel(
     }
 
     if (tid == 0) {
-        unsigned int* min_as_int = reinterpret_cast<unsigned int*>(min_out);
-        unsigned int* max_as_int = reinterpret_cast<unsigned int*>(max_out);
-        unsigned int old_min = atomicMin(min_as_int, __float_as_uint(smin[0]));
-        unsigned int old_max = atomicMax(max_as_int, __float_as_uint(smax[0]));
-        (void)old_min;
-        (void)old_max;
+        block_mins[block_id] = smin[0];
+        block_maxs[block_id] = smax[0];
     }
 }
 
@@ -296,20 +295,65 @@ void compute_minmax(
     const float* data, size_t n,
     float* min_val, float* max_val,
     cudaStream_t stream) {
-
-    cudaMemset(min_val, 0x7F, sizeof(float));
-    cudaMemset(max_val, 0x80, sizeof(float));
-
     constexpr size_t block_size = 256;
-    size_t grid_size = 256;
+    size_t grid_size = std::min<size_t>((n + block_size - 1) / block_size, 256);
+
+    if (grid_size == 0) {
+        *min_val = 0.0f;
+        *max_val = 0.0f;
+        return;
+    }
+
+    bool data_is_host = false;
+    cudaPointerAttributes attr;
+    if (cudaPointerGetAttributes(&attr, data) == cudaSuccess) {
+        data_is_host = (attr.type == cudaMemoryTypeHost);
+    }
+
+    const float* d_data = data;
+    float* d_data_alloc = nullptr;
+    if (data_is_host) {
+        cudaMalloc(&d_data_alloc, n * sizeof(float));
+        cudaMemcpy(d_data_alloc, data, n * sizeof(float), cudaMemcpyHostToDevice);
+        d_data = d_data_alloc;
+    }
+
+    float* d_block_mins;
+    float* d_block_maxs;
+    cudaMalloc(&d_block_mins, grid_size * sizeof(float));
+    cudaMalloc(&d_block_maxs, grid_size * sizeof(float));
 
     detail::compute_minmax_kernel<<<grid_size, block_size, 0, stream>>>(
-        data, n, min_val, max_val);
+        d_data, n, d_block_mins, d_block_maxs);
 
-    cudaError_t err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        fprintf(stderr, "CUDA error in compute_minmax: %s\n", cudaGetErrorString(err));
+    std::vector<float> h_block_mins(grid_size);
+    std::vector<float> h_block_maxs(grid_size);
+    cudaMemcpy(h_block_mins.data(), d_block_mins, grid_size * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_block_maxs.data(), d_block_maxs, grid_size * sizeof(float), cudaMemcpyDeviceToHost);
+
+    float local_min = FLT_MAX;
+    float local_max = -FLT_MAX;
+    for (size_t i = 0; i < grid_size; ++i) {
+        local_min = std::fmin(local_min, h_block_mins[i]);
+        local_max = std::fmax(local_max, h_block_maxs[i]);
     }
+
+    bool min_is_host = false;
+    if (cudaPointerGetAttributes(&attr, min_val) == cudaSuccess) {
+        min_is_host = (attr.type == cudaMemoryTypeHost);
+    }
+
+    if (min_is_host) {
+        *min_val = local_min;
+        *max_val = local_max;
+    } else {
+        cudaMemcpy(min_val, &local_min, sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(max_val, &local_max, sizeof(float), cudaMemcpyHostToDevice);
+    }
+
+    if (d_data_alloc) cudaFree(d_data_alloc);
+    cudaFree(d_block_mins);
+    cudaFree(d_block_maxs);
 }
 
 } // namespace cuda
