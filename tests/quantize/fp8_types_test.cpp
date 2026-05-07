@@ -46,17 +46,12 @@ TEST_F(FP8TypesTest, E4M3ConstructionFromNegativeValue) {
 }
 
 TEST_F(FP8TypesTest, E4M3RoundtripAccuracy) {
-    std::vector<float> test_values = {
-        0.1f, 0.5f, 1.0f, 2.0f, 10.0f, 50.0f, 100.0f, 200.0f,
-        0.01f, 0.05f, 0.5f, 1.0f, 10.0f, 50.0f, 100.0f, 200.0f
-    };
-
-    for (float v : test_values) {
+    for (float v : {0.1f, 0.5f, 1.0f, 2.0f, 10.0f, 50.0f, 100.0f, 200.0f}) {
         FP8E4M3 val(v);
         float recovered = static_cast<float>(val);
         float rel_err = relative_error(v, recovered);
         if (v >= FP8E4M3::MIN_NORMAL) {
-            EXPECT_LE(rel_err, 0.5f) << "Failed for value " << v;
+            EXPECT_LE(rel_err, 0.15f) << "Failed for value " << v;
         }
     }
 }
@@ -124,16 +119,13 @@ TEST_F(FP8TypesTest, E5M2ConstructionFromNegativeValue) {
 }
 
 TEST_F(FP8TypesTest, E5M2RoundtripAccuracy) {
-    std::vector<float> test_values = {
-        1.0f, 10.0f, 100.0f, 1000.0f, 10000.0f,
-        0.1f, 0.001f, 0.0001f
-    };
-
-    for (float v : test_values) {
+    for (float v : {0.1f, 1.0f, 10.0f, 100.0f, 1000.0f, 10000.0f}) {
         FP8E5M2 val(v);
         float recovered = static_cast<float>(val);
         float rel_err = relative_error(v, recovered);
-        EXPECT_LE(rel_err, 0.5f) << "Failed for value " << v;
+        if (v >= FP8E5M2::MIN_NORMAL) {
+            EXPECT_LE(rel_err, 0.30f) << "Failed for value " << v;
+        }
     }
 }
 

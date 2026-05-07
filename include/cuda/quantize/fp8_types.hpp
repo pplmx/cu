@@ -174,7 +174,15 @@ private:
         mantissa = mantissa * (1 << MANTISSA_BITS);
 
         uint8_t exp_bits = static_cast<uint8_t>(exp) << MANTISSA_BITS;
-        uint8_t mantissa_bits = static_cast<uint8_t>(std::round(mantissa)) & ((1 << MANTISSA_BITS) - 1);
+        uint8_t mantissa_bits = static_cast<uint8_t>(std::round(mantissa));
+
+        if (mantissa_bits >= (1 << MANTISSA_BITS)) {
+            mantissa_bits = 0;
+            exp_bits += (1 << MANTISSA_BITS);
+            if (exp_bits >= (31 << MANTISSA_BITS)) {
+                return sign | POS_INF;
+            }
+        }
 
         return sign | exp_bits | mantissa_bits;
     }
