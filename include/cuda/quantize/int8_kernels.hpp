@@ -1,3 +1,15 @@
+/**
+ * @file int8_kernels.hpp
+ * @brief INT8 quantization CUDA kernels
+ * @defgroup int8_kernels INT8 Kernels
+ * @ingroup quantize
+ *
+ * Provides CUDA kernels for INT8 quantization and dequantization operations.
+ *
+ * @note Optimized for NVIDIA Tensor Cores
+ * @see quantize_tensor.hpp For type definitions
+ */
+
 #ifndef NOVA_CUDA_QUANTIZE_INT8_KERNELS_HPP
 #define NOVA_CUDA_QUANTIZE_INT8_KERNELS_HPP
 
@@ -8,13 +20,30 @@ namespace nova {
 namespace quantize {
 namespace cuda {
 
+/**
+ * @brief Parameters for INT8 quantization
+ * @struct QuantizationParams
+ * @ingroup int8_kernels
+ */
 struct QuantizationParams {
+    /** @brief Quantization scale */
     float scale{1.0f};
+
+    /** @brief Zero point for asymmetric quantization */
     float zero_point{0.0f};
+
+    /** @brief Use symmetric quantization (no zero point) */
     bool symmetric{true};
 
+    /** @brief Default constructor */
     QuantizationParams() = default;
 
+    /**
+     * @brief Construct quantization params
+     * @param s Scale value
+     * @param zp Zero point
+     * @param sym Symmetric flag
+     */
     QuantizationParams(float s, float zp = 0.0f, bool sym = true)
         : scale(s), zero_point(zp), symmetric(sym) {}
 };

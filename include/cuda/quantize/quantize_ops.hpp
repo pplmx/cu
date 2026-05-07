@@ -1,3 +1,15 @@
+/**
+ * @file quantize_ops.hpp
+ * @brief Core quantization operations
+ * @defgroup quantize_ops Quantization Operations
+ * @ingroup quantize
+ *
+ * Provides core quantization arithmetic operations including
+ * quantized matrix multiplication.
+ *
+ * @see quantize_tensor.hpp For type definitions
+ */
+
 #ifndef NOVA_CUDA_QUANTIZE_OPS_HPP
 #define NOVA_CUDA_QUANTIZE_OPS_HPP
 
@@ -8,10 +20,25 @@
 namespace nova {
 namespace quantize {
 
+/**
+ * @brief Supported numerical precisions
+ * @enum Precision
+ * @ingroup quantize_ops
+ */
 enum class Precision { FP32, FP16, INT8 };
 
+/**
+ * @brief Quantized matrix multiplication
+ * @class QuantizedMatmul
+ * @ingroup quantize_ops
+ */
 class QuantizedMatmul {
 public:
+    /**
+     * @brief Forward pass of quantized matmul
+     * @param a Quantized input A
+     * @param[out] c Output accumulator
+     */
     static void forward(const QuantizedInt8& a,
                         const QuantizedInt8& b,
                         QuantizedInt8& output,

@@ -1,3 +1,14 @@
+/**
+ * @file fp8_activation.hpp
+ * @brief FP8 activation functions
+ * @defgroup fp8_activation FP8 Activations
+ * @ingroup quantize
+ *
+ * Provides FP8-compatible activation functions for quantized neural networks.
+ *
+ * @see fp8_types.hpp For FP8 type definitions
+ */
+
 #ifndef NOVA_CUDA_QUANTIZE_FP8_ACTIVATION_HPP
 #define NOVA_CUDA_QUANTIZE_FP8_ACTIVATION_HPP
 
@@ -11,6 +22,7 @@ namespace cuda {
 
 namespace activation {
 
+/** @brief Sigmoid activation */
 __device__ __forceinline__ float sigmoidf(float x) {
     return 1.0f / (1.0f + expf(-x));
 }

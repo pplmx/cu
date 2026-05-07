@@ -1,3 +1,15 @@
+/**
+ * @file qat.hpp
+ * @brief Quantization-Aware Training support
+ * @defgroup qat Quantization-Aware Training
+ * @ingroup quantize
+ *
+ * Provides simulation and conversion tools for QAT (Quantization-Aware Training).
+ * Supports fake quantization operators and precision management.
+ *
+ * @see calibrator.hpp For calibration support
+ */
+
 #include <cuda/quantize/calibrator.hpp>
 #include <cuda/quantize/fp8_types.hpp>
 #include <vector>
@@ -11,6 +23,11 @@
 namespace nova {
 namespace quantize {
 
+/**
+ * @brief Numerical precision levels
+ * @enum Precision
+ * @ingroup qat
+ */
 enum class Precision {
     FP32,
     FP16,

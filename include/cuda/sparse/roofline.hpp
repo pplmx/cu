@@ -1,3 +1,22 @@
+/**
+ * @file roofline.hpp
+ * @brief Roofline performance model analysis
+ * @defgroup roofline Roofline Analysis
+ * @ingroup sparse
+ *
+ * Provides roofline performance model for analyzing sparse operation efficiency.
+ * Compares achieved performance against device theoretical limits.
+ *
+ * Example usage:
+ * @code
+ * RooflineModel model;
+ * model.analyze("SpMV", flops, bytes, elapsed_time);
+ * std::cout << "Achieved: " << model.effective_gflops << " GF/s\n";
+ * @endcode
+ *
+ * @note Helps identify compute vs memory bottlenecks
+ */
+
 #ifndef NOVA_CUDA_SPARSE_ROOFLINE_HPP
 #define NOVA_CUDA_SPARSE_ROOFLINE_HPP
 
@@ -12,16 +31,39 @@
 namespace nova {
 namespace sparse {
 
+/**
+ * @brief Numerical precision for roofline analysis
+ * @enum Precision
+ * @ingroup roofline
+ */
 enum class Precision { FP64, FP32, FP16 };
 
+/**
+ * @brief Performance bottleneck classification
+ * @enum PerformanceBound
+ * @ingroup roofline
+ */
 enum class PerformanceBound {
+    /** @brief Operation limited by compute throughput */
     COMPUTE_BOUND,
+
+    /** @brief Operation limited by memory bandwidth */
     MEMORY_BOUND,
+
+    /** @brief Balanced between compute and memory */
     BALANCED,
+
+    /** @brief Unable to determine bound */
     UNKNOWN
 };
 
+/**
+ * @brief Device peak performance parameters
+ * @struct DevicePeaks
+ * @ingroup roofline
+ */
 struct DevicePeaks {
+    /** @brief FP64 peak GFLOPS */
     double fp64_peak_gflops = 0.0;
     double fp32_peak_gflops = 0.0;
     double fp16_peak_gflops = 0.0;

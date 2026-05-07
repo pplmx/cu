@@ -4,23 +4,25 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: v2.14 Documentation Quality
+## Current Milestone: Planning Next Milestone
 
-**Goal:** Comprehensive documentation sweep — API docs, code comments, error/log messages, and user-facing documentation
+**Status:** v2.14 complete — run `/gsd-new-milestone` to start planning
 
-**Target features:**
-- API Documentation: Doxygen comments, function docs, parameter descriptions
-- Code Comments: Explain complex logic, add missing comments, clarify intent
-- Error/Log Messages: Improve error messages, add structured logging, better diagnostics
-- README/docs: Update user-facing docs, tutorials, guides
+## Completed (v2.14 Documentation Quality)
 
-## Previous Milestone: v2.13 Transformer Optimization (SHIPPED)
+**Goal:** Comprehensive documentation sweep
+
+**Shipped:**
+- API Documentation: 30 headers documented with Doxygen comments — Phase 107
+- Code Comments: 5 source files commented (memory, device, algo layers) — Phase 108
+- Error/Log Messages: Structured logging infrastructure (5 levels) — Phase 109
+- README/docs: README.md, CHANGELOG.md, docs/ARCHITECTURE.md, SPARSE.md, QUANTIZATION.md — Phase 110
+
+## Previous Milestone: v2.13 Transformer Optimization (SHIPPED 2026-05-06)
 
 **Goal:** FP8 support, CUDA kernels, production calibration, and QAT integration
 
-**Status:** Complete — archived at `.planning/milestones/v2.12-*`
-
-Run `/gsd-new-milestone` to start planning
+**Status:** Complete — archived at `.planning/milestones/v2.13-*`
 
 ## Completed (v2.6)
 
@@ -409,15 +411,29 @@ This document evolves at phase transitions and milestone boundaries.
 - ✓ QAT patterns (FakeQuantize, STE gradients) and AMP manager — Phase 101
 - ✓ Benchmark suite and accuracy comparison tools — Phase 102
 
-### Planned (v2.14)
+### Completed (v2.14)
 
-- [ ] API Documentation: Doxygen comments, function docs, parameter descriptions
-- [ ] Code Comments: Explain complex logic, add missing comments, clarify intent
-- [ ] Error/Log Messages: Improve error messages, add structured logging, better diagnostics
-- [ ] README/docs: Update user-facing docs, tutorials, guides
+- ✓ API Documentation: Doxygen coverage for 30 headers — Phase 107
+- ✓ Code Comments: Inline comments in 5 source files — Phase 108
+- ✓ Error/Log Messages: Structured logging with 5 levels — Phase 109
+- ✓ README/docs: User/developer documentation guides — Phase 110
+
+### Validated (v2.14)
+
+- ✓ Doxygen @brief, @param, @return documentation — v2.14
+- ✓ @defgroup module organization (error, sparse, quantize, gnn) — v2.14
+- ✓ @deprecated tags with migration guidance — v2.14
+- ✓ Inline comments explaining algorithm rationale — v2.14
+- ✓ Thread-safety documentation in concurrent code — v2.14
+- ✓ Structured logging (ERROR/WARN/INFO/DEBUG/TRACE) — v2.14
+- ✓ Compile-time log level filtering — v2.14
+- ✓ Updated README.md with v2.x features — v2.14
+- ✓ CHANGELOG.md with v1.0-v2.14 milestones — v2.14
+- ✓ docs/ARCHITECTURE.md five-layer guide — v2.14
+- ✓ docs/SPARSE.md operations guide — v2.14
+- ✓ docs/QUANTIZATION.md INT8/FP8 guide — v2.14
 
 ---
-*Last updated: 2026-05-07 after v2.14 Documentation Quality started*
-*v2.14: Documentation Quality (ACTIVE)*
 
-
+*Last updated: 2026-05-07 after v2.14 Documentation Quality shipped*
+*v2.15: Planning required*

@@ -1,3 +1,16 @@
+/**
+ * @file hyb_matrix.hpp
+ * @brief Hybrid sparse matrix format (ELL + COO)
+ * @defgroup hyb_matrix Hybrid Matrix Format
+ * @ingroup sparse
+ *
+ * Hybrid format combining ELL for regular patterns and COO for irregular
+ * entries. Optimized for matrices with varying row nnz.
+ *
+ * @note Better memory efficiency than pure ELL for irregular matrices
+ * @see sparse_matrix.hpp For other matrix formats
+ */
+
 #ifndef NOVA_CUDA_SPARSE_HYB_MATRIX_HPP
 #define NOVA_CUDA_SPARSE_HYB_MATRIX_HPP
 
@@ -9,11 +22,26 @@
 namespace nova {
 namespace sparse {
 
+/**
+ * @brief Hybrid ELL+COO sparse matrix
+ * @class SparseMatrixHYB
+ * @tparam T Element type
+ * @ingroup hyb_matrix
+ *
+ * Stores regular entries in ELL format and irregular entries in COO.
+ */
 template<typename T>
 class SparseMatrixHYB {
 public:
+    /** @brief Default constructor creates empty matrix */
     SparseMatrixHYB() = default;
 
+    /**
+     * @brief Create HYB matrix from CSR
+     * @param csr Source CSR matrix
+     * @param threshold_divisor Split threshold divisor
+     * @return HYB matrix representation
+     */
     static SparseMatrixHYB FromCSR(const SparseMatrixCSR<T>& csr, int threshold_divisor = 2) {
         SparseMatrixHYB result;
         result.num_rows_ = csr.num_rows();

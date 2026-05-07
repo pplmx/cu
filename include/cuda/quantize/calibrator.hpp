@@ -1,3 +1,23 @@
+/**
+ * @file calibrator.hpp
+ * @brief Quantization scale calibration
+ * @defgroup calibrator Scale Calibration
+ * @ingroup quantize
+ *
+ * Determines optimal quantization scales by analyzing tensor value distributions.
+ * Supports symmetric and asymmetric calibration modes.
+ *
+ * Example usage:
+ * @code
+ * MinMaxCalibrator calibrator;
+ * calibrator.collect_data(tensor_data, size);
+ * auto result = calibrator.compute();
+ * std::cout << "Scale: " << result.scale << "\n";
+ * @endcode
+ *
+ * @see quantize_tensor.hpp For quantization metadata
+ */
+
 #ifndef NOVA_CUDA_QUANTIZE_CALIBRATOR_HPP
 #define NOVA_CUDA_QUANTIZE_CALIBRATOR_HPP
 
@@ -11,14 +31,38 @@
 namespace nova {
 namespace quantize {
 
+/**
+ * @brief Result of scale calibration
+ * @struct CalibrationResult
+ * @ingroup calibrator
+ */
 struct CalibrationResult {
+    /** @brief Quantization scale */
     float scale;
+
+    /** @brief Zero point for asymmetric quantization */
     float zero_point;
+
+    /** @brief Whether symmetric quantization was used */
     bool symmetric;
+
+    /** @brief Minimum value in calibration data */
     float min_val;
+
+    /** @brief Maximum value in calibration data */
     float max_val;
 
+    /** @brief Default constructor */
     CalibrationResult() : scale(1.0f), zero_point(0.0f), symmetric(true), min_val(0.0f), max_val(0.0f) {}
+
+    /**
+     * @brief Construct calibration result
+     * @param s Scale value
+     * @param zp Zero point
+     * @param sym Symmetric flag
+     * @param min_v Minimum value
+     * @param max_v Maximum value
+     */
     CalibrationResult(float s, float zp, bool sym, float min_v, float max_v)
         : scale(s), zero_point(zp), symmetric(sym), min_val(min_v), max_val(max_v) {}
 };

@@ -1,3 +1,23 @@
+/**
+ * @file preconditioner.hpp
+ * @brief Iterative solver preconditioners
+ * @defgroup preconditioner Preconditioners
+ * @ingroup sparse
+ *
+ * Provides preconditioners to accelerate iterative solver convergence:
+ * - Jacobi (diagonal) preconditioner
+ * - ILU(0) incomplete LU factorization
+ *
+ * Example usage:
+ * @code
+ * JacobiPreconditioner<float> jacobi(A);
+ * jacobi.compute();
+ * auto result = gmres(A, b, x, config, &jacobi);
+ * @endcode
+ *
+ * @see krylov.hpp For solver implementations
+ */
+
 #pragma once
 
 #include "cuda/sparse/matrix.hpp"
@@ -11,11 +31,26 @@ namespace nova::sparse {
 
 namespace memory = cuda::memory;
 
+/**
+ * @brief Error for preconditioner operations
+ * @class PreconditionerError
+ * @ingroup preconditioner
+ */
 class PreconditionerError : public std::runtime_error {
 public:
+    /** @brief Construct with error message */
     explicit PreconditionerError(const std::string& msg) : std::runtime_error(msg) {}
 };
 
+/**
+ * @brief Base class for preconditioners
+ * @class Preconditioner
+ * @tparam T Element type
+ * @ingroup preconditioner
+ *
+ * Preconditioners transform the linear system Ax = b to a form
+ * that converges faster with iterative methods.
+ */
 template<typename T>
 class Preconditioner {
 public:

@@ -1,3 +1,15 @@
+/**
+ * @file nvtx_sparse.hpp
+ * @brief NVTX profiling markers for sparse operations
+ * @defgroup nvtx_sparse NVTX Markers
+ * @ingroup sparse
+ *
+ * Provides NVTX markers for profiling sparse operations.
+ * Only active when NOVA_NVTX is defined.
+ *
+ * @see observability/nvtx.hpp For general NVTX support
+ */
+
 #ifndef NOVA_CUDA_SPARSE_NVTX_SPARSE_HPP
 #define NOVA_CUDA_SPARSE_NVTX_SPARSE_HPP
 
@@ -9,15 +21,26 @@ namespace nova {
 namespace sparse {
 namespace nvtx {
 
+/**
+ * @brief Get NVTX domain for sparse operations
+ * @return NVTX domain handle
+ */
 inline nvtxDomainHandle_t get_sparse_domain() {
     static nvtxDomainHandle_t domain = nvtxDomainCreateA("nova_sparse");
     return domain;
 }
 
+/**
+ * @brief RAII NVTX range wrapper
+ * @class ScopedRange
+ * @ingroup nvtx_sparse
+ */
 struct ScopedRange {
+    /** @brief Start NVTX range */
     ScopedRange(const char* name) {
         nvtxRangePushA(name);
     }
+    /** @brief End NVTX range */
     ~ScopedRange() {
         nvtxRangePop();
     }

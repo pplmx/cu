@@ -1,3 +1,16 @@
+/**
+ * @file sampling.hpp
+ * @brief Graph sampling for GNN training
+ * @defgroup gnn_sampling Graph Sampling
+ * @ingroup gnn
+ *
+ * Provides graph sampling strategies for efficient GNN mini-batch training.
+ * Supports neighbor sampling and k-hop subgraph extraction.
+ *
+ * @note Sampling reduces memory requirements for large graphs
+ * @see message_passing.hpp For GNN operations
+ */
+
 #ifndef NOVA_CUDA_GNN_SAMPLING_HPP
 #define NOVA_CUDA_GNN_SAMPLING_HPP
 
@@ -8,20 +21,50 @@
 namespace nova {
 namespace gnn {
 
+/**
+ * @brief Graph neighbor sampler
+ * @class GraphSampler
+ * @ingroup gnn_sampling
+ */
 class GraphSampler {
 public:
+    /**
+     * @brief Construct sampler with random seed
+     * @param seed Random seed for reproducibility
+     */
     explicit GraphSampler(int seed = 42) : rng_(seed) {}
 
+    /**
+     * @brief Result of neighbor sampling
+     * @struct SampledNeighbors
+     */
     struct SampledNeighbors {
+        /** @brief Sampled node IDs */
         std::vector<int> node_ids;
+        /** @brief Number of neighbors per node */
         std::vector<int> neighbor_counts;
+        /** @brief Neighbor lists per node */
         std::vector<std::vector<int>> neighbors;
     };
 
+    /**
+     * @brief Sample neighbors from graph
+     * @param graph Adjacency matrix
+     * @param seed_nodes Starting nodes
+     * @param num_samples Maximum neighbors per node
+     * @return Sampled neighbor information
+     */
     SampledNeighbors sample_neighbors(const sparse::SparseMatrixCSR<float>& graph,
                                        const std::vector<int>& seed_nodes,
                                        int num_samples);
 
+    /**
+     * @brief Extract k-hop neighborhood
+     * @param graph Adjacency matrix
+     * @param seed_nodes Starting nodes
+     * @param k Number of hops
+     * @return Aggregated node IDs
+     */
     std::vector<int> k_hop_aggregation(const sparse::SparseMatrixCSR<float>& graph,
                                         const std::vector<int>& seed_nodes,
                                         int k);

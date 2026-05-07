@@ -1,3 +1,29 @@
+/**
+ * @file krylov.hpp
+ * @brief Krylov subspace iterative solvers
+ * @defgroup krylov Krylov Subspace Solvers
+ * @ingroup sparse
+ *
+ * Provides iterative solvers for sparse linear systems Ax = b:
+ * - CG (Conjugate Gradient) for symmetric positive definite matrices
+ * - GMRES (Generalized Minimal Residual) for non-symmetric matrices
+ * - BiCGSTAB (Biconjugate Gradient Stabilized) for non-symmetric matrices
+ *
+ * Example usage:
+ * @code
+ * SolverConfig config{.max_iterations = 1000, .tolerance = 1e-6};
+ * auto result = cg(A, b, x, config);
+ * if (result.converged) {
+ *     std::cout << "Converged in " << result.iterations << " iterations\n";
+ * }
+ * @endcode
+ *
+ * @note Time complexity: O(nnz * iterations)
+ * @note Requires preconditioner for difficult problems
+ * @see preconditioner.hpp For preconditioning support
+ * @see solver_workspace.hpp For workspace management
+ */
+
 #ifndef NOVA_CUDA_SPARSE_KRYLOV_HPP
 #define NOVA_CUDA_SPARSE_KRYLOV_HPP
 
@@ -13,20 +39,49 @@
 namespace nova {
 namespace sparse {
 
+/**
+ * @brief Solver error codes
+ * @enum SolverError
+ * @ingroup krylov
+ */
 enum class SolverError {
+    /** @brief Solver completed successfully */
     SUCCESS = 0,
+
+    /** @brief Maximum iterations reached without convergence */
     MAX_ITERATIONS,
+
+    /** @brief Numerical breakdown occurred */
     BREAKDOWN,
+
+    /** @brief Invalid or malformed matrix */
     INVALID_MATRIX,
+
+    /** @brief Failed to meet convergence tolerance */
     CONVERGENCE_FAILURE,
+
+    /** @brief Preconditioner failed or is invalid */
     PRECONDITIONER_ERROR
 };
 
+/**
+ * @brief Result of iterative solver
+ * @struct SolverResult
+ * @tparam T Element type
+ * @ingroup krylov
+ */
 template<typename T>
 struct SolverResult {
+    /** @brief Whether solver converged */
     bool converged = false;
+
+    /** @brief Number of iterations performed */
     int iterations = 0;
+
+    /** @brief Final residual norm */
     T residual_norm = T{0};
+
+    /** @brief Relative residual ||r||/||b|| */
     T relative_residual = T{0};
     SolverError error_code = SolverError::SUCCESS;
     std::vector<T> residual_history;

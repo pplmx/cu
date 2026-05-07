@@ -1,3 +1,30 @@
+/**
+ * @file quantize_tensor.hpp
+ * @brief Tensor quantization types and utilities
+ * @defgroup quantize_tensor Tensor Quantization
+ * @ingroup quantize
+ *
+ * Provides quantization modes, metadata structures, and type definitions
+ * for numerical precision reduction in deep learning workloads.
+ *
+ * Supported modes:
+ * - PerTensor: Single scale for entire tensor
+ * - PerChannel: Scale per output channel
+ *
+ * Example usage:
+ * @code
+ * QuantizationMetadata meta{
+ *     .mode = QuantizationMode::PerTensor,
+ *     .scale = 0.1f,
+ *     .zero_point = 128,
+ *     .num_bits = 8
+ * };
+ * @endcode
+ *
+ * @see calibrator.hpp For scale calibration
+ * @see quantize_ops.hpp For quantization operations
+ */
+
 #ifndef NOVA_CUDA_QUANTIZE_TENSOR_HPP
 #define NOVA_CUDA_QUANTIZE_TENSOR_HPP
 
@@ -10,16 +37,39 @@
 namespace nova {
 namespace quantize {
 
+/**
+ * @brief Quantization granularity mode
+ * @enum QuantizationMode
+ * @ingroup quantize_tensor
+ */
 enum class QuantizationMode { PerTensor, PerChannel };
 
+/**
+ * @brief Metadata for quantized tensor
+ * @struct QuantizationMetadata
+ * @ingroup quantize_tensor
+ */
 struct QuantizationMetadata {
+    /** @brief Quantization granularity */
     QuantizationMode mode;
+
+    /** @brief Scale factor */
     float scale;
+
+    /** @brief Zero point for asymmetric quantization */
     float zero_point;
+
+    /** @brief Number of bits per value */
     int num_bits;
 };
 
+/**
+ * @brief IEEE 754 half-precision floating point
+ * @struct float16
+ * @ingroup quantize_tensor
+ */
 struct alignas(2) float16 {
+    /** @brief Raw 16-bit value */
     uint16_t value;
 
     float16() = default;

@@ -1,3 +1,15 @@
+/**
+ * @file solver_workspace.hpp
+ * @brief Workspace management for iterative sparse solvers
+ * @defgroup solver_workspace Solver Workspace
+ * @ingroup sparse
+ *
+ * Manages temporary vectors used by iterative solvers (CG, GMRES, BiCGSTAB).
+ * Pre-allocates all required workspace to avoid allocation overhead during solve.
+ *
+ * @see krylov.hpp For solver implementations
+ */
+
 #ifndef NOVA_CUDA_SPARSE_SOLVER_WORKSPACE_HPP
 #define NOVA_CUDA_SPARSE_SOLVER_WORKSPACE_HPP
 
@@ -9,15 +21,32 @@
 namespace nova {
 namespace sparse {
 
+/**
+ * @brief Workspace for iterative solvers
+ * @class SolverWorkspace
+ * @tparam T Element type
+ * @ingroup solver_workspace
+ *
+ * Pre-allocates temporary vectors used by Krylov subspace methods.
+ */
 template<typename T>
 class SolverWorkspace {
 public:
+    /** @brief Default constructor creates empty workspace */
     SolverWorkspace() : size_(0) {}
 
+    /**
+     * @brief Construct and allocate workspace
+     * @param size Problem size (number of unknowns)
+     */
     explicit SolverWorkspace(int size) : size_(0) {
         resize(size);
     }
 
+    /**
+     * @brief Resize workspace for new problem size
+     * @param size Problem size
+     */
     void resize(int size) {
         if (size == size_) return;
 

@@ -1,3 +1,29 @@
+/**
+ * @file matrix.hpp
+ * @brief Unified sparse matrix with GPU memory management
+ * @defgroup SparseMatrix Unified Sparse Matrix
+ * @ingroup sparse
+ *
+ * Modern sparse matrix type with automatic GPU memory management.
+ * Provides multiple construction methods and device-memory buffers.
+ *
+ * Example usage:
+ * @code
+ * // Create from dense
+ * auto matrix = SparseMatrix<float>::FromDense(dense.data(), rows, cols, 1e-6f);
+ *
+ * // Perform SpMV
+ * spmv(*matrix, d_x, d_y);
+ *
+ * // Copy back to host
+ * std::vector<float> result(rows);
+ * matrix.values_buffer().copy_to(result.data(), rows);
+ * @endcode
+ *
+ * @see sparse_matrix.hpp For legacy format classes
+ * @see sparse_ops.hpp For supported operations
+ */
+
 #pragma once
 
 #include <algorithm>
@@ -11,11 +37,30 @@
 
 namespace nova::sparse {
 
+/**
+ * @brief Unified sparse matrix with GPU memory management
+ * @class SparseMatrix
+ * @tparam T Element type (float, double, etc.)
+ * @ingroup SparseMatrix
+ *
+ * Provides GPU-resident sparse matrix storage with CSR format.
+ * Data is stored in cuda::memory::Buffer for automatic management.
+ *
+ * @note Thread-safe buffer operations
+ * @see cuda::memory::Buffer For memory management details
+ */
 template<typename T>
 class SparseMatrix {
 public:
+    /** @brief Default constructor creates empty matrix */
     SparseMatrix() = default;
 
+    /**
+     * @brief Construct with pre-allocated storage
+     * @param num_rows Number of rows
+     * @param num_cols Number of columns
+     * @param nnz Number of non-zeros
+     */
     SparseMatrix(int num_rows, int num_cols, int nnz)
         : values_(static_cast<size_t>(nnz))
         , row_offsets_(static_cast<size_t>(num_rows + 1))
@@ -23,38 +68,96 @@ public:
         , num_rows_(num_rows)
         , num_cols_(num_cols) {}
 
+    /**
+     * @brief Create from dense matrix
+     * @param dense Dense matrix data (row-major)
+     * @param rows Number of rows
+     * @param cols Number of columns
+     * @param sparsity_threshold Treat elements with |value| <= threshold as zero
+     * @return Sparse matrix, or nullopt if fully dense
+     *
+     * @note Automatically copies data to GPU
+     * @note Time complexity: O(rows * cols)
+     */
     static std::optional<SparseMatrix> FromDense(const T* dense, int rows, int cols,
                                                   float sparsity_threshold = 0.0f);
 
+    /**
+     * @brief Create from host data
+     * @param values Non-zero values
+     * @param row_offsets Row offset array (size = rows + 1)
+     * @param col_indices Column indices
+     * @param num_rows Number of rows
+     * @param num_cols Number of columns
+     * @return Sparse matrix with copied data
+     */
     static SparseMatrix FromHostData(std::vector<T> values,
                                       std::vector<int> row_offsets,
                                       std::vector<int> col_indices,
                                       int num_rows, int num_cols);
 
+    /**
+     * @brief Create from edge list (for graphs)
+     * @param edges Vector of (src, dst) vertex pairs
+     * @param num_vertices Number of vertices
+     * @param weights Optional edge weights
+     * @return Sparse matrix in adjacency list format
+     */
     static SparseMatrix FromEdgeList(const std::vector<std::pair<int, int>>& edges,
                                       int num_vertices,
                                       const std::vector<T>* weights = nullptr);
 
+    /** @brief Get number of rows */
     int rows() const { return num_rows_; }
+
+    /** @brief Get number of columns */
     int cols() const { return num_cols_; }
+
+    /** @brief Get number of non-zeros */
     int nnz() const { return static_cast<int>(values_.size()); }
 
+    /** @brief Get mutable pointer to device values */
     T* values() { return values_.data(); }
+
+    /** @brief Get mutable pointer to device row offsets */
     int* row_offsets() { return row_offsets_.data(); }
+
+    /** @brief Get mutable pointer to device column indices */
     int* col_indices() { return col_indices_.data(); }
 
+    /** @brief Get const pointer to device values */
     const T* values() const { return values_.data(); }
+
+    /** @brief Get const pointer to device row offsets */
     const int* row_offsets() const { return row_offsets_.data(); }
+
+    /** @brief Get const pointer to device column indices */
     const int* col_indices() const { return col_indices_.data(); }
 
+    /** @brief Get reference to values buffer */
     cuda::memory::Buffer<T>& values_buffer() { return values_; }
+
+    /** @brief Get reference to row offsets buffer */
     cuda::memory::Buffer<int>& row_offsets_buffer() { return row_offsets_; }
+
+    /** @brief Get reference to column indices buffer */
     cuda::memory::Buffer<int>& col_indices_buffer() { return col_indices_; }
 
+    /** @brief Get const reference to values buffer */
     const cuda::memory::Buffer<T>& values_buffer() const { return values_; }
+
+    /** @brief Get const reference to row offsets buffer */
     const cuda::memory::Buffer<int>& row_offsets_buffer() const { return row_offsets_; }
+
+    /** @brief Get const reference to column indices buffer */
     const cuda::memory::Buffer<int>& col_indices_buffer() const { return col_indices_; }
 
+    /**
+     * @brief Copy matrix data back to host
+     * @param[out] out_values Output values vector
+     * @param[out] out_row_offsets Output row offsets vector
+     * @param[out] out_col_indices Output column indices vector
+     */
     void copy_to_host(std::vector<T>& out_values,
                       std::vector<int>& out_row_offsets,
                       std::vector<int>& out_col_indices) const;
@@ -146,21 +249,78 @@ void SparseMatrix<T>::copy_to_host(std::vector<T>& out_values,
     col_indices_.copy_to(out_col_indices.data(), static_cast<size_t>(nnz()));
 }
 
+/**
+ * @brief Sparse Matrix-Vector Product (y = A*x)
+ * @param A Sparse matrix
+ * @param x Input vector (device)
+ * @param[out] y Output vector (device)
+ * @tparam T Element type
+ * @tparam T Element type
+ * @note Synchronous operation
+ * @note Device memory: O(nnz + rows + cols) for temporaries
+ *
+ * @def spmv
+ * @ingroup SparseMatrix
+ */
 template<typename T>
 void spmv(const SparseMatrix<T>& A, const T* x, T* y);
 
+/**
+ * @brief Async Sparse Matrix-Vector Product
+ * @param A Sparse matrix
+ * @param x Input vector (device)
+ * @param[out] y Output vector (device)
+ * @param stream CUDA stream
+ * @tparam T Element type
+ *
+ * @def spmv_async
+ * @ingroup SparseMatrix
+ */
 template<typename T>
 void spmv_async(const SparseMatrix<T>& A, const T* x, T* y, cudaStream_t stream);
 
+/**
+ * @brief Sparse Matrix-Vector Product with transpose (y = A^T*x)
+ * @param A Sparse matrix
+ * @param x Input vector (device)
+ * @param[out] y Output vector (device)
+ * @tparam T Element type
+ *
+ * @def spmv_transpose
+ * @ingroup SparseMatrix
+ */
 template<typename T>
 void spmv_transpose(const SparseMatrix<T>& A, const T* x, T* y);
 
+/**
+ * @brief Async Sparse Matrix-Vector Product with transpose
+ * @param A Sparse matrix
+ * @param x Input vector (device)
+ * @param[out] y Output vector (device)
+ * @param stream CUDA stream
+ * @tparam T Element type
+ *
+ * @def spmv_transpose_async
+ * @ingroup SparseMatrix
+ */
 template<typename T>
 void spmv_transpose_async(const SparseMatrix<T>& A, const T* x, T* y, cudaStream_t stream);
 
+/** @cond */
 template<typename T>
 class SparseMatrixCSR;
+/** @endcond */
 
+/**
+ * @brief Convert legacy SparseMatrixCSR to unified SparseMatrix
+ * @param csr Legacy CSR matrix
+ * @return Unified SparseMatrix with GPU memory
+ * @tparam T Element type
+ *
+ * @def ToSparseMatrix
+ * @ingroup SparseMatrix
+ * @deprecated Use SparseMatrix directly
+ */
 template<typename T>
 SparseMatrix<T> ToSparseMatrix(const SparseMatrixCSR<T>& csr) {
     if (csr.nnz() == 0) {

@@ -1,3 +1,20 @@
+/**
+ * @file benchmark.hpp
+ * @brief Quantization performance benchmarking
+ * @defgroup quantize_benchmark Quantization Benchmarks
+ * @ingroup quantize
+ *
+ * Provides benchmarking utilities for quantization operations.
+ * Measures throughput, latency, and numerical accuracy.
+ *
+ * Example usage:
+ * @code
+ * QuantizeBenchmark bench;
+ * bench.run_int8_benchmark();
+ * bench.print_results();
+ * @endcode
+ */
+
 #include <cuda/quantize/qat.hpp>
 #include <cuda/quantize/calibrator.hpp>
 #include <cuda/quantize/int8_kernels.hpp>

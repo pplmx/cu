@@ -1,3 +1,24 @@
+/**
+ * @file message_passing.hpp
+ * @brief GNN message passing implementations
+ * @defgroup message_passing Message Passing
+ * @ingroup gnn
+ *
+ * Provides message passing primitives for Graph Neural Networks:
+ * - Generic message/aggregate functions
+ * - GCN aggregation and propagation
+ * - GraphSAGE-style operations
+ *
+ * Example usage:
+ * @code
+ * MessagePassing mp;
+ * mp.gcn_aggregate(graph, node_features, output);
+ * @endcode
+ *
+ * @see sampling.hpp For graph sampling
+ * @see attention.hpp For attention mechanisms
+ */
+
 #ifndef NOVA_CUDA_GNN_MESSAGE_PASSING_HPP
 #define NOVA_CUDA_GNN_MESSAGE_PASSING_HPP
 
@@ -9,24 +30,54 @@
 namespace nova {
 namespace gnn {
 
+/** @brief Message function: src_feat -> message */
 using MessageFunction = std::function<float(float src_feat, float dst_feat)>;
+
+/** @brief Aggregation function: messages -> aggregated value */
 using AggregateFunction = std::function<float(const std::vector<float>& messages)>;
 
+/**
+ * @brief Message passing GNN layer
+ * @class MessagePassing
+ * @ingroup message_passing
+ */
 class MessagePassing {
 public:
+    /** @brief Default constructor */
     MessagePassing() = default;
 
+    /** @brief Set custom message function */
     void set_message_function(MessageFunction fn) { message_fn_ = std::move(fn); }
+
+    /** @brief Set custom aggregate function */
     void set_aggregate_function(AggregateFunction fn) { aggregate_fn_ = std::move(fn); }
 
+    /**
+     * @brief Generic message passing forward
+     * @param graph Adjacency matrix
+     * @param node_features Input node features
+     * @param[out] output Aggregated features
+     */
     void forward(const sparse::SparseMatrixCSR<float>& graph,
                  const float* node_features,
                  float* output);
 
+    /**
+     * @brief GCN-style aggregation
+     * @param graph Adjacency matrix
+     * @param node_features Input node features
+     * @param[out] output Aggregated features
+     */
     void gcn_aggregate(const sparse::SparseMatrixCSR<float>& graph,
                        const float* node_features,
                        float* output);
 
+    /**
+     * @brief GCN-style propagation
+     * @param graph Adjacency matrix
+     * @param node_features Input node features
+     * @param[out] output Output features
+     */
     void gcn_propagate(const sparse::SparseMatrixCSR<float>& graph,
                        const float* node_features,
                        float* output,

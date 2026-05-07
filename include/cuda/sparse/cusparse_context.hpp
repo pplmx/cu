@@ -1,3 +1,15 @@
+/**
+ * @file cusparse_context.hpp
+ * @brief cuSPARSE context management
+ * @defgroup cusparse_context cuSPARSE Context
+ * @ingroup sparse
+ *
+ * Provides RAII wrapper for cuSPARSE library initialization and handle management.
+ *
+ * @note Automatically initializes cuSPARSE on construction
+ * @note Thread-safe handle management
+ */
+
 #pragma once
 
 #include <cusparse.h>
@@ -6,6 +18,13 @@
 #include <stdexcept>
 #include <string>
 
+/**
+ * @brief Check cuSPARSE call and throw on error
+ * @param expr cuSPARSE API call
+ *
+ * @def CUSPARSE_CHECK
+ * @ingroup cusparse_context
+ */
 #define CUSPARSE_CHECK(expr)                                                    \
     do {                                                                        \
         cusparseStatus_t status = (expr);                                       \
@@ -17,6 +36,11 @@
 
 namespace nova::sparse::detail {
 
+/**
+ * @brief RAII wrapper for cuSPARSE handle
+ * @class CusparseContext
+ * @ingroup cusparse_context
+ */
 class CusparseContext {
 public:
     static CusparseContext& get();

@@ -1,3 +1,16 @@
+/**
+ * @file attention.hpp
+ * @brief Graph Attention Networks
+ * @defgroup gnn_attention Graph Attention
+ * @ingroup gnn
+ *
+ * Provides Graph Attention Network (GAT) layer implementation.
+ * Uses multi-head attention for node feature aggregation.
+ *
+ * @note Time complexity: O(V * k^2 * F) where k=neighbors, F=features
+ * @see message_passing.hpp For base message passing
+ */
+
 #ifndef NOVA_CUDA_GNN_ATTENTION_HPP
 #define NOVA_CUDA_GNN_ATTENTION_HPP
 
@@ -8,17 +21,38 @@
 namespace nova {
 namespace gnn {
 
+/**
+ * @brief Graph Attention Network layer
+ * @class GraphAttention
+ * @ingroup gnn_attention
+ */
 class GraphAttention {
 public:
+    /**
+     * @brief Construct GAT layer
+     * @param in_features Input feature dimension
+     * @param out_features Output feature dimension
+     * @param num_heads Number of attention heads
+     */
     GraphAttention(int in_features, int out_features, int num_heads = 1)
         : in_features_(in_features)
         , out_features_(out_features)
         , num_heads_(num_heads) {}
 
+    /**
+     * @brief Forward pass
+     * @param graph Adjacency matrix
+     * @param node_features Input node features
+     * @param[out] output Output node features
+     */
     void forward(const sparse::SparseMatrixCSR<float>& graph,
                  const float* node_features,
                  float* output);
 
+    /**
+     * @brief Set attention weight parameters
+     * @param weights Attention weight vector
+     */
     void set_attention_weights(const std::vector<float>& weights);
 
 private:

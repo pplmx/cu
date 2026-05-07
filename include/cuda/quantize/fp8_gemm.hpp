@@ -1,3 +1,16 @@
+/**
+ * @file fp8_gemm.hpp
+ * @brief FP8 matrix multiplication
+ * @defgroup fp8_gemm FP8 GEMM
+ * @ingroup quantize
+ *
+ * Provides FP8 general matrix multiplication optimized for transformer workloads.
+ * Uses NVIDIA FP8 Tensor Cores for high throughput.
+ *
+ * @note Requires H100 or newer GPU
+ * @see fp8_types.hpp For FP8 type definitions
+ */
+
 #ifndef NOVA_CUDA_QUANTIZE_FP8_GEMM_HPP
 #define NOVA_CUDA_QUANTIZE_FP8_GEMM_HPP
 
@@ -7,11 +20,23 @@
 namespace nova {
 namespace quantize {
 
+/**
+ * @brief FP8 matrix multiplication interface
+ * @class FP8GEMM
+ * @ingroup fp8_gemm
+ */
 class FP8GEMM {
 public:
+    /**
+     * @brief Configuration for FP8 GEMM
+     * @struct Config
+     */
     struct Config {
+        /** @brief Scale for input A */
         float scale_a;
+        /** @brief Scale for input B */
         float scale_b;
+        /** @brief Scale for output */
         float scale_out;
         bool use_tensor_core;
         int num_streams;

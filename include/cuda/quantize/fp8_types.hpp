@@ -1,3 +1,18 @@
+/**
+ * @file fp8_types.hpp
+ * @brief FP8 floating point type definitions
+ * @defgroup fp8_types FP8 Types
+ * @ingroup quantize
+ *
+ * Provides IEEE-like FP8 type definitions:
+ * - FP8E4M3: 4-bit exponent, 3-bit mantissa (E4M3)
+ * - FP8E5M2: 5-bit exponent, 2-bit mantissa (E5M2)
+ *
+ * Compatible with NVIDIA H100/H200 FP8 support.
+ *
+ * @see fp8_kernels.hpp For conversion kernels
+ */
+
 #ifndef NOVA_CUDA_QUANTIZE_FP8_TYPES_HPP
 #define NOVA_CUDA_QUANTIZE_FP8_TYPES_HPP
 

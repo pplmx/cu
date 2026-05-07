@@ -1,3 +1,25 @@
+/**
+ * @file reordering.hpp
+ * @brief Sparse matrix bandwidth reduction reordering
+ * @defgroup reordering Matrix Reordering
+ * @ingroup sparse
+ *
+ * Provides bandwidth reduction reordering for sparse matrices,
+ * improving cache locality and solver convergence.
+ *
+ * Supported methods:
+ * - RCM (Reverse Cuthill-McKee) for symmetric matrices
+ *
+ * Example usage:
+ * @code
+ * RCMReorderer<float> reorderer;
+ * auto result = reorderer.reorder(A);
+ * std::cout << "Bandwidth reduced by " << result.bandwidth_reduction_ratio << "x\n";
+ * @endcode
+ *
+ * @see krylov.hpp For iterative solvers that benefit from reordering
+ */
+
 #pragma once
 
 #include "cuda/sparse/matrix.hpp"
@@ -9,24 +31,59 @@
 
 namespace nova::sparse {
 
+/**
+ * @brief Error for reordering operations
+ * @class ReorderingError
+ * @ingroup reordering
+ */
 class ReorderingError : public std::runtime_error {
 public:
+    /** @brief Construct with error message */
     explicit ReorderingError(const std::string& msg) : std::runtime_error(msg) {}
 };
 
+/**
+ * @brief Result of matrix reordering
+ * @struct ReorderingResult
+ * @ingroup reordering
+ */
 struct ReorderingResult {
+    /** @brief Permutation vector P such that P*A*P^T is reordered */
     std::vector<int> permutation;
+
+    /** @brief Inverse permutation P^-1 */
     std::vector<int> inverse_permutation;
+
+    /** @brief Original matrix bandwidth */
     int original_bandwidth = 0;
+
+    /** @brief Reordered matrix bandwidth */
     int reordered_bandwidth = 0;
+
+    /** @brief Ratio of original to reordered bandwidth */
     double bandwidth_reduction_ratio = 0.0;
 };
 
+/**
+ * @brief Reverse Cuthill-McKee bandwidth reduction
+ * @class RCMReorderer
+ * @tparam T Element type
+ * @ingroup reordering
+ *
+ * Reduces matrix bandwidth for better numerical stability and cache utilization.
+ */
 template<typename T>
 class RCMReorderer {
 public:
+    /** @brief Default constructor */
     RCMReorderer() = default;
 
+    /**
+     * @brief Reorder sparse matrix
+     * @param A Input sparse matrix
+     * @param in_place Whether to reorder in-place (not supported, ignored)
+     * @return Reordering result with permutation
+     */
     ReorderingResult reorder(const SparseMatrix<T>& A, bool in_place = false);
 
     SparseMatrix<T> apply_reordering(const SparseMatrix<T>& A, const ReorderingResult& result);

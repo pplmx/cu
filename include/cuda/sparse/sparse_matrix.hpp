@@ -1,3 +1,32 @@
+/**
+ * @file sparse_matrix.hpp
+ * @brief Sparse matrix storage formats for GPU computation
+ * @defgroup sparse_matrix Sparse Matrix Formats
+ * @ingroup sparse
+ *
+ * This module provides multiple sparse matrix storage formats optimized
+ * for different sparse matrix structures and GPU compute patterns.
+ *
+ * Supported formats:
+ * - CSR (Compressed Sparse Row) - General purpose, good for matrix-vector products
+ * - CSC (Compressed Sparse Column) - Good for matrix-vector products with column access
+ * - ELL (Ellpack-Itpack) - Fast for regular sparsity patterns
+ * - SELL (Sliced ELL) - Better load balancing for irregular patterns
+ *
+ * Example usage:
+ * @code
+ * // Convert dense to CSR
+ * auto csr = SparseMatrixCSR<float>::FromDense(dense_data, rows, cols);
+ *
+ * // Convert between formats
+ * auto csc = SparseMatrixCSC<float>::FromCSR(*csr);
+ * auto ell = SparseMatrixELL<float>::FromCSR(*csr);
+ * @endcode
+ *
+ * @see sparse_ops.hpp For sparse matrix operations
+ * @see solver_workspace.hpp For iterative solvers
+ */
+
 #ifndef NOVA_CUDA_SPARSE_MATRIX_HPP
 #define NOVA_CUDA_SPARSE_MATRIX_HPP
 
@@ -9,14 +38,44 @@
 namespace nova {
 namespace sparse {
 
+/**
+ * @brief Supported sparse matrix storage formats
+ * @enum SparseFormat
+ * @ingroup sparse_matrix
+ */
 enum class SparseFormat { CSR, CSC, ELL, SELL, HYB };
 
+/**
+ * @brief Compressed Sparse Row matrix format
+ * @class SparseMatrixCSR
+ * @ingroup sparse_matrix
+ *
+ * Stores sparse matrix in CSR format:
+ * - values: Non-zero elements in row-major order
+ * - row_offsets: Starting index of each row in values (size = rows + 1)
+ * - col_indices: Column indices for each value (size = nnz)
+ *
+ * @note Time complexity: O(rows + cols + nnz) for construction
+ * @note Space: O(nnz + rows) for typical sparse matrices
+ *
+ * @deprecated Use cuda::sparse::SparseMatrix<T> instead via ToSparseMatrix()
+ * @see SparseMatrix For the new unified sparse matrix type
+ */
 template<typename T>
 class [[deprecated("Use cuda::sparse::SparseMatrix<T> instead")]]
 SparseMatrixCSR {
 public:
+    /** @brief Default constructor creates empty matrix */
     SparseMatrixCSR() = default;
 
+    /**
+     * @brief Construct CSR matrix from raw data
+     * @param values Non-zero values in row-major order
+     * @param row_offsets Row offset array (size = rows + 1)
+     * @param col_indices Column indices (size = values.size())
+     * @param num_rows Number of rows
+     * @param num_cols Number of columns
+     */
     SparseMatrixCSR(std::vector<T> values, std::vector<int> row_offsets,
                     std::vector<int> col_indices, int num_rows, int num_cols)
         : values_(std::move(values))
@@ -25,19 +84,55 @@ public:
         , num_rows_(num_rows)
         , num_cols_(num_cols) {}
 
+    /**
+     * @brief Create CSR matrix from dense matrix
+     * @param dense Pointer to dense matrix data (row-major)
+     * @param rows Number of rows
+     * @param cols Number of columns
+     * @param sparsity_threshold Elements with |value| <= threshold treated as zero
+     * @return CSR matrix, or nullopt if fully dense (nnz == 0)
+     * @tparam T Numeric type (float, double, etc.)
+     *
+     * @note Time complexity: O(rows * cols)
+     * @note Allocates O(nnz) temporary storage
+     */
     static std::optional<SparseMatrixCSR<T>> FromDense(const T* dense, int rows, int cols,
                                                        float sparsity_threshold = 0.0f);
 
+    /**
+     * @brief Get number of rows
+     * @return Row count
+     */
     int num_rows() const { return num_rows_; }
+
+    /**
+     * @brief Get number of columns
+     * @return Column count
+     */
     int num_cols() const { return num_cols_; }
+
+    /**
+     * @brief Get number of non-zeros
+     * @return NNZ count
+     */
     int nnz() const { return static_cast<int>(values_.size()); }
 
+    /** @brief Get const pointer to values array */
     const T* values() const { return values_.data(); }
+
+    /** @brief Get const pointer to row offset array */
     const int* row_offsets() const { return row_offsets_.data(); }
+
+    /** @brief Get const pointer to column indices array */
     const int* col_indices() const { return col_indices_.data(); }
 
+    /** @brief Get mutable pointer to values array */
     T* values() { return values_.data(); }
+
+    /** @brief Get mutable pointer to row offset array */
     int* row_offsets() { return row_offsets_.data(); }
+
+    /** @brief Get mutable pointer to column indices array */
     int* col_indices() { return col_indices_.data(); }
 
 private:
@@ -48,11 +143,33 @@ private:
     int num_cols_ = 0;
 };
 
+/**
+ * @brief Compressed Sparse Column matrix format
+ * @class SparseMatrixCSC
+ * @ingroup sparse_matrix
+ *
+ * Stores sparse matrix in CSC format:
+ * - values: Non-zero elements in column-major order
+ * - col_offsets: Starting index of each column in values (size = cols + 1)
+ * - row_indices: Row indices for each value (size = nnz)
+ *
+ * @note Good for operations that access columns efficiently
+ * @see SparseMatrixCSR For row-oriented access patterns
+ */
 template<typename T>
 class SparseMatrixCSC {
 public:
+    /** @brief Default constructor creates empty matrix */
     SparseMatrixCSC() = default;
 
+    /**
+     * @brief Construct CSC matrix from raw data
+     * @param values Non-zero values in column-major order
+     * @param col_offsets Column offset array (size = cols + 1)
+     * @param row_indices Row indices (size = values.size())
+     * @param num_rows Number of rows
+     * @param num_cols Number of columns
+     */
     SparseMatrixCSC(std::vector<T> values, std::vector<int> col_offsets,
                     std::vector<int> row_indices, int num_rows, int num_cols)
         : values_(std::move(values))
@@ -61,14 +178,31 @@ public:
         , num_rows_(num_rows)
         , num_cols_(num_cols) {}
 
+    /** @brief Get number of rows */
     int num_rows() const { return num_rows_; }
+
+    /** @brief Get number of columns */
     int num_cols() const { return num_cols_; }
+
+    /** @brief Get number of non-zeros */
     int nnz() const { return static_cast<int>(values_.size()); }
 
+    /** @brief Get const pointer to values array */
     const T* values() const { return values_.data(); }
+
+    /** @brief Get const pointer to column offset array */
     const int* col_offsets() const { return col_offsets_.data(); }
+
+    /** @brief Get const pointer to row indices array */
     const int* row_indices() const { return row_indices_.data(); }
 
+    /**
+     * @brief Create CSC matrix from CSR matrix
+     * @param csr Source CSR matrix
+     * @return CSC matrix representation
+     *
+     * @note Time complexity: O(rows + cols + nnz)
+     */
     static SparseMatrixCSC<T> FromCSR(const SparseMatrixCSR<T>& csr);
 
 private:
@@ -144,11 +278,34 @@ SparseMatrixCSC<T> SparseMatrixCSC<T>::FromCSR(const SparseMatrixCSR<T>& csr) {
                               std::move(row_indices), rows, cols);
 }
 
+/**
+ * @brief ELL (Ellpack-Itpack) sparse matrix format
+ * @class SparseMatrixELL
+ * @ingroup sparse_matrix
+ *
+ * Stores sparse matrix with fixed-width columns per row (padded to max_nnz).
+ * - values: Padded values array (rows * max_nnz_per_row)
+ * - col_indices: Padded column indices (-1 for padding)
+ * - row_offsets: Starting index for each row (computed: i * max_nnz_per_row)
+ *
+ * @note Fast for GPUs due to regular memory access patterns
+ * @note Wastes space when max_nnz_per_row is much larger than average
+ * @note Time complexity: O(rows * max_nnz_per_row) for SpMV
+ */
 template<typename T>
 class SparseMatrixELL {
 public:
+    /** @brief Default constructor creates empty matrix */
     SparseMatrixELL() = default;
 
+    /**
+     * @brief Construct ELL matrix from raw data
+     * @param values Padded values (rows * max_nnz_per_row)
+     * @param col_indices Padded column indices (-1 for padding)
+     * @param num_rows Number of rows
+     * @param num_cols Number of columns
+     * @param max_nnz_per_row Maximum non-zeros per row
+     */
     SparseMatrixELL(std::vector<T> values, std::vector<int> col_indices,
                     int num_rows, int num_cols, int max_nnz_per_row)
         : values_(std::move(values))
@@ -162,19 +319,44 @@ public:
         }
     }
 
+    /**
+     * @brief Create ELL matrix from CSR matrix
+     * @param csr Source CSR matrix
+     * @return ELL matrix representation
+     *
+     * @note Time complexity: O(rows + cols + nnz)
+     * @note Space: O(rows * max_nnz_per_row)
+     */
     static SparseMatrixELL<T> FromCSR(const SparseMatrixCSR<T>& csr);
 
+    /** @brief Get number of rows */
     int num_rows() const { return num_rows_; }
+
+    /** @brief Get number of columns */
     int num_cols() const { return num_cols_; }
+
+    /** @brief Get actual number of non-zeros (excluding padding) */
     int nnz() const { return static_cast<int>(values_.size()) - (num_rows_ * max_nnz_per_row_ - count_nnz()); }
+
+    /** @brief Get total padded storage (including zeros) */
     int padded_nnz() const { return num_rows_ * max_nnz_per_row_; }
+
+    /** @brief Get maximum non-zeros per row (padding width) */
     int max_nnz_per_row() const { return max_nnz_per_row_; }
 
+    /** @brief Get const pointer to values array */
     const T* values() const { return values_.data(); }
+
+    /** @brief Get const pointer to column indices array */
     const int* col_indices() const { return col_indices_.data(); }
+
+    /** @brief Get const pointer to row offset array */
     const int* row_offsets() const { return row_offsets_.data(); }
 
+    /** @brief Get mutable pointer to values array */
     T* values() { return values_.data(); }
+
+    /** @brief Get mutable pointer to column indices array */
     int* col_indices() { return col_indices_.data(); }
 
 private:
@@ -188,11 +370,33 @@ private:
     int max_nnz_per_row_ = 0;
 };
 
+/**
+ * @brief Sliced ELL (SELL) sparse matrix format
+ * @class SparseMatrixSELL
+ * @ingroup sparse_matrix
+ *
+ * Variant of ELL that slices rows into groups for better load balancing.
+ * Each slice has its own max_nnz, reducing padding waste.
+ *
+ * @note Better for irregular sparsity patterns than standard ELL
+ * @note Slice height controls tradeoff between padding and launch overhead
+ * @see SparseMatrixELL For simpler regular-sparsity use cases
+ */
 template<typename T>
 class SparseMatrixSELL {
 public:
+    /** @brief Default constructor creates empty matrix */
     SparseMatrixSELL() = default;
 
+    /**
+     * @brief Construct SELL matrix from raw data
+     * @param values Padded values array
+     * @param col_indices Padded column indices (-1 for padding)
+     * @param slice_ptr Slice boundaries (size = num_slices + 1)
+     * @param num_rows Number of rows
+     * @param num_cols Number of columns
+     * @param slice_height Number of rows per slice
+     */
     SparseMatrixSELL(std::vector<T> values, std::vector<int> col_indices,
                      std::vector<int> slice_ptr, int num_rows, int num_cols, int slice_height)
         : values_(std::move(values))
@@ -202,19 +406,45 @@ public:
         , num_cols_(num_cols)
         , slice_height_(slice_height) {}
 
+    /**
+     * @brief Create SELL matrix from CSR matrix
+     * @param csr Source CSR matrix
+     * @param slice_height Rows per slice (default: 32)
+     * @return SELL matrix representation
+     *
+     * @note Time complexity: O(rows + cols + nnz)
+     * @note slice_height=32 is typically optimal for CUDA
+     */
     static SparseMatrixSELL<T> FromCSR(const SparseMatrixCSR<T>& csr, int slice_height = 32);
 
+    /** @brief Get number of rows */
     int num_rows() const { return num_rows_; }
+
+    /** @brief Get number of columns */
     int num_cols() const { return num_cols_; }
+
+    /** @brief Get actual number of non-zeros */
     int nnz() const { return count_nnz(); }
+
+    /** @brief Get total padded storage */
     int padded_nnz() const { return static_cast<int>(values_.size()); }
+
+    /** @brief Get slice height */
     int slice_height() const { return slice_height_; }
 
+    /** @brief Get const pointer to values array */
     const T* values() const { return values_.data(); }
+
+    /** @brief Get const pointer to column indices array */
     const int* col_indices() const { return col_indices_.data(); }
+
+    /** @brief Get const pointer to slice pointer array */
     const int* slice_ptr() const { return slice_ptr_.data(); }
 
+    /** @brief Get mutable pointer to values array */
     T* values() { return values_.data(); }
+
+    /** @brief Get mutable pointer to column indices array */
     int* col_indices() { return col_indices_.data(); }
 
 private:
@@ -337,9 +567,26 @@ SparseMatrixSELL<T> SparseMatrixSELL<T>::FromCSR(const SparseMatrixCSR<T>& csr, 
                                 std::move(slice_ptr), num_rows, num_cols, slice_height);
 }
 
+/**
+ * @brief Forward declaration of unified sparse matrix type
+ * @class SparseMatrix
+ * @tparam T Element type
+ * @ingroup sparse
+ *
+ * @see ToSparseMatrix() For conversion from legacy CSR
+ */
 template<typename T>
 class SparseMatrix;
 
+/**
+ * @brief Convert legacy SparseMatrixCSR to new unified SparseMatrix
+ * @param csr Legacy CSR matrix
+ * @return Unified sparse matrix representation
+ * @tparam T Element type
+ * @ingroup sparse
+ *
+ * @deprecated Use cuda::sparse::SparseMatrix<T> directly
+ */
 template<typename T>
 SparseMatrix<T> ToSparseMatrix(const SparseMatrixCSR<T>& csr);
 
