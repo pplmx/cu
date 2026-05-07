@@ -1,117 +1,116 @@
-# v2.13 Transformer Optimization — Requirements
+# Requirements: Nova CUDA Library Enhancement
 
-**Milestone:** v2.13 Transformer Optimization
-**Created:** 2026-05-05
-**Last Updated:** 2026-05-05
+**Defined:** 2026-05-07
+**Core Value:** A reliable, high-performance CUDA compute library that can be trusted in production environments, with comprehensive algorithms for scientific computing, image processing, and emerging workloads.
 
----
+## v1 Requirements
 
-## Speculative Decoding
+Requirements for v2.14 Documentation Quality milestone. Each maps to roadmap phases.
 
-### Core Infrastructure
+### API Documentation
 
-- [ ] **SPEC-01**: User can configure speculative decoding via `SpeculativeDecodingConfig` with draft depth (1-8 tokens), acceptance threshold, and draft model selection
-- [ ] **SPEC-02**: Draft model can generate K candidate tokens in a single forward pass using existing FlashAttention infrastructure
-- [ ] **SPEC-03**: Target model verifies ALL draft tokens in parallel using tree attention kernels with proper masking
-- [ ] **SPEC-04**: User can perform rejection sampling with correct probability comparison (`fminf(1.0f, target_prob / draft_prob)`)
-- [ ] **SPEC-05**: User can isolate KV cache per speculation via snapshot/rollback mechanism
-- [ ] **SPEC-06**: User can track log probabilities for draft tokens via LogProbTracker for KL divergence verification
+- [ ] **APIDOC-01**: All public headers have Doxygen @brief descriptions
+- [ ] **APIDOC-02**: All public functions have @param and @return documentation
+- [ ] **APIDOC-03**: Complex types have @tparam documentation
+- [ ] **APIDOC-04**: Doxygen groups (@defgroup) organize headers by module
+- [ ] **APIDOC-05**: Deprecation notices use @deprecated with migration guidance
+- [ ] **APIDOC-06**: Examples in @code/@endcode blocks for key APIs
+- [ ] **APIDOC-07**: Cross-references (@see) link related functions
+- [ ] **APIDOC-08**: Performance notes (@note) for performance-critical APIs
 
-### Advanced Features
+### Code Comments
 
-- [ ] **SPEC-07**: User can enable EAGLE3/SnapKV tree-based decoding for higher acceptance rates
-- [ ] **SPEC-08**: User can overlap draft generation with verification using async CUDA streams
-- [ ] **SPEC-09**: User can configure guided decoding with xGrammar integration compatible with speculative decoding
+- [ ] **COMMENT-01**: All memory layer code (cuda/memory/) has inline comments
+- [ ] **COMMENT-02**: All device layer code (cuda/device/) has inline comments
+- [ ] **COMMENT-03**: All algorithm layer code (cuda/algo/) has inline comments
+- [ ] **COMMENT-04**: All API layer code (cuda/api/) has inline comments
+- [ ] **COMMENT-05**: All observability code (cuda/observability/) has inline comments
+- [ ] **COMMENT-06**: Complex algorithm logic has explanatory comments
+- [ ] **COMMENT-07**: Error handling paths are documented
+- [ ] **COMMENT-08**: Thread-safety guarantees are documented
 
----
+### Error/Log Messages
 
-## Beam Search
+- [ ] **LOG-01**: All error messages include actionable guidance
+- [ ] **LOG-02**: Structured logging with severity levels (ERROR, WARN, INFO, DEBUG, TRACE)
+- [ ] **LOG-03**: Error messages include relevant context (device ID, stream, operation)
+- [ ] **LOG-04**: Log macros support compile-time disable
+- [ ] **LOG-05**: Performance-critical paths have DEBUG/TRACE options
+- [ ] **LOG-06**: Error categorization enables programmatic handling
+- [ ] **LOG-07**: NVTX annotations use descriptive range names
 
-### Core Infrastructure
+### README/docs
 
-- [ ] **BEAM-01**: User can create `BeamSearchManager` managing N beam hypotheses (1-8 beams)
-- [ ] **BEAM-02**: User can run beam search with cumulative log probability scoring and length normalization
-- [ ] **BEAM-03**: User can allocate KV cache blocks per beam hypothesis with reference-counted prefix sharing
-- [ ] **BEAM-04**: User can perform batch KV operations across multiple beam hypotheses efficiently
-- [ ] **BEAM-05**: User can configure TopK/TopP nucleus sampling with beam search integration
+- [ ] **DOCS-01**: README.md reflects current v2.x capabilities
+- [ ] **DOCS-02**: CHANGELOG.md is updated for all v2.x milestones
+- [ ] **DOCS-03**: Architecture overview documents five-layer design
+- [ ] **DOCS-04**: Sparse matrix programming guide added (docs/SPARSE.md)
+- [ ] **DOCS-05**: Inference optimization guide added (docs/INFERENCE.md)
+- [ ] **DOCS-06**: Quantization guide added (docs/QUANTIZATION.md)
+- [ ] **DOCS-07**: Performance tuning guide updated with new tooling
+- [ ] **DOCS-08**: Contributing guide has documentation standards section
 
-### Advanced Features
+## v2 Requirements
 
-- [ ] **BEAM-06**: User can use score rebase to prevent underflow at long sequences (>2000 tokens)
-- [ ] **BEAM-07**: User can combine beam search with speculative decoding in the same inference loop
-- [ ] **BEAM-08**: User can export beam search traces with token scores for debugging/analysis
+### API Documentation
 
----
+- **APIDOC-09**: Generate and host API reference HTML (CI integration)
+- **APIDOC-10**: Add usage examples to Doxygen output
 
-## KV Cache Improvements
+### Code Comments
 
-### Core Infrastructure
-
-- [ ] **KV-01**: User can configure `StreamingCacheManager` with async prefetch and eviction policies
-- [ ] **KV-02**: User can enable cross-sequence prefix caching with block-level hash lookup
-- [ ] **KV-03**: User can separate attention sink storage from LRU cache for importance-based eviction
-- [ ] **KV-04**: User can monitor PagedAttention fragmentation ratio and trigger compaction below 30% threshold
-
-### Advanced Features
-
-- [ ] **KV-05**: User can use dynamic block sizing (16/32/64 tokens) based on sequence access patterns
-- [ ] **KV-06**: User can implement chunked prefill for long prompts (>16K tokens) when memory-constrained
-- [ ] **KV-07**: User can configure L2 cache persistence hints for iterative algorithms
-- [ ] **KV-08**: User can enable persistent KV cache variants for CUDA Graph capture
-
----
+- **COMMENT-09**: Header-only inline documentation for templates
 
 ## Out of Scope
 
-| Feature | Reason for Exclusion |
-|---------|---------------------|
-| Multi-model speculative decoding | Model coordination complexity; hardware heterogeneity edge case |
-| NVFP4 KV quantization | Quality vs memory tradeoff unvalidated; requires profiling |
-| Multi-tier KV cache (GPU/CPU/NIC) | Architecture documented but implementation complexity too high for this milestone |
-| Disk-based persistent KV cache | Latency and consistency issues; streaming context is preferred |
-| Beam width > 8 | Memory O(N*seq_len) with diminishing returns above 4-8 |
-
----
-
-## Future Requirements (Deferred)
-
-- Multi-model speculative decoding
-- KV cache compression (NVFP4)
-- Multi-tier KV cache (GPU/CPU/NIC)
-- Disaggregated serving (KV transfer between prefill/decode nodes)
-
----
+| Feature | Reason |
+|---------|--------|
+| Translation/localization | English documentation sufficient |
+| Video tutorials | Focus on written documentation |
+| Interactive documentation | Static Doxygen output for now |
+| API versioning documentation | Future consideration |
 
 ## Traceability
 
-| REQ-ID | Phase | Status |
-|--------|-------|--------|
-| SPEC-01 | Phase 105 | Pending |
-| SPEC-02 | Phase 105 | Pending |
-| SPEC-03 | Phase 105 | Pending |
-| SPEC-04 | Phase 105 | Pending |
-| SPEC-05 | Phase 105 | Pending |
-| SPEC-06 | Phase 105 | Pending |
-| SPEC-07 | Phase 105 | Pending |
-| SPEC-08 | Phase 105 | Pending |
-| SPEC-09 | Phase 105 | Pending |
-| BEAM-01 | Phase 104 | Pending |
-| BEAM-02 | Phase 104 | Pending |
-| BEAM-03 | Phase 104 | Pending |
-| BEAM-04 | Phase 104 | Pending |
-| BEAM-05 | Phase 104 | Pending |
-| BEAM-06 | Phase 104 | Pending |
-| BEAM-07 | Phase 106 | Pending |
-| BEAM-08 | Phase 104 | Pending |
-| KV-01 | Phase 103 | Pending |
-| KV-02 | Phase 103 | Pending |
-| KV-03 | Phase 103 | Pending |
-| KV-04 | Phase 103 | Pending |
-| KV-05 | Phase 106 | Pending |
-| KV-06 | Phase 106 | Pending |
-| KV-07 | Phase 103 | Pending |
-| KV-08 | Phase 103 | Pending |
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| APIDOC-01 | — | Pending |
+| APIDOC-02 | — | Pending |
+| APIDOC-03 | — | Pending |
+| APIDOC-04 | — | Pending |
+| APIDOC-05 | — | Pending |
+| APIDOC-06 | — | Pending |
+| APIDOC-07 | — | Pending |
+| APIDOC-08 | — | Pending |
+| COMMENT-01 | — | Pending |
+| COMMENT-02 | — | Pending |
+| COMMENT-03 | — | Pending |
+| COMMENT-04 | — | Pending |
+| COMMENT-05 | — | Pending |
+| COMMENT-06 | — | Pending |
+| COMMENT-07 | — | Pending |
+| COMMENT-08 | — | Pending |
+| LOG-01 | — | Pending |
+| LOG-02 | — | Pending |
+| LOG-03 | — | Pending |
+| LOG-04 | — | Pending |
+| LOG-05 | — | Pending |
+| LOG-06 | — | Pending |
+| LOG-07 | — | Pending |
+| DOCS-01 | — | Pending |
+| DOCS-02 | — | Pending |
+| DOCS-03 | — | Pending |
+| DOCS-04 | — | Pending |
+| DOCS-05 | — | Pending |
+| DOCS-06 | — | Pending |
+| DOCS-07 | — | Pending |
+| DOCS-08 | — | Pending |
+
+**Coverage:**
+- v1 requirements: 31 total
+- Mapped to phases: 0
+- Unmapped: 31 ⚠️
 
 ---
-
-*Requirements defined: 2026-05-05*
+*Requirements defined: 2026-05-07*
+*Last updated: 2026-05-07 after initial definition*
