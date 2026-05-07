@@ -69,8 +69,8 @@ __global__ void fp8_gemm_naive_kernel(
     int m, int k, int n,
     float scale_a, float scale_b, float scale_out) {
 
-    const int row = blockIdx.x * blockDim.x + threadIdx.x;
-    const int col = blockIdx.y * blockDim.y + threadIdx.y;
+    const int row = blockIdx.y * blockDim.y + threadIdx.y;
+    const int col = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (row >= m || col >= n) return;
 

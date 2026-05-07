@@ -33,14 +33,14 @@ BenchmarkResult QuantizationBenchmark::benchmark_fp8_quantization(
     cudaMemcpy(d_data, data.data(), data.size() * sizeof(float), cudaMemcpyHostToDevice);
 
     for (int i = 0; i < config_.warmup_runs; ++i) {
-        nova::quantize::cuda::quantize_f32_to_fp8e4m3(d_data, quantized.data(), data.size(), stream_);
+        nova::quantize::cuda::quantize_f32_to_fp8e4m3(d_data, reinterpret_cast<FP8E4M3*>(d_quantized), data.size(), stream_);
     }
     cudaStreamSynchronize(stream_);
 
     auto start = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < config_.benchmark_runs; ++i) {
-        nova::quantize::cuda::quantize_f32_to_fp8e4m3(d_data, quantized.data(), data.size(), stream_);
+        nova::quantize::cuda::quantize_f32_to_fp8e4m3(d_data, reinterpret_cast<FP8E4M3*>(d_quantized), data.size(), stream_);
     }
     cudaStreamSynchronize(stream_);
 
@@ -50,6 +50,8 @@ BenchmarkResult QuantizationBenchmark::benchmark_fp8_quantization(
     float total_bytes = static_cast<float>(data.size()) * sizeof(float) * config_.benchmark_runs;
     result.throughput_gbps = total_bytes / duration.count();
     result.latency_us = static_cast<float>(duration.count()) / config_.benchmark_runs;
+
+    cudaMemcpy(quantized.data(), d_quantized, data.size() * sizeof(FP8E4M3), cudaMemcpyDeviceToHost);
 
     std::vector<float> recovered(data.size());
     for (size_t i = 0; i < data.size(); ++i) {
@@ -61,6 +63,7 @@ BenchmarkResult QuantizationBenchmark::benchmark_fp8_quantization(
     cudaFree(d_data);
     cudaFree(d_quantized);
 
+    results_.push_back(result);
     return result;
 }
 
@@ -103,6 +106,7 @@ BenchmarkResult QuantizationBenchmark::benchmark_int8_quantization(
     cudaFree(d_data);
     cudaFree(d_quantized);
 
+    results_.push_back(result);
     return result;
 }
 

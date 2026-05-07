@@ -277,13 +277,31 @@ void build_histogram(
     int num_bins,
     cudaStream_t stream) {
 
+    bool data_needs_copy = false;
+    cudaPointerAttributes attr;
+    if (cudaPointerGetAttributes(&attr, data) != cudaSuccess ||
+        attr.type == cudaMemoryTypeUnregistered ||
+        attr.type == cudaMemoryTypeHost) {
+        data_needs_copy = true;
+    }
+
+    const float* d_data = data;
+    float* d_data_alloc = nullptr;
+    if (data_needs_copy) {
+        cudaMalloc(&d_data_alloc, n * sizeof(float));
+        cudaMemcpy(d_data_alloc, data, n * sizeof(float), cudaMemcpyHostToDevice);
+        d_data = d_data_alloc;
+    }
+
     cudaMemset(histogram, 0, num_bins * sizeof(uint32_t));
 
     constexpr size_t block_size = 256;
     size_t grid_size = (n + block_size - 1) / block_size;
 
     detail::build_histogram_kernel<<<grid_size, block_size, 0, stream>>>(
-        data, histogram, n, min_val, max_val, num_bins);
+        d_data, histogram, n, min_val, max_val, num_bins);
+
+    if (d_data_alloc) cudaFree(d_data_alloc);
 
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
