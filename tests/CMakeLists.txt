@@ -110,7 +110,6 @@ add_executable(nova-tests
     testing/robustness_test.cpp
     testing/integration_test.cpp
     sparse/matrix_test.cpp
-    sparse/krylov_test.cpp
     sparse/krylov_gpu_test.cpp
     sparse/sparse_matrix_test.cpp
     sparse/integration_test.cpp

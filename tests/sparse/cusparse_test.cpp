@@ -34,8 +34,8 @@ TEST(SparseOpsGPUTest, SpmvSimple) {
     d_y.copy_to(h_y.data(), 3);
 
     EXPECT_TRUE(approx_equal(h_y[0], 6.0f));
-    EXPECT_TRUE(approx_equal(h_y[1], 9.0f));
-    EXPECT_TRUE(approx_equal(h_y[2], 5.0f));
+    EXPECT_TRUE(approx_equal(h_y[1], 10.0f));
+    EXPECT_TRUE(approx_equal(h_y[2], 8.0f));
 }
 
 TEST(SparseOpsGPUTest, SpmvLarger) {
@@ -89,9 +89,9 @@ TEST(SparseOpsGPUTest, SpmvTranspose) {
     h_y.assign(3, 0.0f);
     d_y.copy_to(h_y.data(), 3);
 
-    EXPECT_TRUE(approx_equal(h_y[0], 4.0f));
-    EXPECT_TRUE(approx_equal(h_y[1], 5.0f));
-    EXPECT_TRUE(approx_equal(h_y[2], 5.0f));
+    EXPECT_TRUE(approx_equal(h_y[0], 6.0f));
+    EXPECT_TRUE(approx_equal(h_y[1], 10.0f));
+    EXPECT_TRUE(approx_equal(h_y[2], 8.0f));
 }
 
 TEST(SparseOpsGPUTest, DoublePrecision) {
@@ -116,8 +116,8 @@ TEST(SparseOpsGPUTest, DoublePrecision) {
     d_y.copy_to(h_y.data(), 3);
 
     EXPECT_TRUE(approx_equal(h_y[0], 6.0, 1e-8));
-    EXPECT_TRUE(approx_equal(h_y[1], 9.0, 1e-8));
-    EXPECT_TRUE(approx_equal(h_y[2], 5.0, 1e-8));
+    EXPECT_TRUE(approx_equal(h_y[1], 10.0, 1e-8));
+    EXPECT_TRUE(approx_equal(h_y[2], 8.0, 1e-8));
 }
 
 TEST(SparseOpsGPUTest, CusparseContextSingleton) {

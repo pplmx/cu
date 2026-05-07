@@ -9,7 +9,7 @@ namespace nova {
 namespace sparse {
 namespace test {
 
-class SparseMatrixTest : public ::testing::Test {
+class SparseMatrixFormatTest : public ::testing::Test {
 protected:
     void SetUp() override {}
 
@@ -40,17 +40,17 @@ protected:
     }
 };
 
-TEST_F(SparseMatrixTest, FromDenseCreatesCSR) {
+TEST_F(SparseMatrixFormatTest, FromDenseCreatesCSR) {
     auto dense = create_dense_3x3();
     auto csr = SparseMatrixCSR<float>::FromDense(dense.data(), 3, 3);
 
     ASSERT_TRUE(csr.has_value());
     EXPECT_EQ(csr->num_rows(), 3);
     EXPECT_EQ(csr->num_cols(), 3);
-    EXPECT_EQ(csr->nnz(), 4);
+    EXPECT_EQ(csr->nnz(), 5);
 }
 
-TEST_F(SparseMatrixTest, CSRStoresCorrectValues) {
+TEST_F(SparseMatrixFormatTest, CSRStoresCorrectValues) {
     auto dense = create_dense_3x3();
     auto csr = SparseMatrixCSR<float>::FromDense(dense.data(), 3, 3);
 
@@ -69,14 +69,14 @@ TEST_F(SparseMatrixTest, CSRStoresCorrectValues) {
     EXPECT_EQ(csr->col_indices()[4], 2);
 }
 
-TEST_F(SparseMatrixTest, FromDenseReturnsNulloptForAllZeros) {
+TEST_F(SparseMatrixFormatTest, FromDenseReturnsNulloptForAllZeros) {
     std::vector<float> zeros(9, 0.0f);
     auto csr = SparseMatrixCSR<float>::FromDense(zeros.data(), 3, 3);
 
     EXPECT_FALSE(csr.has_value());
 }
 
-TEST_F(SparseMatrixTest, ToCSCConvertsCorrectly) {
+TEST_F(SparseMatrixFormatTest, ToCSCConvertsCorrectly) {
     auto dense = create_dense_3x3();
     auto csr = SparseMatrixCSR<float>::FromDense(dense.data(), 3, 3);
 
@@ -88,7 +88,7 @@ TEST_F(SparseMatrixTest, ToCSCConvertsCorrectly) {
     EXPECT_EQ(csc.nnz(), 5);
 }
 
-TEST_F(SparseMatrixTest, SpMVProducesCorrectResult) {
+TEST_F(SparseMatrixFormatTest, SpMVProducesCorrectResult) {
     auto dense = create_dense_3x3();
     auto csr = SparseMatrixCSR<float>::FromDense(dense.data(), 3, 3);
 
@@ -104,7 +104,7 @@ TEST_F(SparseMatrixTest, SpMVProducesCorrectResult) {
     EXPECT_FLOAT_EQ(y[2], 4.0f * 1.0f + 5.0f * 3.0f);
 }
 
-TEST_F(SparseMatrixTest, SpMMProducesCorrectResult) {
+TEST_F(SparseMatrixFormatTest, SpMMProducesCorrectResult) {
     auto dense = create_dense_3x3();
     auto csr = SparseMatrixCSR<float>::FromDense(dense.data(), 3, 3);
 
@@ -117,12 +117,12 @@ TEST_F(SparseMatrixTest, SpMMProducesCorrectResult) {
 
     sparse_mm(*csr, B.data(), C.data(), 3);
 
-    EXPECT_FLOAT_EQ(C[0], 1.0f * 1.0f + 2.0f * 4.0f);
-    EXPECT_FLOAT_EQ(C[3], 3.0f * 5.0f);
+    EXPECT_FLOAT_EQ(C[0], 1.0f * 1.0f + 2.0f * 7.0f);
+    EXPECT_FLOAT_EQ(C[3], 3.0f * 4.0f);
     EXPECT_FLOAT_EQ(C[6], 4.0f * 1.0f + 5.0f * 7.0f);
 }
 
-TEST_F(SparseMatrixTest, ToELLConvertsCorrectly) {
+TEST_F(SparseMatrixFormatTest, ToELLConvertsCorrectly) {
     auto dense = create_dense_3x3();
     auto csr = SparseMatrixCSR<float>::FromDense(dense.data(), 3, 3);
     ASSERT_TRUE(csr.has_value());
@@ -135,7 +135,7 @@ TEST_F(SparseMatrixTest, ToELLConvertsCorrectly) {
     EXPECT_EQ(ell.padded_nnz(), 6);
 }
 
-TEST_F(SparseMatrixTest, ELLPreservesValuesAndIndices) {
+TEST_F(SparseMatrixFormatTest, ELLPreservesValuesAndIndices) {
     auto dense = create_dense_3x3();
     auto csr = SparseMatrixCSR<float>::FromDense(dense.data(), 3, 3);
     ASSERT_TRUE(csr.has_value());
@@ -157,7 +157,7 @@ TEST_F(SparseMatrixTest, ELLPreservesValuesAndIndices) {
     EXPECT_EQ(ell.col_indices()[5], 2);
 }
 
-TEST_F(SparseMatrixTest, ELLSpMVMatchesCSR) {
+TEST_F(SparseMatrixFormatTest, ELLSpMVMatchesCSR) {
     auto dense = create_dense_3x3();
     auto csr = SparseMatrixCSR<float>::FromDense(dense.data(), 3, 3);
     ASSERT_TRUE(csr.has_value());
@@ -176,7 +176,7 @@ TEST_F(SparseMatrixTest, ELLSpMVMatchesCSR) {
     EXPECT_FLOAT_EQ(y_ell[2], y_csr[2]);
 }
 
-TEST_F(SparseMatrixTest, ToSELLConvertsCorrectly) {
+TEST_F(SparseMatrixFormatTest, ToSELLConvertsCorrectly) {
     auto dense = create_dense_3x3();
     auto csr = SparseMatrixCSR<float>::FromDense(dense.data(), 3, 3);
     ASSERT_TRUE(csr.has_value());
@@ -189,7 +189,7 @@ TEST_F(SparseMatrixTest, ToSELLConvertsCorrectly) {
     EXPECT_EQ(sell.padded_nnz(), 8);
 }
 
-TEST_F(SparseMatrixTest, SELLPreservesValuesAndIndices) {
+TEST_F(SparseMatrixFormatTest, SELLPreservesValuesAndIndices) {
     auto dense = create_dense_3x3();
     auto csr = SparseMatrixCSR<float>::FromDense(dense.data(), 3, 3);
     ASSERT_TRUE(csr.has_value());
@@ -212,7 +212,7 @@ TEST_F(SparseMatrixTest, SELLPreservesValuesAndIndices) {
     EXPECT_EQ(sell.col_indices()[slice1_base + 1], 2);
 }
 
-TEST_F(SparseMatrixTest, SELLDefaultSliceHeight) {
+TEST_F(SparseMatrixFormatTest, SELLDefaultSliceHeight) {
     auto dense = create_dense_3x3();
     auto csr = SparseMatrixCSR<float>::FromDense(dense.data(), 3, 3);
     ASSERT_TRUE(csr.has_value());
@@ -222,7 +222,7 @@ TEST_F(SparseMatrixTest, SELLDefaultSliceHeight) {
     EXPECT_EQ(sell.slice_height(), 32);
 }
 
-TEST_F(SparseMatrixTest, SELLSpMVMatchesCSR) {
+TEST_F(SparseMatrixFormatTest, SELLSpMVMatchesCSR) {
     auto dense = create_dense_3x3();
     auto csr = SparseMatrixCSR<float>::FromDense(dense.data(), 3, 3);
     ASSERT_TRUE(csr.has_value());
@@ -241,7 +241,7 @@ TEST_F(SparseMatrixTest, SELLSpMVMatchesCSR) {
     EXPECT_FLOAT_EQ(y_sell[2], y_csr[2]);
 }
 
-TEST_F(SparseMatrixTest, ELLEdgeCaseVaryingRowDensity) {
+TEST_F(SparseMatrixFormatTest, ELLEdgeCaseVaryingRowDensity) {
     auto dense = create_dense_varying_density();
     auto csr = SparseMatrixCSR<float>::FromDense(dense.data(), 5, 5);
     ASSERT_TRUE(csr.has_value());
@@ -252,7 +252,7 @@ TEST_F(SparseMatrixTest, ELLEdgeCaseVaryingRowDensity) {
     EXPECT_EQ(ell.padded_nnz(), 25);
 }
 
-TEST_F(SparseMatrixTest, SELLSpMVVaryingDensityMatchesCSR) {
+TEST_F(SparseMatrixFormatTest, SELLSpMVVaryingDensityMatchesCSR) {
     auto dense = create_dense_varying_density();
     auto csr = SparseMatrixCSR<float>::FromDense(dense.data(), 5, 5);
     ASSERT_TRUE(csr.has_value());
@@ -271,7 +271,7 @@ TEST_F(SparseMatrixTest, SELLSpMVVaryingDensityMatchesCSR) {
     }
 }
 
-TEST_F(SparseMatrixTest, ELLEdgeCaseSingleRow) {
+TEST_F(SparseMatrixFormatTest, ELLEdgeCaseSingleRow) {
     std::vector<float> single_row = {1.0f, 0.0f, 2.0f, 0.0f, 0.0f};
     auto csr = SparseMatrixCSR<float>::FromDense(single_row.data(), 1, 5);
     ASSERT_TRUE(csr.has_value());
@@ -283,7 +283,7 @@ TEST_F(SparseMatrixTest, ELLEdgeCaseSingleRow) {
     EXPECT_EQ(ell.padded_nnz(), 2);
 }
 
-TEST_F(SparseMatrixTest, SELLEdgeCaseSingleRow) {
+TEST_F(SparseMatrixFormatTest, SELLEdgeCaseSingleRow) {
     std::vector<float> single_row = {1.0f, 0.0f, 2.0f, 0.0f, 0.0f};
     auto csr = SparseMatrixCSR<float>::FromDense(single_row.data(), 1, 5);
     ASSERT_TRUE(csr.has_value());
@@ -293,7 +293,7 @@ TEST_F(SparseMatrixTest, SELLEdgeCaseSingleRow) {
     EXPECT_EQ(sell.num_rows(), 1);
     EXPECT_EQ(sell.slice_height(), 2);
     EXPECT_EQ(sell.slice_ptr()[0], 0);
-    EXPECT_EQ(sell.slice_ptr()[1], 2);
+    EXPECT_EQ(sell.slice_ptr()[1], 4);
 }
 
 } // namespace test

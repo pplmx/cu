@@ -2,6 +2,8 @@
 #include <cuda_runtime.h>
 #include <library_types.h>
 
+#include <vector>
+
 #include "cuda/sparse/matrix.hpp"
 #include "cuda/sparse/cusparse_context.hpp"
 #include "cuda/memory/buffer.h"
@@ -160,6 +162,16 @@ void spmv(const SparseMatrix<T>& A, const T* x, T* y) {
 }
 
 template<typename T>
+void spmv(const SparseMatrix<T>& A, const std::vector<T>& x, std::vector<T>& y) {
+    cuda::memory::Buffer<T> d_x(A.cols());
+    cuda::memory::Buffer<T> d_y(A.rows());
+
+    d_x.copy_from(x.data(), static_cast<size_t>(A.cols()));
+    detail::spmv_impl(A, d_x.data(), d_y.data(), nullptr);
+    d_y.copy_to(y.data(), static_cast<size_t>(A.rows()));
+}
+
+template<typename T>
 void spmv_async(const SparseMatrix<T>& A, const T* x, T* y, cudaStream_t stream) {
     detail::spmv_impl(A, x, y, stream);
 }
@@ -176,6 +188,8 @@ void spmv_transpose_async(const SparseMatrix<T>& A, const T* x, T* y, cudaStream
 
 template void spmv<float>(const SparseMatrix<float>&, const float*, float*);
 template void spmv<double>(const SparseMatrix<double>&, const double*, double*);
+template void spmv<float>(const SparseMatrix<float>&, const std::vector<float>&, std::vector<float>&);
+template void spmv<double>(const SparseMatrix<double>&, const std::vector<double>&, std::vector<double>&);
 template void spmv_async<float>(const SparseMatrix<float>&, const float*, float*, cudaStream_t);
 template void spmv_async<double>(const SparseMatrix<double>&, const double*, double*, cudaStream_t);
 template void spmv_transpose<float>(const SparseMatrix<float>&, const float*, float*);

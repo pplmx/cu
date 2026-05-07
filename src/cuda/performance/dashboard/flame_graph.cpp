@@ -142,10 +142,10 @@ std::string NVTraceParser::get_nvtx_domain(const std::string& category) {
     if (category.find("memory") != std::string::npos) return "nova.memory";
     if (category.find("device") != std::string::npos) return "nova.device";
     if (category.find("algo") != std::string::npos) return "nova.algo";
-    if (category.find("performance") != std::string::npos) return "nova.performance";
     if (category.find("nvblox") != std::string::npos) return "nova.performance.nvblox";
     if (category.find("fusion") != std::string::npos) return "nova.performance.fusion";
     if (category.find("bandwidth") != std::string::npos) return "nova.performance.bandwidth";
+    if (category.find("performance") != std::string::npos) return "nova.performance";
     return "nova.api";
 }
 

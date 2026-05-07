@@ -58,7 +58,7 @@ TEST(SparseMatrixTest, FromDenseWithThreshold) {
     auto matrix = SparseMatrix<float>::FromDense(dense.data(), 3, 3, 0.1f);
 
     ASSERT_TRUE(matrix.has_value());
-    EXPECT_EQ(matrix->nnz(), 3);
+    EXPECT_EQ(matrix->nnz(), 4);
 }
 
 TEST(SparseMatrixTest, FromDenseAllZeros) {

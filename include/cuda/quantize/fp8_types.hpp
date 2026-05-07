@@ -62,9 +62,10 @@ public:
 
 private:
     NOVA_HD static uint8_t float_to_fp8(float f) {
-        if (f == 0.0f) return 0;
+        bool negative = (f < 0) || (f == 0 && std::signbit(f));
+        uint32_t sign = negative ? 0x80 : 0;
+        if (f == 0.0f || f == -0.0f) return sign;
 
-        uint32_t sign = (f < 0) ? 0x80 : 0;
         f = std::abs(f);
 
         if (std::isinf(f)) return sign | POS_INF;
@@ -144,9 +145,10 @@ public:
 
 private:
     NOVA_HD static uint8_t float_to_fp8(float f) {
-        if (f == 0.0f) return 0;
+        bool negative = (f < 0) || (f == 0 && std::signbit(f));
+        uint32_t sign = negative ? 0x80 : 0;
+        if (f == 0.0f || f == -0.0f) return sign;
 
-        uint32_t sign = (f < 0) ? 0x80 : 0;
         f = std::abs(f);
 
         if (std::isinf(f)) return sign | POS_INF;

@@ -73,6 +73,7 @@ double RooflineModel::compute_performance_gflops(uint64_t flops, uint64_t elapse
 }
 
 double RooflineModel::ridge_point() const {
+    if (points_.empty()) return 0.0;
     if (peaks_.hbm_bandwidth_gbs <= 0.0) return 0.0;
     if (peaks_.fp64_gflops <= 0.0) return 0.0;
     return peaks_.fp64_gflops / peaks_.hbm_bandwidth_gbs;

@@ -305,6 +305,11 @@ public:
             return result;
         }
 
+        std::vector<T> h_b(n);
+        for (int i = 0; i < n; ++i) {
+            h_b[i] = b[i];
+        }
+
         T b_norm = detail::norm2(b, n);
         if (b_norm < std::numeric_limits<T>::epsilon()) {
             result.converged = true;
@@ -313,15 +318,20 @@ public:
             return result;
         }
 
+        std::vector<T> h_x(n);
+        for (int i = 0; i < n; ++i) {
+            h_x[i] = x[i];
+        }
+
         std::vector<T> r(n), v(n);
         std::vector<T> w(n);
 
         std::vector<T> cos_sin(restart_);
         std::vector<T> s(restart_ + 1), cs(restart_), sn(restart_);
 
-        spmv(A, x, v.data());
+        spmv(A, h_x, v);
         for (int i = 0; i < n; ++i) {
-            r[i] = b[i] - v[i];
+            r[i] = h_b[i] - v[i];
         }
 
         T beta = detail::norm2(r.data(), n);
@@ -354,7 +364,7 @@ public:
                     v[i] = V[j * n + i];
                 }
 
-                spmv(A, v.data(), w.data());
+                spmv(A, v, w);
 
                 T h_ij = T{0};
                 for (int i = 0; i < n; ++i) {
@@ -439,6 +449,9 @@ public:
 
                     delete[] V;
                     delete[] H;
+                    for (int i = 0; i < n; ++i) {
+                        x[i] = h_x[i];
+                    }
                     return result;
                 }
             }
@@ -456,13 +469,13 @@ public:
 
             for (int k = 0; k < restart_; ++k) {
                 for (int i = 0; i < n; ++i) {
-                    x[i] += y[k] * V[k * n + i];
+                    h_x[i] += y[k] * V[k * n + i];
                 }
             }
 
-            spmv(A, x, v.data());
+            spmv(A, h_x, v);
             for (int i = 0; i < n; ++i) {
-                r[i] = b[i] - v[i];
+                r[i] = h_b[i] - v[i];
             }
             beta = detail::norm2(r.data(), n);
 
@@ -495,6 +508,9 @@ public:
         result.iterations = total_iterations;
         result.residual_norm = beta;
         result.error_code = SolverError::MAX_ITERATIONS;
+        for (int i = 0; i < n; ++i) {
+            x[i] = h_x[i];
+        }
         return result;
     }
 
