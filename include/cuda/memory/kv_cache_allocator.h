@@ -117,6 +117,8 @@ public:
 
     std::vector<int64_t> find_sequences_with_prefix(int64_t reference_sequence_id) const;
 
+    void update_prefix_cache(int64_t sequence_id, const void* data, int num_tokens);
+
     struct FragmentationReport {
         float ratio;
         int num_free_blocks;
@@ -458,6 +460,27 @@ KVCacheAllocator::find_prefix_match(
 
     stats_.prefix_cache_misses++;
     return std::nullopt;
+}
+
+inline void KVCacheAllocator::update_prefix_cache(
+    int64_t sequence_id,
+    const void* data,
+    int num_tokens
+) {
+    if (!config_.enable_prefix_caching) {
+        return;
+    }
+
+    std::unique_lock lock(mutex_);
+
+    auto it = sequence_blocks_.find(sequence_id);
+    if (it == sequence_blocks_.end()) {
+        return;
+    }
+
+    const uint64_t hash = compute_prefix_hash(data, num_tokens);
+    const int first_block = it->second.front();
+    prefix_cache_[hash] = first_block;
 }
 
 inline KVCacheStats KVCacheAllocator::get_stats() const {
