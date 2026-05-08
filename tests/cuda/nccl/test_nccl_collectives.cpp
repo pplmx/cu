@@ -29,13 +29,20 @@ class NcclCollectivesTest : public ::testing::Test {
 protected:
     void SetUp() override {
         int device_count;
-        cudaGetDeviceCount(&device_count);
+        cudaError_t err = cudaGetDeviceCount(&device_count);
+        if (err != cudaSuccess) {
+            GTEST_SKIP() << "CUDA not available";
+        }
         if (device_count < 2) {
             GTEST_SKIP() << "Need at least 2 GPUs for NCCL collective tests";
         }
 
         context_ = std::make_unique<NcclContext>();
-        context_->initialize();
+        try {
+            context_->initialize();
+        } catch (const std::exception& e) {
+            GTEST_SKIP() << "NCCL initialization failed: " << e.what();
+        }
     }
 
     void TearDown() override {

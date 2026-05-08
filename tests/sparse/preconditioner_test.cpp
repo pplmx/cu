@@ -11,6 +11,11 @@ namespace test {
 class JacobiPreconditionerTest : public ::testing::Test {
 protected:
     void SetUp() override {
+        cudaSetDevice(0);
+    }
+
+    void TearDown() override {
+        cudaDeviceSynchronize();
     }
 
     static std::vector<double> generate_laplacian(int n) {

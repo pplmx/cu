@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <cuda/memory/kv_cache_allocator.h>
+#include <cuda/memory/buffer.h>
 #include <thread>
 #include <atomic>
 #include <vector>
@@ -11,6 +12,8 @@ namespace cuda::memory::test {
 class KVCacheAllocatorTest : public ::testing::Test {
 protected:
     void SetUp() override {
+        cudaSetDevice(0);
+
         config_ = KVCacheAllocatorConfig{
             .num_heads = 4,
             .head_dim = 64,
@@ -21,6 +24,10 @@ protected:
             .enable_prefix_caching = true,
             .max_prefix_blocks = 32
         };
+    }
+
+    void TearDown() override {
+        cudaDeviceSynchronize();
     }
 
     KVCacheAllocatorConfig config_;
