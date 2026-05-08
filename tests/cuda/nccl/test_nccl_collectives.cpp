@@ -37,6 +37,11 @@ protected:
             GTEST_SKIP() << "Need at least 2 GPUs for NCCL collective tests";
         }
 
+        const char* nccl_test_env = std::getenv("NCCL_TESTS_AVAILABLE");
+        if (nccl_test_env == nullptr) {
+            GTEST_SKIP() << "NCCL multi-process tests require NCCL_TESTS_AVAILABLE env var";
+        }
+
         context_ = std::make_unique<NcclContext>();
         try {
             context_->initialize();

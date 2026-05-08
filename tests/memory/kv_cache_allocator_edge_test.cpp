@@ -12,6 +12,12 @@ namespace cuda::memory::test {
 class KVCacheAllocatorEdgeTest : public ::testing::Test {
 protected:
     void SetUp() override {
+        cudaError_t err = cudaSetDevice(0);
+        if (err != cudaSuccess) {
+            GTEST_SKIP() << "Failed to set CUDA device: " << cudaGetErrorString(err);
+        }
+        cudaDeviceReset();
+
         config_ = KVCacheAllocatorConfig{
             .num_heads = 4,
             .head_dim = 64,
@@ -22,6 +28,10 @@ protected:
             .enable_prefix_caching = true,
             .max_prefix_blocks = 32
         };
+    }
+
+    void TearDown() override {
+        cudaDeviceReset();
     }
 
     KVCacheAllocatorConfig config_;

@@ -167,7 +167,7 @@ private:
     std::vector<int> free_list_;
     std::unordered_map<int64_t, std::vector<int>> sequence_blocks_;
     std::unordered_map<uint64_t, int> prefix_cache_;
-    mutable std::shared_mutex mutex_;
+    mutable std::recursive_mutex mutex_;
     KVCacheStats stats_;
 
     memory::Buffer<void> gpu_memory_;
@@ -334,11 +334,13 @@ inline void KVCacheAllocator::free(int64_t sequence_id) {
         return;
     }
 
+    std::vector<int> blocks_to_free = it->second;
+
     if (config_.enable_prefix_caching) {
         merge_prefix_blocks(sequence_id);
     }
 
-    for (const int block_idx : it->second) {
+    for (const int block_idx : blocks_to_free) {
         KVCacheBlock& block = blocks_[block_idx];
         if (block.ref_count > 1) {
             continue;
@@ -353,7 +355,6 @@ inline void KVCacheAllocator::free(int64_t sequence_id) {
         stats_.free_blocks++;
     }
 
-    sequence_blocks_.erase(it);
     stats_.used_memory = stats_.allocated_blocks * block_memory_size_;
 }
 
@@ -391,7 +392,7 @@ inline void KVCacheAllocator::evict(int num_blocks_needed) {
 inline std::vector<const KVCacheBlock*> KVCacheAllocator::get_blocks(
     int64_t sequence_id
 ) const {
-    std::shared_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     auto it = sequence_blocks_.find(sequence_id);
     if (it == sequence_blocks_.end()) {
@@ -412,7 +413,7 @@ inline const KVCacheBlock* KVCacheAllocator::get_block(
     int64_t sequence_id,
     int block_index
 ) const {
-    std::shared_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     auto it = sequence_blocks_.find(sequence_id);
     if (it == sequence_blocks_.end()) {
@@ -460,7 +461,7 @@ KVCacheAllocator::find_prefix_match(
 }
 
 inline KVCacheStats KVCacheAllocator::get_stats() const {
-    std::shared_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     KVCacheStats stats = stats_;
     stats.fragmentation_percent = stats_.total_blocks > 0
@@ -616,7 +617,7 @@ inline uint64_t KVCacheAllocator::compute_content_hash(
 inline std::vector<int64_t> KVCacheAllocator::find_sequences_with_prefix(
     int64_t reference_sequence_id
 ) const {
-    std::shared_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     std::vector<int64_t> result;
     auto ref_it = sequence_blocks_.find(reference_sequence_id);
@@ -637,7 +638,7 @@ inline std::vector<int64_t> KVCacheAllocator::find_sequences_with_prefix(
 }
 
 inline KVCacheAllocator::FragmentationReport KVCacheAllocator::analyze_fragmentation() const {
-    std::shared_lock lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     FragmentationReport report;
     report.num_free_blocks = static_cast<int>(free_list_.size());
@@ -694,6 +695,9 @@ inline void KVCacheAllocator::compact() {
 
         if (src_idx != dst_idx) {
             std::swap(blocks_[src_idx].data, blocks_[dst_idx].data);
+            std::swap(blocks_[src_idx].sequence_id, blocks_[dst_idx].sequence_id);
+            std::swap(blocks_[src_idx].in_use, blocks_[dst_idx].in_use);
+            std::swap(blocks_[src_idx].ref_count, blocks_[dst_idx].ref_count);
             blocks_[src_idx].block_id = src_idx;
             blocks_[dst_idx].block_id = dst_idx;
             allocated_blocks[i] = dst_idx;
