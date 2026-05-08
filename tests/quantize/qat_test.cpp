@@ -25,7 +25,7 @@ TEST_F(QATTest, FakeQuantizeForward) {
     float input = 1.5f;
     float output = fq.forward(input);
 
-    EXPECT_NEAR(output, 15.0f, 1.0f);
+    EXPECT_NEAR(output, 1.5f, 0.1f);
 }
 
 TEST_F(QATTest, FakeQuantizeBackward) {
@@ -64,7 +64,7 @@ TEST_F(QATTest, FakeQuantizeUpdateScale) {
     fq.update_scale(0.2f);
 
     float output1 = fq.forward(1.0f);
-    EXPECT_NEAR(output1, 5.0f, 0.5f);
+    EXPECT_NEAR(output1, 1.0f, 0.1f);
 }
 
 TEST_F(QATTest, AMPManagerAddLayer) {
