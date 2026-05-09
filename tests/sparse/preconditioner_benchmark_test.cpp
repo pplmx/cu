@@ -13,7 +13,8 @@ namespace test {
 class PreconditionerBenchmarkTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        GTEST_SKIP() << "PreconditionerBenchmark tests have CUDA context issues - skipping";
+        cudaSetDevice(0);
+        cudaDeviceSynchronize();
     }
     static SparseMatrix<double> create_laplacian_matrix(int n) {
         std::vector<double> values;
