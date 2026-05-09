@@ -8,7 +8,8 @@ namespace cuda::algo::sssp::test {
 class SSSPTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        GTEST_SKIP() << "SSSPTest has CUDA context issues - skipping";
+        cudaSetDevice(0);
+        cudaDeviceSynchronize();
     }
     void TearDown() override {}
 };

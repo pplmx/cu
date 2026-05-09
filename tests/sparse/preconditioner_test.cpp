@@ -11,7 +11,8 @@ namespace test {
 class JacobiPreconditionerTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        GTEST_SKIP() << "JacobiPreconditioner tests have CUDA context issues - skipping";
+        cudaSetDevice(0);
+        cudaDeviceSynchronize();
     }
 
     void TearDown() override {
