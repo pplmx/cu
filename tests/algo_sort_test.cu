@@ -196,6 +196,9 @@ TEST_F(KeyValueSortTest, SortPairsAscending) {
 
 class TopKTest : public ::testing::Test {
 protected:
+    void SetUp() override {
+        cudaSetDevice(0);
+    }
     std::vector<float> h_keys_;
     std::vector<float> h_values_;
     cuda::memory::Buffer<float> d_keys_;
@@ -261,11 +264,20 @@ TEST_F(TopKTest, KGreaterThanSize) {
 
 class BinarySearchTest : public ::testing::Test {
 protected:
+    void SetUp() override {
+        cudaSetDevice(0);
+    }
     std::vector<int> h_sorted_;
     cuda::memory::Buffer<int> d_sorted_;
+
+    void init_buffer(size_t size) {
+        h_sorted_.clear();
+        d_sorted_ = cuda::memory::Buffer<int>(size);
+    }
 };
 
 TEST_F(BinarySearchTest, Found) {
+    init_buffer(10);
     h_sorted_ = {1, 3, 5, 7, 9, 11, 13, 15, 17, 19};
     d_sorted_.copy_from(h_sorted_.data(), h_sorted_.size());
 
@@ -276,6 +288,7 @@ TEST_F(BinarySearchTest, Found) {
 }
 
 TEST_F(BinarySearchTest, NotFound) {
+    init_buffer(10);
     h_sorted_ = {1, 3, 5, 7, 9, 11, 13, 15, 17, 19};
     d_sorted_.copy_from(h_sorted_.data(), h_sorted_.size());
 
@@ -285,6 +298,7 @@ TEST_F(BinarySearchTest, NotFound) {
 }
 
 TEST_F(BinarySearchTest, FirstElement) {
+    init_buffer(5);
     h_sorted_ = {1, 3, 5, 7, 9};
     d_sorted_.copy_from(h_sorted_.data(), h_sorted_.size());
 
@@ -295,6 +309,7 @@ TEST_F(BinarySearchTest, FirstElement) {
 }
 
 TEST_F(BinarySearchTest, LastElement) {
+    init_buffer(5);
     h_sorted_ = {1, 3, 5, 7, 9};
     d_sorted_.copy_from(h_sorted_.data(), h_sorted_.size());
 
@@ -305,6 +320,7 @@ TEST_F(BinarySearchTest, LastElement) {
 }
 
 TEST_F(BinarySearchTest, SingleElementFound) {
+    init_buffer(1);
     h_sorted_ = {42};
     d_sorted_.copy_from(h_sorted_.data(), 1);
 
@@ -315,6 +331,7 @@ TEST_F(BinarySearchTest, SingleElementFound) {
 }
 
 TEST_F(BinarySearchTest, SingleElementNotFound) {
+    init_buffer(1);
     h_sorted_ = {42};
     d_sorted_.copy_from(h_sorted_.data(), 1);
 
@@ -324,7 +341,7 @@ TEST_F(BinarySearchTest, SingleElementNotFound) {
 }
 
 TEST_F(BinarySearchTest, EmptyArray) {
-    d_sorted_ = cuda::memory::Buffer<int>(0);
+    init_buffer(0);
 
     auto result = binary_search(d_sorted_.data(), 0, 1);
 
@@ -333,7 +350,7 @@ TEST_F(BinarySearchTest, EmptyArray) {
 
 TEST_F(BinarySearchTest, FloatArray) {
     std::vector<float> h_sorted_float = {1.5f, 2.5f, 3.5f, 4.5f, 5.5f};
-    cuda::memory::Buffer<float> d_sorted_float;
+    cuda::memory::Buffer<float> d_sorted_float(5);
     d_sorted_float.copy_from(h_sorted_float.data(), h_sorted_float.size());
 
     auto result = binary_search(d_sorted_float.data(), d_sorted_float.size(), 3.5f);

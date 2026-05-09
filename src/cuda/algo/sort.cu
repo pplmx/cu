@@ -143,7 +143,14 @@ BinarySearchResult<T> binary_search(const T* sorted_data, size_t count, const T&
     CUDA_CHECK(cudaStreamSynchronize(stream));
 
     result.index = h_index;
-    result.status = (h_index < count && sorted_data[h_index] == target) ? SearchResult::Found : SearchResult::NotFound;
+
+    if (h_found && h_index < count) {
+        T found_value;
+        CUDA_CHECK(cudaMemcpy(&found_value, sorted_data + h_index, sizeof(T), cudaMemcpyDeviceToHost));
+        result.status = (found_value == target) ? SearchResult::Found : SearchResult::NotFound;
+    } else {
+        result.status = SearchResult::NotFound;
+    }
 
     CUDA_CHECK(cudaFree(d_result_index));
     CUDA_CHECK(cudaFree(d_found));
