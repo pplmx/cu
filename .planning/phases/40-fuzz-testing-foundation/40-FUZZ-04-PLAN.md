@@ -1,11 +1,13 @@
 # Phase 40 Plan: FUZZ-04 - Fuzzing Artifact Isolation
 
 ## Requirement
+
 **FUZZ-04**: Fuzzing artifacts (corpus, crashes) are isolated in dedicated directories
 
 ## Implementation
 
 ### 1. Create Directory Structure
+
 ```bash
 tests/fuzz/
 ├── corpus/
@@ -17,28 +19,36 @@ tests/fuzz/
 ```
 
 ### 2. Create .gitignore
+
 Create `tests/fuzz/crashes/.gitignore`:
-```
+
+```text
 *
 !.gitignore
 ```
 
 ### 3. Add to .gitignore
+
 Add to root `.gitignore`:
-```
+
+```text
 # Fuzzing crashes
 tests/fuzz/crashes/*
 !tests/fuzz/crashes/.gitignore
 ```
 
 ### 4. Create Baseline Corpus
+
 Create initial seed files in `tests/fuzz/baseline/`:
+
 - `memory_pool_seed.bin` - minimal memory pool input
 - `algorithm_seed.bin` - minimal algorithm input
 - `matmul_seed.bin` - minimal matmul input
 
 ### 5. Document Structure
+
 Create `tests/fuzz/README.md`:
+
 ```markdown
 # Fuzz Testing
 
@@ -65,14 +75,17 @@ make fuzz_algorithms
 # Run matmul fuzzing
 make fuzz_matmul
 ```
+```
 
 ## CI Fuzzing
 
 Fuzz tests run in CI with corpus baseline comparison:
+
 - Minimum corpus size: 1000 entries
 - Crash detection fails CI
 - Corpus regression fails CI
-```
+
+```text
 
 ## Verification
 1. Verify directory structure exists

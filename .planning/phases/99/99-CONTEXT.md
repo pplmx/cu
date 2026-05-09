@@ -84,14 +84,16 @@ __global__ void build_histogram_kernel(
 
 ## Files to Create
 
-### New files:
+### New files
+
 - `include/cuda/quantize/int8_kernels.hpp`
 - `src/cuda/quantize/int8_kernels.cu`
 - `include/cuda/quantize/calibration_kernels.hpp`
 - `src/cuda/quantize/calibration_kernels.cu`
 - `tests/quantize/int8_kernels_test.cpp`
 
-### Modifications:
+### Modifications
+
 - `CMakeLists.txt` — Add to QUANTIZE_SOURCES
 - `tests/CMakeLists.txt` — Add int8 test
 

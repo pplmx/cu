@@ -5,24 +5,28 @@
 ## Test Framework
 
 **Unit Testing:** GoogleTest (gtest v1.17.0) + GoogleMock (gmock)
+
 - Fetched via CMake FetchContent
 - Located in `tests/` directory
 
 **Property-Based Testing:** Custom framework (`tests/property/property_test.hpp`)
+
 - Uses `std::mt19937_64` for random generation
 - Seeded for reproducibility
 
 **Fuzz Testing:** libFuzzer (when using Clang)
+
 - Enable with `cmake -DNOVA_BUILD_FUZZ_TESTS=ON`
 
 **Benchmarking:** Google Benchmark (v1.9.1)
+
 - Separate benchmark suite in `benchmark/` directory
 
 ## Test File Organization
 
 ### Location Pattern
 
-```
+```text
 tests/
 ├── CMakeLists.txt           # Test executable definitions
 ├── CMakeFuzz.txt            # Fuzz test configuration
@@ -58,6 +62,7 @@ tests/
 ### GoogleTest Style
 
 **Test fixture class:**
+
 ```cpp
 class BufferTest : public ::testing::Test {
 protected:
@@ -78,6 +83,7 @@ TEST_F(BufferTest, ConstructionWithSize) {
 ```
 
 **Naming convention:**
+
 - Class: `<Feature>Test`
 - Test: `TEST_F(FeatureTest, <Description>)`
 - Description uses PascalCase: `SumBasic`, `ConstructionWithSize`, `NonPowerOfTwo`
@@ -156,6 +162,7 @@ int main(int argc, char** argv) {
 ```
 
 **Test executable targets:**
+
 - `property_mathematical` - Mathematical invariants
 - `property_algorithmic` - Algorithmic correctness
 - `property_numerical` - Numerical stability
@@ -176,6 +183,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
 
 **Corpus location:** `tests/fuzz/corpus/<target>/`
 **Targets:**
+
 - `memory_pool_fuzz` - Memory pool operations
 - `algorithm_fuzz` - Algorithm inputs
 - `matmul_fuzz` - Matrix multiplication inputs
@@ -435,6 +443,7 @@ coverage:
 **Minimum line coverage:** 80% (NOVA_COVERAGE_MIN)
 
 **Enforcement:**
+
 - Coverage job in CI runs on every push to main/PR
 - Fails if line coverage drops below threshold
 - Reports uploaded as artifacts
@@ -488,4 +497,4 @@ TEST_F(BufferTest, MoveConstruction) {
 
 ---
 
-*Testing analysis: 2026-04-30*
+## Testing analysis: 2026-04-30

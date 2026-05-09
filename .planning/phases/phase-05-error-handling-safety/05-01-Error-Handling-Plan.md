@@ -48,18 +48,22 @@ Verify error handling and memory safety tests are correctly written.
 ## Tasks
 
 ### Task 1: TimeoutPropagation Tests
+
 **File:** tests/timeout_propagation_test.cpp
 **Status:** 7 tests, no GTEST_SKIP. Tests cover deadline inheritance, callback invocation, and scoped timeout management. ✓
 
 ### Task 2: RetryTest Circuit Breaker
+
 **File:** tests/retry_test.cpp
 **Status:** 9 tests, no GTEST_SKIP. Tests cover backoff calculation, circuit breaker state machine (closed→half_open→open). ✓
 
 ### Task 3: MemorySafetyTest
+
 **File:** tests/testing/memory_safety_test.cpp
 **Status:** 6 tests, no GTEST_SKIP. Tests cover nullptr validation, uninitialized detection, and tool selection. ✓
 
 ### Task 4: AttentionSink Tests
+
 **File:** tests/memory/attention_sink_test.cpp
 **Status:** 5 tests, no GTEST_SKIP. Tests cover sink promotion, demotion, and tracking. ✓
 

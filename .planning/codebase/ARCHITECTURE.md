@@ -6,7 +6,7 @@
 
 Nova is a CUDA parallel algorithms library with a layered architecture supporting inference workloads, distributed training, and neural network operations.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                        Application Layer                                     │
 │         Examples: neural_net.cpp, distributed_training.cpp                   │
@@ -50,6 +50,7 @@ Nova is a CUDA parallel algorithms library with a layered architecture supportin
 **Overall:** Layered Architecture with modular domain separation
 
 **Key Characteristics:**
+
 - Header-only utilities for zero linking overhead
 - RAII memory management via `Buffer<T>` template
 - Stream-based asynchronous CUDA operations
@@ -65,6 +66,7 @@ Nova is a CUDA parallel algorithms library with a layered architecture supportin
 **Location:** `include/cuda/memory/`
 
 **Key Abstractions:**
+
 - `cuda::memory::Buffer<T>` - RAII wrapper for device memory with copy_from/copy_to
 - `cuda::memory::unique_ptr<T>` - Smart pointer for device memory
 - `cuda::memory::MemoryPool` - Memory pool with metrics and defragmentation
@@ -79,6 +81,7 @@ Nova is a CUDA parallel algorithms library with a layered architecture supportin
 **Location:** `include/cuda/device/`
 
 **Key Abstractions:**
+
 - `CUDA_CHECK()` macro for automatic error checking
 - `CudaException`, `CublasException` exception hierarchy
 - Warp-level and block-level reduction primitives
@@ -93,6 +96,7 @@ Nova is a CUDA parallel algorithms library with a layered architecture supportin
 **Location:** `include/cuda/algo/`
 
 **Key Abstractions:**
+
 - `reduce_sum()`, `reduce_max()`, `reduce_min()`
 - `sort()` with configurable comparison
 - `FlashAttention` for efficient transformer attention
@@ -107,6 +111,7 @@ Nova is a CUDA parallel algorithms library with a layered architecture supportin
 **Location:** `include/cuda/stream/`
 
 **Key Abstractions:**
+
 - `cuda::stream::Stream` - RAII wrapper for cudaStream_t
 - Synchronization primitives (synchronize, query)
 
@@ -117,12 +122,14 @@ Nova is a CUDA parallel algorithms library with a layered architecture supportin
 **Location:** `include/cuda/inference/`
 
 **Key Abstractions:**
+
 - `Scheduler` - Manages sequence batching and scheduling
 - `SequenceManager` - Tracks sequence states (Waiting, Running, Finished, Evicted)
 - `BlockManager` - Paged KV-cache block allocation
 - `PagedAttention` - Flash attention with block-based KV-cache
 
 **Configuration:**
+
 ```cpp
 struct SchedulerConfig {
     int max_batch_size = 32;
@@ -144,6 +151,7 @@ struct SchedulerConfig {
 **Location:** `include/cuda/neural/`
 
 **Submodules:**
+
 - `matmul.h` - Matrix multiplication via cuBLAS
 - `activations.h` - ReLU, GELU, SiLU, sigmoid, tanh
 - `softmax.h` - Full and masked softmax
@@ -161,6 +169,7 @@ struct SchedulerConfig {
 **Location:** `include/cuda/nccl/`, `include/cuda/distributed/`, `include/cuda/mpi/`
 
 **Key Abstractions:**
+
 - `NcclContext` - NCCL communicator pool with singleton fallback
 - Collective operations: all_reduce, broadcast, barrier, all_gather, reduce_scatter
 - `MeshStreams` - Per-device CUDA streams for collectives
@@ -176,6 +185,7 @@ struct SchedulerConfig {
 **Location:** `include/cuda/production/`, `include/cuda/performance/`
 
 **Key Abstractions:**
+
 - `GraphExecutor` - CUDA graph capture and execution
 - `Profiler` - Performance profiling with Chrome trace export
 - `Autotuner` - Hardware-aware parameter optimization
@@ -186,7 +196,7 @@ struct SchedulerConfig {
 
 ### Primary Inference Flow
 
-```
+```text
 User Request
     │
     ▼
@@ -218,7 +228,7 @@ Output buffer
 
 ### Memory Allocation Flow
 
-```
+```text
 Buffer<T> constructor
     │
     ▼
@@ -266,15 +276,18 @@ buf.copy_from(host_data, 1024);
 ## Entry Points
 
 **Main Application:**
+
 - `src/main.cpp` - Demo application showcasing library features
 
 **Examples:**
+
 - `examples/neural_net.cpp` - Neural network primitives usage
 - `examples/distributed_training.cpp` - Multi-GPU training example
 - `examples/graph_algorithms.cpp` - Graph algorithm examples
 - `examples/image_processing.cpp` - Image processing examples
 
 **Library:**
+
 - `include/cuda/` - Public header interface
 - `lib/libcuda_impl.a` - Core implementation library
 
@@ -290,6 +303,7 @@ buf.copy_from(host_data, 1024);
 **Strategy:** Exception-based with comprehensive error context
 
 **Patterns:**
+
 - `CUDA_CHECK(cudaMalloc(...))` - Automatic exception on CUDA errors
 - `NCCL_CHECK(ncclCommInitAll(...))` - NCCL-specific error checking
 - Custom exception classes: `CudaException`, `CublasException`, `NcclException`
@@ -301,10 +315,11 @@ buf.copy_from(host_data, 1024);
 **Validation:** Configuration validation in constructors; range checking in accessors
 
 **Performance:**
+
 - Memory pooling for allocation reuse
 - CUDA graphs for kernel launch optimization
 - Continuous batching for GPU utilization
 
 ---
 
-*Architecture analysis: 2026-04-30*
+## Architecture analysis: 2026-04-30

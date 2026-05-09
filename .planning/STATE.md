@@ -65,4 +65,5 @@ Last activity: 2026-05-09 — All 5 phases complete
 | v2.15 Test Quality Assurance | In Progress | 2026-05-09 | TBD |
 
 ---
-*State updated: 2026-05-09 — Milestone v2.15 started*
+
+## State updated: 2026-05-09 — Milestone v2.15 started

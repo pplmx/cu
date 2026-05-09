@@ -55,19 +55,19 @@ gemm.forward(fp8_weights, d_x, d_y, config);
 
 ## Modules
 
-| Module | Description | Documentation |
-|--------|-------------|---------------|
-| **cuda::sparse** | Sparse matrix formats and solvers | [docs/SPARSE.md](docs/SPARSE.md) |
-| **cuda::quantize** | INT8/FP8 quantization | [docs/QUANTIZATION.md](docs/QUANTIZATION.md) |
-| **cuda::gnn** | Graph neural network operations | [docs/GNN.md](docs/GNN.md) |
-| **cuda::memory** | Memory management and pools | Layer 0 foundation |
-| **cuda::algo** | Parallel algorithms | [docs/ALGORITHMS.md](docs/ALGORITHMS.md) |
+| Module             | Description                       | Documentation                                |
+| ------------------ | --------------------------------- | -------------------------------------------- |
+| **cuda::sparse**   | Sparse matrix formats and solvers | [docs/SPARSE.md](docs/SPARSE.md)             |
+| **cuda::quantize** | INT8/FP8 quantization             | [docs/QUANTIZATION.md](docs/QUANTIZATION.md) |
+| **cuda::gnn**      | Graph neural network operations   | [docs/GNN.md](docs/GNN.md)                   |
+| **cuda::memory**   | Memory management and pools       | Layer 0 foundation                           |
+| **cuda::algo**     | Parallel algorithms               | [docs/ALGORITHMS.md](docs/ALGORITHMS.md)     |
 
 ## Architecture
 
 ### Five-Layer Design
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │  Layer 3: High-Level API (STL-style)                        │
 │  cuda::reduce(), cuda::sort()                              │
@@ -91,7 +91,7 @@ gemm.forward(fp8_weights, d_x, d_y, config);
 
 ### Directory Structure
 
-```
+```text
 include/cuda/
 ├── memory/               # Layer 0: Memory Foundation
 │   ├── buffer.h         # cuda::memory::Buffer<T>
@@ -142,12 +142,12 @@ src/
 
 ### Layer Responsibilities
 
-| Layer | Namespace | Purpose | Dependencies |
-|-------|-----------|---------|--------------|
-| **Layer 0** | `cuda::memory` | Memory allocation, RAII, pooling | CUDA runtime |
-| **Layer 1** | `cuda::device` | Pure device kernels | Layer 0 |
-| **Layer 2** | `cuda::algo` | Memory management, algorithms | Layers 0, 1 |
-| **Layer 3** | `cuda::api` | STL-style containers | Layers 0, 1, 2 |
+| Layer       | Namespace      | Purpose                          | Dependencies   |
+| ----------- | -------------- | -------------------------------- | -------------- |
+| **Layer 0** | `cuda::memory` | Memory allocation, RAII, pooling | CUDA runtime   |
+| **Layer 1** | `cuda::device` | Pure device kernels              | Layer 0        |
+| **Layer 2** | `cuda::algo`   | Memory management, algorithms    | Layers 0, 1    |
+| **Layer 3** | `cuda::api`    | STL-style containers             | Layers 0, 1, 2 |
 
 ## Quick Start
 
@@ -228,16 +228,16 @@ auto config = cuda::api::ReduceConfig::optimized_config();
 
 ## Modules
 
-| Module | Description |
-|--------|-------------|
-| **cuda::sparse** | Sparse matrix formats (CSR, ELL, SELL, HYB), SpMV, iterative solvers |
-| **cuda::quantize** | INT8/FP8 quantization, calibration, QAT support |
-| **cuda::gnn** | Graph sampling, message passing, graph attention |
-| **cuda::memory** | Buffer, unique_ptr, MemoryPool, DistributedMemoryPool |
-| **cuda::error** | Error handling, timeout management, retry logic |
-| **cuda::observability** | Logging, NVTX, performance analysis |
-| **cuda::algo** | Parallel primitives (reduce, scan, sort) |
-| **cuda::device** | CUDA kernels, warp primitives |
+| Module                  | Description                                                          |
+| ----------------------- | -------------------------------------------------------------------- |
+| **cuda::sparse**        | Sparse matrix formats (CSR, ELL, SELL, HYB), SpMV, iterative solvers |
+| **cuda::quantize**      | INT8/FP8 quantization, calibration, QAT support                      |
+| **cuda::gnn**           | Graph sampling, message passing, graph attention                     |
+| **cuda::memory**        | Buffer, unique_ptr, MemoryPool, DistributedMemoryPool                |
+| **cuda::error**         | Error handling, timeout management, retry logic                      |
+| **cuda::observability** | Logging, NVTX, performance analysis                                  |
+| **cuda::algo**          | Parallel primitives (reduce, scan, sort)                             |
+| **cuda::device**        | CUDA kernels, warp primitives                                        |
 
 ## v2.x Additions
 
@@ -265,29 +265,29 @@ ctest -j16
 
 ### Test Configuration
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `NOVA_ENABLE_NCCL` | ON | Enable NCCL collectives (requires NCCL) |
-| `NOVA_ENABLE_MPI` | OFF | Enable MPI multi-node support |
-| `NOVA_ENABLE_UNITY_BUILD` | ON | Faster compilation via unity builds |
-| `CTEST_PARALLEL_LEVEL` | NCPU | Test parallelism (capped at 16 for GPU memory) |
+| Option                    | Default | Description                                    |
+| ------------------------- | ------- | ---------------------------------------------- |
+| `NOVA_ENABLE_NCCL`        | ON      | Enable NCCL collectives (requires NCCL)        |
+| `NOVA_ENABLE_MPI`         | OFF     | Enable MPI multi-node support                  |
+| `NOVA_ENABLE_UNITY_BUILD` | ON      | Faster compilation via unity builds            |
+| `CTEST_PARALLEL_LEVEL`    | NCPU    | Test parallelism (capped at 16 for GPU memory) |
 
 ## Development
 
 ### Build Options
 
-| Generator | Command | Speed |
-|-----------|---------|-------|
-| Ninja | `cmake -G Ninja -B build` | **Fastest** |
-| Make | `cmake -B build` | Standard |
+| Generator | Command                   | Speed       |
+| --------- | ------------------------- | ----------- |
+| Ninja     | `cmake -G Ninja -B build` | **Fastest** |
+| Make      | `cmake -B build`          | Standard    |
 
 ### Build Targets
 
-| Target | Description |
-|--------|-------------|
+| Target                | Description                                     |
+| --------------------- | ----------------------------------------------- |
 | `cmake --build <dir>` | Build project (use `--parallel` for multi-core) |
-| `ctest -j<N>` | Run tests in parallel |
-| `make clean` | Clean build artifacts |
+| `ctest -j<N>`         | Run tests in parallel                           |
+| `make clean`          | Clean build artifacts                           |
 
 ## Requirements
 
@@ -304,9 +304,9 @@ ctest -j16
 Licensed under either of
 
 - Apache License, Version 2.0
-  ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+  ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
 - MIT license
-  ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+  ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.
 

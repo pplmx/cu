@@ -17,6 +17,7 @@ requirements:
 ### PERF-01: User can fuse matmul + bias + activation into single kernel
 
 **Verification:**
+
 - `FusedMatmulBiasAct` class implemented with configurable activation types
 - Supported activations: ReLU, Sigmoid, Tanh, GELU
 - `FusionPolicyManager` singleton provides policy-based configuration
@@ -27,12 +28,14 @@ requirements:
   - FusedMatmulBiasActTest.FusionPolicyManager ✓
 
 **Files:**
+
 - `include/cuda/neural/fusion/fused_matmul_bias_act.h`
 - `src/cuda/neural/fusion/fused_matmul_bias_act.cu`
 
 ### PERF-03: User can run autotuning for block sizes on target GPU
 
 **Verification:**
+
 - `Autotuner` class implemented with grid search and warmup
 - `AutotuneConfig` supports configurable block_sizes, grid_sizes, iterations
 - `AutotuneRegistry` singleton provides persistent caching
@@ -45,12 +48,13 @@ requirements:
   - AutotunerTest.DefaultConfigPath ✓
 
 **Files:**
+
 - `include/cuda/performance/autotuner.h`
 - `src/cuda/performance/autotuner.cpp`
 
 ## Test Results
 
-```
+```text
 Running 7 tests from 2 test suites.
 [==========] Running 7 tests from 2 test suites.
 [  PASSED  ] 7 tests.

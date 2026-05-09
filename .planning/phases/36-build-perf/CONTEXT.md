@@ -75,16 +75,19 @@ Developers can build Nova quickly using CMake presets and ccache
 ### 2. CMake Options
 
 Add to CMakeLists.txt:
+
 - `NOVA_USE_CCACHE` - Enable ccache detection and configuration
 - `NOVA_ENABLE_UNITY_BUILD` - Already exists, ensure it's properly documented
 
 ### 3. Documentation
 
 Create `docs/build-performance.md` with:
+
 - How to use CMake presets
 - ccache setup and usage
 - Unity build guidance
 - Performance tips
 
 ---
-*Context created: 2026-04-26*
+
+## Context created: 2026-04-26

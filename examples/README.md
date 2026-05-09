@@ -20,6 +20,7 @@ cmake --build build --target image_processing
 **File:** `image_processing.cpp`
 
 Demonstrates CUDA image processing with:
+
 - Sobel edge detection
 - Gaussian blur
 - Morphological operations
@@ -33,6 +34,7 @@ Demonstrates CUDA image processing with:
 **File:** `graph_algorithms.cpp`
 
 Demonstrates GPU graph processing with:
+
 - BFS (Breadth-First Search)
 - PageRank
 
@@ -46,6 +48,7 @@ Demonstrates GPU graph processing with:
 **File:** `neural_net.cpp`
 
 Demonstrates CUDA neural network operations with:
+
 - Matrix multiply with bias
 - ReLU activation
 - Layer normalization
@@ -60,6 +63,7 @@ Demonstrates CUDA neural network operations with:
 **File:** `distributed_training.cpp`
 
 Demonstrates multi-GPU distributed training with:
+
 - NCCL collectives
 - All-reduce gradients
 - Multi-node support via MPI
@@ -102,6 +106,7 @@ mpicc -std=c++23 \
 - C++23 compiler
 
 For distributed examples:
+
 - MPI implementation (OpenMPI, MPICH)
 - NCCL library
 
@@ -110,6 +115,7 @@ For distributed examples:
 ### "No CUDA-capable device"
 
 Ensure `CUDA_VISIBLE_DEVICES` is set correctly:
+
 ```bash
 CUDA_VISIBLE_DEVICES=0 ./build/bin/image_processing
 ```
@@ -117,6 +123,7 @@ CUDA_VISIBLE_DEVICES=0 ./build/bin/image_processing
 ### NCCL initialization failed
 
 Ensure NCCL is installed and CUDA can see multiple GPUs:
+
 ```bash
 nvidia-smi  # Verify GPUs are visible
 ```
@@ -124,6 +131,7 @@ nvidia-smi  # Verify GPUs are visible
 ### Build errors
 
 Clean and rebuild:
+
 ```bash
 rm -rf build
 cmake -G Ninja -B build

@@ -16,12 +16,15 @@
 ## Files Created
 
 ### Headers
+
 - `include/cuda/preemption/preemption_handler.h` — SignalHandler, ShutdownCoordinator, ResumeValidator, PreemptionManager
 
 ### Implementation
+
 - `src/cuda/preemption/preemption_handler.cpp` — Full implementation
 
 ### CMake Updates
+
 - `CMakeLists.txt` — Added cuda_preemption library
 
 ## Key Components

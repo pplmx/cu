@@ -17,6 +17,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `SequenceParallelAttention::gather_kv()` for all-gather across ranks
 - `SequenceParallelAttention::scatter_output()` for reduce-scatter
 - Single-GPU fallback returns input unchanged
@@ -28,6 +29,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `RingSequenceParallelism::ring_attention()` implemented
 - Ring communication pattern for KV passing
 - Single-GPU fallback when sequence_parallel_size == 1
@@ -39,6 +41,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `all_reduce_sequence()` uses NCCL AllReduce when comm is set
 - Falls back gracefully when comm is nullptr
 - Config includes rank, world_size, comm fields
@@ -50,6 +53,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `send_recv_kv()` for peer-to-peer KV exchange
 - prev_rank_ and next_rank_ calculated for ring topology
 - All communication goes through specified stream
@@ -61,6 +65,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `has_sequence_parallelism()` returns false when size == 1
 - All methods check flag and bypass NCCL calls
 - Test `SingleGPUFallback` verifies behavior
@@ -100,4 +105,5 @@ All success criteria have been implemented and verified.
 | SP-03: TP communicator integration | ✅ |
 
 ---
-*Verification completed: 2026-04-29*
+
+## Verification completed: 2026-04-29

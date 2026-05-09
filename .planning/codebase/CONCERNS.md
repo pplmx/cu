@@ -7,6 +7,7 @@
 ### Large, Complex Files
 
 **SyncBatchNorm Implementation:**
+
 - File: `src/cuda/neural/sync_batch_norm.cu` (545 lines)
 - Issue: Excessive function complexity with backward pass allocating 3 temporary GPU buffers without RAII wrappers
 - Impact: Memory leaks if exceptions occur mid-backward pass
@@ -19,11 +20,13 @@ cudaMalloc(&d_x_norm, n * sizeof(float));  // No cleanup on exception
 ```
 
 **Tools Module:**
+
 - File: `src/cuda/tools/tools.cpp` (358 lines)
 - Issue: Bank conflict analysis logic is simplistic and assumes 32 banks, hardcoded values
 - Impact: Inaccurate analysis on different GPU architectures
 
 **Checkpoint Manager:**
+
 - File: `src/cuda/checkpoint/checkpoint_manager.cpp` (448 lines)
 - Issue: Large single file with multiple responsibilities (storage backend, manager, hashing)
 - Fix: Consider splitting into separate files
@@ -31,6 +34,7 @@ cudaMalloc(&d_x_norm, n * sizeof(float));  // No cleanup on exception
 ### Incomplete Implementations
 
 **SyncBatchNorm Backward:**
+
 - File: `src/cuda/neural/sync_batch_norm.cu` (lines 528-543)
 - Issue: `sync_batch_norm_backward()` function is completely empty - returns immediately
 - Impact: Training gradients cannot be computed through this layer
@@ -45,17 +49,21 @@ void sync_batch_norm_backward(...) {
 ### Global Mutable State
 
 **Signal Handler:**
+
 - File: `src/cuda/preemption/preemption_handler.cpp` (lines 14-17)
 - Issue: Static global mutable state for signal handling
+
 ```cpp
 static std::atomic<bool> g_shutdown_requested{false};
 static std::atomic<int> g_received_signal{0};
 ```
+
 - Impact: Not thread-safe in all scenarios, global state complicates testing
 - Fix: Encapsulate in singleton or pass through context
 
 **Singleton Proliferation:**
 Multiple `instance()` singletons scattered across codebase:
+
 - `NcclContext::instance()` (`src/cuda/nccl/nccl_context.cpp:31`)
 - `CheckpointManager::instance()` (`include/cuda/checkpoint/checkpoint_manager.h:70`)
 - `DeviceHealthMonitor::instance()` (`src/cuda/memory_error/memory_error_handler.cpp:24`)
@@ -67,12 +75,14 @@ Multiple `instance()` singletons scattered across codebase:
 ### Memory Fragmentation
 
 **MemoryPool Defragmentation:**
+
 - File: `src/memory/memory_pool.cpp` (lines 208-229)
 - Issue: `defragment()` uses `cudaMalloc`/`cudaFree` which is synchronous and expensive
 - Impact: Defragmentation blocks entire GPU, causing latency spikes
 - Fix: Consider async defragmentation or use CUDA managed memory
 
 **MemoryPool Streaming:**
+
 - File: `src/memory/memory_pool.cpp` (lines 94-126)
 - Issue: Allocations across different streams are not synchronized
 - Impact: Cannot safely allocate for one stream while another is still using memory
@@ -81,18 +91,22 @@ Multiple `instance()` singletons scattered across codebase:
 ### Inefficient Kernel Patterns
 
 **SyncBatchNorm Training Loop:**
+
 - File: `src/cuda/neural/sync_batch_norm.cu` (lines 27-32)
 - Issue: Serial loop over batch dimension in kernel
+
 ```cpp
 for (int b = 0; b < batch_size; ++b) {  // Serial in thread
     for (int s = 0; s < spatial_size; ++s) {
 ```
+
 - Impact: Poor GPU utilization, should use parallel reduction
 - Fix: Use CUB `DeviceReduce` or warp-level reductions
 
 ### No Kernel Fusion Support
 
 **Linear Layer Implementation:**
+
 - Files: `src/cuda/neural/matmul.cu`, `src/cuda/neural/activations.cu`
 - Issue: Each operation launches separate kernel
 - Impact: Memory bandwidth wasted on intermediate results
@@ -103,6 +117,7 @@ for (int b = 0; b < batch_size; ++b) {  // Serial in thread
 ### Incomplete Security Documentation
 
 **SECURITY.md:**
+
 - File: `SECURITY.md` (25 lines)
 - Issue: Template only - no actual security contact, vulnerability process, or supported versions
 - Current supported versions claim 5.1.x but code is v0.1.0
@@ -111,15 +126,19 @@ for (int b = 0; b < batch_size; ++b) {  // Serial in thread
 ### Checkpoint Data Integrity
 
 **Checkpoint Manager:**
+
 - File: `src/cuda/checkpoint/checkpoint_manager.cpp` (lines 26-39)
 - Issue: Atomic write uses PID in temp filename, which could collide on rapid saves
+
 ```cpp
 std::string temp_path = full_path + ".tmp." + std::to_string(getpid());
 ```
+
 - Impact: Race condition possible when multiple processes save simultaneously
 - Fix: Use UUID or timestamp with collision detection
 
 **File Storage Backend:**
+
 - File: `src/cuda/checkpoint/checkpoint_manager.cpp` (lines 50-57)
 - Issue: No validation of path traversal attacks
 - Fix: Validate paths don't contain `..` or absolute paths
@@ -127,6 +146,7 @@ std::string temp_path = full_path + ".tmp." + std::to_string(getpid());
 ### No Input Validation in Tools
 
 **Bank Conflict Analyzer:**
+
 - File: `src/cuda/tools/tools.cpp` (lines 11-52)
 - Issue: No validation of input parameters (data_size, num_threads, block_size)
 - Impact: Division by zero or buffer overflow possible with malicious inputs
@@ -137,6 +157,7 @@ std::string temp_path = full_path + ".tmp." + std::to_string(getpid());
 ### Thread-Safe Singleton Initialization
 
 **Multiple Initialization Race:**
+
 - Files: `src/cuda/nccl/nccl_context.cpp`, `src/cuda/memory_error/memory_error_handler.cpp`
 - Issue: Singleton `instance()` uses C++11 magic statics, but initialization may race with `initialize()` calls
 - Impact: Undefined behavior if used before initialization complete
@@ -145,7 +166,9 @@ std::string temp_path = full_path + ".tmp." + std::to_string(getpid());
 ### Memory Pool Hard Limits
 
 **MemoryPool Config:**
+
 - File: `include/cuda/memory/memory_pool.h` (lines 16-21)
+
 ```cpp
 struct Config {
     size_t block_size = 1 << 20;  // 1MB fixed
@@ -153,6 +176,7 @@ struct Config {
     bool preallocate = true;
 };
 ```
+
 - Issue: Fixed 16MB maximum pool size, not adaptive
 - Impact: Cannot scale to large models, wasteful for small models
 - Fix: Implement dynamic block allocation
@@ -160,6 +184,7 @@ struct Config {
 ### No Distributed Memory Management
 
 **Multi-Node Context:**
+
 - File: `include/cuda/multinode/multi_node_context.h`
 - Issue: Checkpoint/restore of distributed training state not implemented
 - Impact: Cannot recover multi-node jobs after failure
@@ -170,6 +195,7 @@ struct Config {
 ### API Documentation
 
 **Missing API docs for:**
+
 - `cuda::memory::Buffer<T>` - no Doxygen comments
 - `cuda::algo::reduce_*` functions - no parameter descriptions
 - `cuda::neural::*` layer interfaces - incomplete documentation
@@ -177,6 +203,7 @@ struct Config {
 ### Architecture Documentation
 
 **Missing:**
+
 - Decision records for layered architecture choices
 - Performance benchmark baselines
 - Memory usage guidelines per module
@@ -185,6 +212,7 @@ struct Config {
 ### Test Documentation
 
 **Missing test docs:**
+
 - How to run specific test categories
 - Understanding flaky tests
 - Adding new test fixtures
@@ -194,7 +222,9 @@ struct Config {
 ### CUDA Error Handling
 
 **Error Guard Destructor:**
+
 - File: `src/cuda/error/cuda_error.cpp` (lines 106-109)
+
 ```cpp
 ~cuda_error_guard() {
     if (!ok_) {
@@ -202,6 +232,7 @@ struct Config {
     }
 }
 ```
+
 - Issue: Silently swallows errors in destructor
 - Impact: Lost error information, debugging difficulties
 - Fix: Log or propagate errors
@@ -209,26 +240,32 @@ struct Config {
 ### Thread-Safety Issues
 
 **HealthMonitor Thread:**
+
 - File: `src/cuda/comm/comm_error_recovery.cpp` (lines 47-91)
 - Issue: Background thread accesses `comm_states` map while main thread may modify
 - Fix: Use proper reader-writer lock pattern
 
 **DeviceHealthMonitor:**
+
 - File: `src/cuda/memory_error/memory_error_handler.cpp` (lines 33-92)
 - Issue: Monitor thread sets device context without synchronization
+
 ```cpp
 cudaSetDevice(i);  // Modifies global CUDA state
 ```
+
 - Impact: Race with user code that expects specific device to be current
 
 ### Memory Leaks
 
 **Missing cudaFree in Error Paths:**
+
 - File: `src/cuda/neural/sync_batch_norm.cu` (lines 474-476)
 - Issue: cudaFree called but no error handling if they fail
 - If `cudaFree` fails, temporary buffers leak
 
 **No Exception Safety:**
+
 - File: `src/cuda/neural/sync_batch_norm.cu` (lines 427-450)
 - Issue: If kernel launch fails, allocated memory is not freed
 - Fix: Use RAII wrappers
@@ -236,6 +273,7 @@ cudaSetDevice(i);  // Modifies global CUDA state
 ### NCCL/MPI Error Handling
 
 **NCCL Context:**
+
 - File: `src/cuda/nccl/nccl_context.cpp` (lines 79-101)
 - Issue: If NCCL initialization fails partway through, inconsistent state
 - Fix: Implement rollback on partial failure
@@ -264,4 +302,4 @@ cudaSetDevice(i);  // Modifies global CUDA state
 
 ---
 
-*Concerns audit: 2026-04-30*
+## Concerns audit: 2026-04-30

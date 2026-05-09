@@ -27,6 +27,7 @@
 ### Test Results
 
 **Passing:** 9 tests
+
 - RadixSortTest.AscendingSort
 - RadixSortTest.DescendingSort  
 - RadixSortTest.AlreadySorted
@@ -37,6 +38,7 @@
 - BinarySearchTest.EmptyArray
 
 **Known Issues:**
+
 - BinarySearchTest (non-empty): Buffer initialization needs explicit size in test setup
 - TopKTest: Timed out in initial run (may need optimization)
 

@@ -5,6 +5,7 @@ How to save and restore training state with Nova's CheckpointManager.
 ## Overview
 
 Nova provides `CheckpointManager` for saving:
+
 - Model weights
 - Optimizer states
 - RNG state (for reproducibility)
@@ -64,20 +65,20 @@ public:
         manager.set_storage_backend("checkpoints/");
         manager.set_interval(std::chrono::minutes(5));
     }
-    
+
     void train(int epochs) {
         for (int epoch = 0; epoch < epochs; epoch++) {
             // Training step
             float loss = training_step(epoch);
             std::cout << "Epoch " << epoch << " loss: " << loss << "\n";
-            
+
             // Auto-save if interval reached
             if (manager.should_checkpoint()) {
                 save_checkpoint(epoch, loss);
             }
         }
     }
-    
+
     void resume() {
         if (manager.checkpoint_exists("latest")) {
             std::cout << "Loading checkpoint...\n";
@@ -85,7 +86,7 @@ public:
             restore_state(state);
         }
     }
-    
+
 private:
     nova::checkpoint::CheckpointManager manager;
     // ... model state
@@ -155,6 +156,7 @@ std::cout << "Epoch: " << info.metadata["epoch"] << "\n";
 ### "Checkpoint file not found"
 
 Check:
+
 1. Storage path is correct
 2. File permissions allow read
 3. Path exists: `ls -la checkpoints/`

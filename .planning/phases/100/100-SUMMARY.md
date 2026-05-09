@@ -10,24 +10,29 @@
 ## Deliverables
 
 ### Calibration Base Class
+
 - `Calibrator` abstract base class with virtual interface
 
 ### MinMaxCalibrator (CAL-02)
+
 - Simple min/max-based scale computation
 - Symmetric and asymmetric modes
 - Cache save/load support
 
 ### HistogramCalibrator (CAL-01)
+
 - Histogram-based calibration with percentile selection
 - Configurable bin count (default: 2048)
 - Configurable percentile (default: 99.99%)
 - Threshold finding for outlier clipping
 
 ### MSECalibrator (CAL-02)
+
 - MSE-optimized scale selection
 - Searches scale space to minimize quantization error
 
 ### PerChannelCalibrator (CAL-03)
+
 - Per-channel scale computation
 - Configurable channel dimension
 - Batch calibration for activation tensors

@@ -9,6 +9,7 @@
 ### DBN-01: SyncBatchNorm with all-reduce for mean/variance
 
 Synchronized batch normalization requires:
+
 1. Computing local batch statistics (mean, variance) on each GPU
 2. All-reducing statistics across all GPUs
 3. Synchronizing running mean/variance for inference
@@ -16,6 +17,7 @@ Synchronized batch normalization requires:
 ### DBN-02: Cross-GPU batch statistics aggregation
 
 Key challenges:
+
 - Batch size per GPU (total_batch = local_batch * num_gpus)
 - Numerical stability (Welford's algorithm or two-pass)
 - Async vs sync reduction timing
@@ -23,6 +25,7 @@ Key challenges:
 ### DBN-03: Evaluation vs training mode handling
 
 Modes:
+
 - Training: Use batch statistics, update running stats
 - Inference: Use running population statistics
 
@@ -33,11 +36,13 @@ Modes:
 **Decision:** Synchronous all-reduce before forward pass completes
 
 **Rationale:**
+
 - Ensures deterministic results across runs
 - Simpler correctness guarantees
 - Performance acceptable for typical batch sizes
 
 **Alternative considered:** Async overlap with computation
+
 - Higher complexity, harder to debug
 - Marginal performance gains for small batches
 
@@ -46,6 +51,7 @@ Modes:
 **Decision:** Two-pass computation for numerical stability
 
 **Rationale:**
+
 - Standard batch norm uses E[x²] - E[x]² which can be unstable
 - Two-pass (compute mean, then variance) is more stable
 - Welford's algorithm is equivalent but more complex
@@ -55,13 +61,14 @@ Modes:
 **Decision:** Exponential moving average (EMA) with momentum
 
 **Rationale:**
+
 - Standard PyTorch behavior
 - Configurable momentum parameter
 - Works well for typical training scenarios
 
 ## Architecture
 
-```
+```text
 SyncBatchNorm
 ├── Forward Training
 │   ├── compute_local_stats(input)

@@ -96,10 +96,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SAFE-03 | TBD | Pending |
 
 **Coverage:**
+
 - v1 requirements: 21 total
 - Mapped to phases: 0
 - Unmapped: 21 ⚠️
 
 ---
+
 *Requirements defined: 2026-05-09*
 *Last updated: 2026-05-09 after initial definition*

@@ -40,6 +40,7 @@ All success criteria met. Phase 102 verified.
 ## v2.12 Milestone Verification
 
 All 5 phases verified:
+
 - Phase 98: FP8 Foundation ✅
 - Phase 99: CUDA Quantization Kernels ✅
 - Phase 100: Calibration Infrastructure ✅

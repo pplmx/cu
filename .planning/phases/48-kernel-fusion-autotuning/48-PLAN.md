@@ -54,11 +54,13 @@
 ## Verification
 
 1. **Build verification:**
+
    ```bash
    cmake --build build --parallel
    ```
 
 2. **Test execution:**
+
    ```bash
    ctest -R "fusion|autotuner" -V
    ```

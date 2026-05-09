@@ -16,6 +16,7 @@ files_modified:
 ### Implementation Details
 
 **SparseMatrixELL<T>:**
+
 - Two-pass conversion algorithm from CSR
 - Pass 1: Calculate max_nnz_per_row across all rows
 - Pass 2: Copy values and indices with padding (zeros for values, -1 for col_indices)
@@ -23,6 +24,7 @@ files_modified:
 - Accessors for values, col_indices, row_offsets, dimensions, and padding info
 
 **SparseMatrixSELL<T>:**
+
 - Configurable slice_height parameter (default: 32)
 - Rows grouped into slices of C rows each
 - Each slice padded independently to its max nnz
@@ -42,4 +44,5 @@ files_modified:
 - SpMV numerical accuracy: ELL and SELL match CSR results exactly
 
 ---
-*Summary generated: 2026-05-01*
+
+## Summary generated: 2026-05-01

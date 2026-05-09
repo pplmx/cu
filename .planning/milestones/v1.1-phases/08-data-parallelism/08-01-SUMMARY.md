@@ -21,6 +21,7 @@ Multi-GPU collective operations (all-reduce, broadcast, all-gather, barrier) wit
 ## Key Files Created
 
 ### Headers
+
 - `include/cuda/distributed/common.h` - MeshStreams, ReductionOp enum
 - `include/cuda/distributed/reduce.h` - DistributedReduce class
 - `include/cuda/distributed/broadcast.h` - DistributedBroadcast class
@@ -28,6 +29,7 @@ Multi-GPU collective operations (all-reduce, broadcast, all-gather, barrier) wit
 - `include/cuda/distributed/barrier.h` - MeshBarrier class
 
 ### Implementations
+
 - `src/cuda/distributed/common.cu` - MeshStreams implementation
 - `src/cuda/distributed/reduce.cu` - All-reduce implementation
 - `src/cuda/distributed/broadcast.cu` - Broadcast implementation
@@ -35,16 +37,20 @@ Multi-GPU collective operations (all-reduce, broadcast, all-gather, barrier) wit
 - `src/cuda/distributed/barrier.cu` - Barrier implementation
 
 ### Tests
+
 - `tests/distributed/distributed_ops_test.cu` - Comprehensive test suite
 
 ### Build Updates
+
 - `CMakeLists.txt` - Added CUDA_DISTRIBUTED_DIR and DISTRIBUTED_SOURCES
 - `tests/CMakeLists.txt` - Added test file and include directories
 
 ## Implementation Details
 
 ### Algorithm
+
 Uses gather-reduce-broadcast pattern rather than true ring all-reduce for simplicity and correctness:
+
 1. **Gather phase**: Each GPU copies its data to GPU 0 (via host staging)
 2. **Reduce phase**: GPU 0 reduces all chunks using CUDA kernels
 3. **Broadcast phase**: Result is copied from GPU 0 to all other GPUs
@@ -76,14 +82,18 @@ Uses gather-reduce-broadcast pattern rather than true ring all-reduce for simpli
 ## Deviations from Plan
 
 ### Implementation Pattern
+
 The plan specified a "ring all-reduce" algorithm, but the implementation uses a simpler gather-reduce-broadcast pattern. This was chosen because:
+
 - Ring algorithms require all GPUs to call the collective operation simultaneously
 - Testing ring algorithms requires a proper collective test harness
 - The gather-reduce-broadcast pattern is easier to verify and debug
 - Performance characteristics are similar for small-to-medium data sizes
 
 ### Multi-GPU Tests
+
 Full multi-GPU correctness tests were deferred because they require:
+
 - A proper collective test harness where all GPUs call operations simultaneously
 - Thread synchronization across GPUs (complex to implement correctly)
 - The single-GPU fallback tests verify the code path works on CI
@@ -102,7 +112,7 @@ Full multi-GPU correctness tests were deferred because they require:
 
 ## Commit
 
-```
+```text
 e41d7d2 feat(distributed): add DistributedReduce for multi-GPU all-reduce (MGPU-05)
 ```
 

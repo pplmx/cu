@@ -17,16 +17,19 @@ files_modified:
 ### Files Created
 
 **include/cuda/sparse/solver_workspace.hpp:**
+
 - `SolverWorkspace<T>` class for pre-allocated work vectors
 - `SolverDiagnostics` struct with timing and convergence rate
 - `TimedSolverResult<T>` extending SolverResult with diagnostics
 
 **include/cuda/sparse/nvtx_sparse.hpp:**
+
 - NVTX domain "nova_sparse"
 - `ScopedRange` for RAII-style range annotation
 - `NOVA_NVTX_SCOPED_RANGE` and `NOVA_NVTX_MARKER` macros
 
 **tests/sparse/integration_test.cpp:**
+
 - E2E tests for CG pipeline (CSR → ELL → SELL → HYB → solve)
 - GMRES benchmark with varying matrix sizes
 - Roofline analysis E2E test
@@ -41,4 +44,5 @@ files_modified:
 5. **NVTX:** Macros defined for optional profiling
 
 ---
-*Summary generated: 2026-05-01*
+
+## Summary generated: 2026-05-01

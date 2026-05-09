@@ -21,23 +21,27 @@ Build quantization infrastructure for INT8 and FP16 tensors.
 ## Implementation Decisions
 
 ### Quantization Modes
+
 - Per-tensor quantization (single scale for entire tensor)
 - Per-channel quantization (scale per output channel)
 
 ### Precision Types
+
 - INT8: 8-bit signed integer with scale and zero_point
 - FP16: Half-precision floating point (IEEE 754)
 
 ## Specific Ideas
 
 ### QUANT-01: INT8 Quantization
+
 - QuantizedTensor<int8_t> with scale and zero_point
 - FromFloat() factory with calibration
 
 ### QUANT-02: FP16 Quantization
+
 - QuantizedTensor<float16_t> type alias
 - FromFloat() with type conversion
 
 ---
 
-*Context generated for Phase 46: Quantization Foundation*
+## Context generated for Phase 46: Quantization Foundation

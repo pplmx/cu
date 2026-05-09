@@ -23,6 +23,7 @@ Implement QuickCheck-style tests verifying mathematical and algorithmic properti
 ## Implementation Decisions
 
 ### Approach
+
 Implement hand-rolled property-based testing framework (avoiding external dependency on rapidcheck). Build on input generation patterns from Phase 40 fuzzing.
 
 ### Property Categories
@@ -42,28 +43,33 @@ Implement hand-rolled property-based testing framework (avoiding external depend
    - No NaN/Inf without cause
 
 ### Seed Reproducibility
+
 Store test seeds in metadata for exact reproduction of failures.
 
 ## Specific Ideas
 
 ### PROP-01: Mathematical Invariants
+
 - Matmul identity property
 - FFT inverse property
 - Transpose involution
 
 ### PROP-02: Algorithmic Correctness
+
 - Sort correctness
 - Reduce associativity
 - Scan prefix correctness
 
 ### PROP-03: Numerical Stability
+
 - Precision mode tests
 - NaN/Inf detection
 
 ### PROP-04: Reproducible Seeds
+
 - Seed logging
 - Seed-based test replay
 
 ---
 
-*Context generated for Phase 41: Property-Based Tests*
+## Context generated for Phase 41: Property-Based Tests

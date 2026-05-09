@@ -12,12 +12,14 @@
 ## Prior Work
 
 ### Phase 92: v2.10 Performance Benchmarks
+
 - BandwidthAnalyzer with H2D/D2H/D2D measurement
 - DeviceMemoryBandwidth query from device properties
 
 ### Existing Infrastructure
 
 #### observability/bandwidth_tracker.h
+
 - `BandwidthTracker` for transfer measurement
 - `DeviceMemoryBandwidth` with theoretical peak queries
 - `BandwidthResult` with bandwidth, bytes, elapsed time
@@ -25,6 +27,7 @@
 ## Implementation Strategy
 
 ### RooflineModel Class
+
 ```cpp
 class RooflineModel {
 public:
@@ -33,10 +36,10 @@ public:
         double performance_gflops;
         std::string kernel_name;
     };
-    
+
     void add_point(const RooflinePoint& point);
     void compute_operational_intensity(uint64_t flops, size_t bytes);
-    
+
     double get_peak_flops_fp64() const;
     double get_peak_bandwidth() const;
     std::string to_json() const;
@@ -44,12 +47,15 @@ public:
 ```
 
 ### Bandwidth Utilization Tracker
+
 Extend existing BandwidthTracker:
+
 - Track utilization percentage per transfer type
 - Historical bandwidth samples
 - Warning when utilization < 50%
 
 ### Cache Analysis
+
 ```cpp
 class CacheAnalyzer {
 public:
@@ -58,7 +64,7 @@ public:
         double l2_hit_rate;
         double texture_hit_rate;
     };
-    
+
     CacheMetrics analyze(int device_id = 0);
 };
 ```

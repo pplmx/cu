@@ -17,18 +17,21 @@ Implement CUDA Graphs foundation for batch workload optimization. CUDA Graphs re
 ## Implementation Decisions
 
 ### Architecture
+
 - Create `cuda/production/` namespace for production hardening features
 - `GraphExecutor` class as the main interface
 - RAII pattern for graph lifecycle management
 - Integration with existing `cuda::stream::Stream` class
 
 ### CUDA Graphs API Usage
+
 - Use `cudaGraphCreate()`, `cudaGraphInstantiate()`
 - Capture via `cudaStreamBeginCapture()`, `cudaStreamEndCapture()`
 - Replay via `cudaGraphLaunch()`
 - Parameter nodes via `cudaGraphAddNode()` with `cudaKernelNodeParams`
 
 ### Memory Integration
+
 - Device memory nodes: `cudaGraphAddMemcpyNode()`
 - Host-pinned memory: `cudaHostRegister()` + memcpy nodes
 - Managed memory: `cudaMallocManaged()` + implicit capture

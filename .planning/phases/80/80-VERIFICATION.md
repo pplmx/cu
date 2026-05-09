@@ -38,7 +38,8 @@ verification_date: "2026-05-01"
 ## Manual Verification
 
 CG Solver Test (10x10 tridiagonal):
-```
+
+```text
 Converged: YES
 Iterations: 5
 Relative residual: 2.29e-18
@@ -46,7 +47,8 @@ Max verification error: 2.22e-16
 ```
 
 Roofline Analysis:
-```
+
+```text
 SpMV Arithmetic Intensity (nnz=1000): 0.124 FLOPs/byte
 Classification: Memory-bound (typical for sparse operations)
 ```
@@ -61,9 +63,11 @@ Classification: Memory-bound (typical for sparse operations)
 
 ## Next Phase
 
-**Phase 81: Extended Formats + Roofline Analysis**
+## Phase 81: Extended Formats + Roofline Analysis
+
 - Depends on: Phase 79, Phase 80
 - Requires: HYB format, performance classification, JSON export
 
 ---
-*Verification generated: 2026-05-01*
+
+## Verification generated: 2026-05-01

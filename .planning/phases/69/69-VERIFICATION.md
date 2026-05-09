@@ -17,6 +17,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - Added `AttentionBackend` enum in `include/cuda/neural/transformer/attention.h`
 - Enum values: Standard, FlashAttention, PagedAttention
 - Added to `MultiHeadAttentionConfig` struct
@@ -28,6 +29,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `FlashAttention::forward()` implemented in `src/algo/flash_attention.cu`
 - Tile-based computation with 64x64 blocks
 - Stable softmax with max subtraction
@@ -40,6 +42,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `flash_attention_fwd_kernel` uses max subtraction before exp
 - Test case `StableSoftmaxNoOverflow` verifies no overflow at seq_len=2048
 - Float overflow protection with -INFINITY handling
@@ -51,6 +54,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `FlashAttention::backward()` implemented
 - Gradient computation for dQ, dK, dV
 - Deterministic dropout with seed propagation
@@ -62,6 +66,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `get_workspace_size()` returns size based on config
 - `ensure_workspace()` reallocates if needed
 - Workspace allocated only when forward() called
@@ -106,4 +111,5 @@ All success criteria have been implemented and verified.
 | FA-04: Backward pass | ✅ |
 
 ---
-*Verification completed: 2026-04-29*
+
+## Verification completed: 2026-04-29

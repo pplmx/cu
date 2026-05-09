@@ -20,6 +20,7 @@ The recommended stack centers on FlashInfer 0.6+ for sampling kernels and page-a
 The core infrastructure requires CUDA 12.x+ (12.8+ for Blackwell), cuDNN 9.x, and CUTLASS 3.x for custom GEMM kernels. For speculative decoding, FlashInfer 0.6+ provides the `chain_speculative_sampling` rejection kernel and paged KV cache support via `append_paged_kv_cache`. FlashAttention 3.x is required for NHD/HND layouts and Blackwell support—existing 2.x installations must be upgraded. The Torch Sampler (TensorRT-LLM's default, replacing deprecated TRTLLMSampler) uses FlashInfer internally for sampling.
 
 **Core technologies:**
+
 - **FlashInfer 0.6+**: Sorting-free sampling kernels, chain speculative sampling, paged KV cache API — primary dependency for spec decode
 - **FlashAttention 3.x**: NHD/HND attention layouts, cascading states, TMA/async copy for Hopper+ — required upgrade from existing 2.6
 - **TensorRT-LLM Attention (XQA kernel)**: 2.4x Llama-70B throughput improvement on H100 — for decode attention
@@ -29,16 +30,19 @@ The core infrastructure requires CUDA 12.x+ (12.8+ for Blackwell), cuDNN 9.x, an
 ### Expected Features
 
 **Must have (table stakes):**
+
 - **Speculative Decoding** — 2-4x latency improvement, requires FlashAttention and sequence manager integration
 - **Beam Search Core (K=4)** — Required for translation, summarization, code generation; memory-optimized with shared prefix blocks
 - **Cross-Sequence Prefix Caching** — 30-70% memory reduction for shared system prompts and RAG workloads
 
 **Should have (competitive):**
+
 - **Tree-Based Speculative Decoding** — Better acceptance rates via EAGLE3/SnapKV tree attention; unlocks higher draft depth
 - **Dynamic Block Sizing** — Adaptive block sizes (16/32/64 tokens) based on workload, 5-15% memory improvement
 - **Chunked Prefill** — Streaming prefill for long prompts (>16K tokens) when memory-constrained
 
 **Defer (v2+):**
+
 - Multi-model Speculative Decoding — Model coordination complexity, hardware heterogeneity edge case
 - KV Cache Compression (NVFP4) — Requires additional profiling for quality tradeoff
 
@@ -49,6 +53,7 @@ The existing five-layer architecture (API/Scheduler → Algo/FlashAttention → 
 Critical architectural constraints: Speculative Decoding requires isolated KV cache per speculation (each draft allocates independent blocks, accepted tokens merge to parent); Beam Search uses reference-counted prefix sharing (only fork blocks that diverge, don't copy full KV); KV Cache improvements enhance both other features by reducing memory pressure.
 
 **Major components:**
+
 1. **SpeculativeDecodingRunner** — Orchestrates draft→verify loop, integrates with Scheduler::step()
 2. **BeamSearchManager** — Beam state, scoring, pruning; manages std::vector<Sequence*> per hypothesis
 3. **StreamingCacheManager** — Async prefetch/evict with L2 persistence hints; hooks into KVCacheAllocator
@@ -72,6 +77,7 @@ Critical architectural constraints: Speculative Decoding requires isolated KV ca
 Based on research, suggested phase structure:
 
 ### Phase 1: KV Cache Foundation
+
 **Rationale:** Other features depend on efficient KV cache. Building streaming, eviction, and persistence first enables better memory planning for speculative and beam modes.
 
 **Delivers:** StreamingCacheManager with async prefetch, EvictionPredictor with attention-aware policy, L2 persistence hints, persistent attention kernel variant.
@@ -83,6 +89,7 @@ Based on research, suggested phase structure:
 **Research Flags:** Medium — L2 persistence hints well-documented; eviction prediction is heuristic/ML choice needs validation
 
 ### Phase 2: Beam Search Core
+
 **Rationale:** Beam search has clear algorithm spec, lower implementation complexity (MEDIUM vs HIGH for spec decode), and validates the memory layer changes from Phase 1.
 
 **Delivers:** BeamSearchManager, BeamSequence with beam_id/beam_score, TopKSampler, batch KV operations in BlockManager.
@@ -94,6 +101,7 @@ Based on research, suggested phase structure:
 **Research Flags:** Low — Well-documented in vLLM, TGI, HuggingFace; standard patterns
 
 ### Phase 3: Speculative Decoding
+
 **Rationale:** Highest user value (2-4x latency) but highest complexity. Benefits from Phase 1 memory improvements and Phase 2 batch handling. Most pitfalls (distribution mismatch, KV contamination) require deep integration testing.
 
 **Delivers:** SpeculativeDecodingRunner, DraftModel interface, VerificationKernel with chain speculative sampling, LogProbTracker.
@@ -107,6 +115,7 @@ Based on research, suggested phase structure:
 **Research Flags:** High — Rejection sampling implementation correctness is critical; need KL divergence test against reference
 
 ### Phase 4: Integration & CUDA Graph
+
 **Rationale:** Consolidate all features, ensure no interference, optimize with CUDA Graphs, add persistent KV support for graph capture.
 
 **Delivers:** Persistent cache CUDA Graph support, cross-feature integration tests, benchmark suite.
@@ -125,10 +134,12 @@ Based on research, suggested phase structure:
 ### Research Flags
 
 Phases likely needing deeper research during planning:
+
 - **Phase 3 (Speculative Decoding):** Kernel implementation correctness—KL divergence verification methodology, tree attention kernel vs single-draft tradeoffs
 - **Phase 4 (Integration):** CUDA Graph conditional nodes for dynamic shapes, persistent KV + batch size variation
 
 Phases with standard patterns (skip research-phase):
+
 - **Phase 2 (Beam Search):** Well-documented in vLLM/TGI; beam_width=4 greedy selection is established pattern
 
 ## Confidence Assessment
@@ -152,19 +163,23 @@ Phases with standard patterns (skip research-phase):
 ## Sources
 
 ### Primary (HIGH confidence)
+
 - NVIDIA TensorRT-LLM Documentation (nvidia.github.io/TensorRT-LLM/) — Speculative decoding, sampling, CUDA integration
 - FlashInfer 0.6.9 Documentation (docs.flashinfer.ai/) — Attention kernels, page API, verification kernels
 - vLLM Documentation (docs.vllm.ai/) — PagedAttention design, speculative decoding implementation
 
 ### Secondary (MEDIUM confidence)
+
 - vLLM GitHub (79k stars) — State-of-the-art reference for implementation patterns
 - LightLLM GitHub (4k stars) — Token-level KV cache management reference
 - Flash Attention Paper (arXiv:2205.14135) — Core attention algorithm
 
 ### Tertiary (LOW confidence)
+
 - EAGLE/SnapKV papers — Tree attention for spec decode; needs implementation validation
 - Community patterns (r/MachineLearning, GitHub issues) — Edge cases, unverified
 
 ---
+
 *Research completed: 2026-05-05*
 *Ready for roadmap: yes*

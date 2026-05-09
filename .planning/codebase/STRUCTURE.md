@@ -4,7 +4,7 @@
 
 ## Directory Layout
 
-```
+```text
 nova/
 ├── include/                    # Public header interface
 │   ├── cuda/                   # CUDA library (main library)
@@ -258,7 +258,7 @@ nova/
 
 ## Source vs Test Separation
 
-```
+```text
 tests/
 ├── *_test.cpp                    # Unit tests (co-located by domain)
 ├── *_test.cu                     # CUDA unit tests
@@ -281,7 +281,7 @@ tests/
 
 ### Core Libraries
 
-```
+```text
 cmake_target          description                  sources
 ─────────────────────────────────────────────────────────────────
 cuda_memory           Memory management            INTERFACE
@@ -333,23 +333,27 @@ ctest
 ## Special Directories
 
 **`data/`**
+
 - Purpose: Test patterns, STB image library
 - Generated: No
 - Committed: Yes
 
 **`.planning/`**
+
 - Purpose: Planning and codebase analysis documents
 - Contains: ARCHITECTURE.md, STRUCTURE.md, ROADMAP.md, etc.
 
 **`build*/`**
+
 - Purpose: Build output directories
 - Generated: Yes
 - Committed: No (gitignored)
 
 **`docs/superpowers/`**
+
 - Purpose: Design specs and implementation plans
 - Contains: RFCs, design documents
 
 ---
 
-*Structure analysis: 2026-04-30*
+## Structure analysis: 2026-04-30

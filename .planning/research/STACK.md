@@ -53,7 +53,7 @@
 
 Based on existing v2.6 FlashAttention + PagedAttention + FP8 quantization stack:
 
-```
+```text
 Layer 5 (API):
   - Add: SpeculativeDecodingConfig, BeamSearchParams, KVCacheConfigV2
 
@@ -133,16 +133,19 @@ pip install xgrammar
 ## Key Integration Notes
 
 ### Speculative Decoding Requires
+
 1. **Rejection sampling kernel** (FlashInfer `chain_speculative_sampling`)
 2. **KV cache access for draft tokens** (existing PagedAttention extends here)
 3. **Parallel drafting support** (EAGLE3, PARD for multi-token speculation)
 
 ### Beam Search Requires
+
 1. **Beam width management in KV cache** (block allocation per beam)
 2. **Logits processor integration** (for prefix caching across beams)
 3. **Sampling back-compat** (max_beam_width = best_of)
 
 ### KV Cache Improvements
+
 1. **NVFP4 KV quantization** (FlashInfer `nvfp4_kv_quantize`)
 2. **Cascade attention** (merge states for prefix reuse)
 3. **Prefix caching** (automatic with block-level hash)

@@ -28,6 +28,7 @@ Enabled SegmentedSortTest fixture by adding proper CUDA device initialization.
 ## Tests Fixed
 
 5 tests enabled:
+
 - SegmentedSortTest::SortByKeyBasic
 - SegmentedSortTest::SortInPlace
 - SegmentedSortTest::ConfigSetters

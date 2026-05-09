@@ -39,6 +39,7 @@
 ### clangd Configuration
 
 The `.clangd/config.yaml` file:
+
 - Adds `-xcuda` to tell clangd to parse files as CUDA C++
 - Specifies `--cuda-gpu-arch=sm_80` for type checking
 - Removes nvcc-specific flags (`-gencode`, `--threads`) that confuse clangd
@@ -47,6 +48,7 @@ The `.clangd/config.yaml` file:
 ### VS Code Integration
 
 Extensions recommended:
+
 - `llvm-vs-code-extensions.vscode-clangd`
 - `ms-vscode.cmake-tools`
 - `ms-vscode.cpptools`
@@ -58,5 +60,6 @@ Extensions recommended:
 - ✅ Gitignored to prevent committing build artifacts
 
 ---
+
 *Phase completed: 2026-04-26*
 *Requirements: IDE-01 ✓, IDE-02 ✓, IDE-03 ✓, IDE-04 ✓*

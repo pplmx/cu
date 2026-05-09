@@ -10,18 +10,21 @@
 ## Deliverables
 
 ### FakeQuantize (QAT-01, QAT-02)
+
 - `FakeQuantize` class with forward/backward operations
 - Straight-through estimator (STE) gradient approximation
 - Configurable scale and zero_point
 - Per-channel quantization support
 
 ### AMPManager (MIX-01)
+
 - `AMPManager` for automatic mixed precision management
 - Layer-wise precision configuration
 - Config save/load for reproducibility
 - Precision tracking per layer
 
 ### SensitivityAnalyzer (MIX-02)
+
 - `SensitivityAnalyzer` for gradient magnitude analysis
 - Automatic precision recommendation based on sensitivity
 - `auto_assign_precision()` for AMPManager integration

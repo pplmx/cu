@@ -7,6 +7,7 @@
 ## 1. Overview
 
 A production-ready CUDA parallel algorithms library with a multi-layered architecture supporting:
+
 - Educational demonstrations
 - Extensibility for new algorithms
 - Production-grade library quality
@@ -17,7 +18,7 @@ A production-ready CUDA parallel algorithms library with a multi-layered archite
 
 ### 2.1 Layered Architecture (Five Layers)
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │  Layer 3: High-Level API (STL-style)                        │
 │  - cuda::reduce(), cuda::sort()                            │
@@ -48,7 +49,7 @@ A production-ready CUDA parallel algorithms library with a multi-layered archite
 
 ### 2.2 Directory Structure
 
-```
+```text
 include/cuda/
 ├── memory/               # Layer 0: Memory Foundation
 │   ├── buffer.h         # cuda::memory::Buffer<T>
@@ -155,11 +156,11 @@ class unique_ptr {
 public:
     unique_ptr() = default;
     explicit unique_ptr(size_t count);
-    
+
     T* get() const;
     T* release();
     explicit operator bool() const;
-    
+
     // Move semantics
     unique_ptr(unique_ptr&&) noexcept;
     unique_ptr& operator=(unique_ptr&&) noexcept;
@@ -181,12 +182,12 @@ public:
         size_t max_blocks = 16;
         bool preallocate = false;
     };
-    
+
     explicit MemoryPool(const Config& config = {});
-    
+
     Buffer<void> allocate(size_t bytes);
     void deallocate(Buffer<void> buffer);
-    
+
     size_t total_allocated() const;
     size_t total_available() const;
     void clear();

@@ -16,7 +16,7 @@
 
 ## Architecture
 
-```
+```text
 SignalHandler
 ├── install_handlers()
 ├── handle_signal()

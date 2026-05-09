@@ -24,4 +24,5 @@
 | SIGNAL-03: FIR filters | ✅ Implemented |
 
 ---
-*Phase 57: Signal Processing — Complete*
+
+## Phase 57: Signal Processing — Complete

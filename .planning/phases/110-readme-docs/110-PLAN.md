@@ -20,35 +20,43 @@
 ## Task Breakdown
 
 ### T-01: README.md Update
+
 Priority: **High**
 
 **Actions:**
+
 - Update features list for v2.x
 - Add quick start example
 - Add API documentation link
 - Add contribution guidelines link
 
 ### T-02: CHANGELOG.md Update
+
 Priority: **High**
 
 **Actions:**
+
 - Add entries for v1.0 through v2.14 milestones
 - Include key features and breaking changes
 - Format consistently with keepachangelog.com
 
 ### T-03: Architecture Overview
+
 Priority: **Medium**
 
 **Actions:**
+
 - Create/update docs/ARCHITECTURE.md
 - Document five-layer design
 - Include layer dependencies
 - Add simple diagram
 
 ### T-04: Feature Guides
+
 Priority: **Medium**
 
 **Actions:**
+
 - Create docs/SPARSE.md with SpMV examples
 - Create docs/INFERENCE.md with optimization tips
 - Create docs/QUANTIZATION.md with FP8/INT8 guide

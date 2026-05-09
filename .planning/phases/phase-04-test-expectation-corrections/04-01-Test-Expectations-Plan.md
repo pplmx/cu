@@ -47,17 +47,21 @@ Verify that test expectations are correctly set. Mark phase complete if tests pa
 ## Tasks
 
 ### Task 1: Verify PositionalEncoding Tests
+
 **Status:** No dedicated test file found. If needed, this is a separate feature work item.
 
 ### Task 2: Verify FusedMatmulBiasAct Tolerance
+
 Check tests/neural/fusion/fused_matmul_bias_act_test.cpp for proper tolerance checking.
 **Status:** EXPECT_NEAR is used for floating point comparisons.
 
 ### Task 3: Verify PrefixSharing Reference Tracking
+
 Check tests/memory/prefix_sharing_test.cpp for correct ref_count assertions.
 **Status:** Tests correctly verify ref_count changes (1 → 2 → 1).
 
 ### Task 4: Verify Fragmentation Calculation
+
 Check tests/memory/fragmentation_test.cpp for appropriate threshold checks.
 **Status:** Tests use EXPECT_GE/EXPECT_GT/EXPECT_LT with appropriate values.
 

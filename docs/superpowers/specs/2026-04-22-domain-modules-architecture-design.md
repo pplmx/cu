@@ -10,13 +10,13 @@
 
 - Device-only APIs (no H2D/D2H magic)
 - RAII everywhere (Buffer<T>, UniquePtr<T>)
-- No global state (remove __constant__ globals)
+- No global state (remove **constant** globals)
 - Monadic error handling via exceptions
 - Builder pattern for kernel launches
 
 ## 2. Target Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                        Public API Layer                                 │
 │                         cuda::algo::*                                   │
@@ -148,6 +148,7 @@ struct ParallelPrimitives {
 ## 4. Implementation Plan
 
 ### Phase 1: Core Infrastructure
+
 - [x] `error.h` - CUDA_CHECK, CudaException
 - [x] `buffer.h` / `buffer.cpp` - Buffer<T> RAII wrapper
 - [x] `memory_pool.h` / `memory_pool.cpp` - Real memory pooling
@@ -155,29 +156,34 @@ struct ParallelPrimitives {
 - [x] `kernel_launcher.h` - Launch abstraction
 
 ### Phase 2: Domain Refactoring
-- [x] `gaussian_blur.cu` - Remove __constant__ globals, use Buffer, use KernelLauncher
+
+- [x] `gaussian_blur.cu` - Remove **constant** globals, use Buffer, use KernelLauncher
 - [x] `add.cu` - Use KernelLauncher, consistent API
 - [x] `scan.cu` - Use KernelLauncher, use Buffer
 - [x] `sort.cu` - Use KernelLauncher, use Buffer
 
 ### Phase 3: Matrix Operations
+
 - [x] `mult.cu` - Create CublasContext RAII, use Buffer
 - [x] `conv2d.cu` - Refactor to use Buffer, KernelLauncher
 
 ### Phase 4: Stream/Event
+
 - [x] `stream.h` / `event.h` - Stream and Event RAII wrappers
 
 ### Phase 5: Performance Primitives
+
 - [x] `device_utils.h` - Add block_reduce, warp primitives
 
 ### Phase 6: Testing
+
 - [x] Add convolution_test.cu (refactored)
 - [x] Add cublas_context_test.cu
 - [x] All 166 tests passing
 
 ## 5. Files Structure
 
-```
+```text
 include/cuda/
 ├── error.h                    # CUDA_CHECK, CudaException
 ├── device/
@@ -259,6 +265,7 @@ private:
 ## 8. Key Changes from Current Code
 
 ### Remove
+
 - `__constant__` globals in gaussian_blur.cu
 - `exit()` on error (replace with throw)
 - Raw `new[]/delete[]` (use Buffer/vector)
@@ -266,6 +273,7 @@ private:
 - Hardcoded shared memory sizes
 
 ### Replace
+
 - `cudaMalloc` → `Buffer<T>`
 - `cudaFree` → Buffer destructor
 - Manual H2D/D2H → User manages buffers
@@ -294,7 +302,7 @@ BenchmarkTest - verify no regression
 - [x] Buffer<T> RAII wrapper working
 - [x] MemoryPool real pooling implemented
 - [x] KernelLauncher abstraction complete
-- [x] All __constant__ globals removed
+- [x] All **constant** globals removed
 - [x] All raw cudaMalloc/cudaFree replaced
 - [x] All tests passing (166 tests)
 - [ ] Clean build with no warnings (deprecation warnings remain)

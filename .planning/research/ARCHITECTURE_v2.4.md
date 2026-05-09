@@ -10,7 +10,7 @@ The v2.4 production hardening adds four new architectural components that integr
 
 ## Component Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │                     NEW: Graph Executor (API Layer)                  │
 │              Wraps algorithm pipelines in CUDA graphs                │
@@ -59,50 +59,50 @@ namespace cuda::graph {
 class GraphExecutor {
 public:
     using CaptureFunc = std::function<void(cudaStream_t)>;
-    
+
 private:
     cudaGraph_t graph_ = nullptr;
     cudaGraphExec_t executable_ = nullptr;
     bool is_captured_ = false;
     bool is_instantiated_ = false;
-    
+
     // Memory nodes to prevent invalidation
     std::vector<void*> pinned_pointers_;
     std::vector<size_t> pinned_sizes_;
-    
+
     int device_id_ = 0;
 
 public:
     GraphExecutor();
     ~GraphExecutor();
-    
+
     // Disable copying (GPU resources)
     GraphExecutor(const GraphExecutor&) = delete;
     GraphExecutor& operator=(const GraphExecutor&) = delete;
-    
+
     // Allow move
     GraphExecutor(GraphExecutor&& other) noexcept;
     GraphExecutor& operator=(GraphExecutor&& other) noexcept;
-    
+
     // Capture operations into a graph
     void beginCapture(Stream& stream);
     void addOperation(CaptureFunc&& operation);
     void endCapture();
-    
+
     // Instantiate for repeated execution
     void instantiate();
-    
+
     // Execute the graph
     void launch(Stream& stream);
-    
+
     // Synchronization
     void synchronize() const;
-    
+
     // Memory management
     void pinMemory(void* ptr, size_t size);
     template<typename T>
     void pinBuffer(const memory::Buffer<T>& buffer);
-    
+
     // Status
     bool isValid() const { return is_instantiated_; }
     explicit operator bool() const { return isValid(); }
@@ -118,11 +118,11 @@ public:
         g.executor_->beginCapture(stream);
         return g;
     }
-    
+
     void addOperation(CaptureFunc&& op) {
         executor_->addOperation(std::move(op));
     }
-    
+
     GraphExecutor::CaptureFunc finalize() {
         return [executor = std::move(executor_)](cudaStream_t stream) {
             executor->instantiate();
@@ -139,34 +139,34 @@ public:
 void useGraphExecutor() {
     // Create executor
     graph::GraphExecutor executor;
-    
+
     // Begin capture on a stream
     auto stream = stream::make_stream();
     executor.beginCapture(stream);
-    
+
     // Add existing algorithm operations
     executor.addOperation([&](cudaStream_t s) {
         algo::reduce_async(data, output, n, s);
     });
-    
+
     executor.addOperation([&](cudaStream_t s) {
         algo::scan_async(output, n, s);
     });
-    
+
     // Pin any external memory used
     executor.pinMemory(external_buffer, buffer_size);
-    
+
     // End capture
     executor.endCapture();
-    
+
     // Instantiate for repeated use
     executor.instantiate();
-    
+
     // Launch multiple times
     for (int i = 0; i < iterations; i++) {
         executor.launch(stream);
     }
-    
+
     executor.synchronize();
 }
 ```
@@ -213,25 +213,25 @@ private:
 public:
     explicit L2PersistenceManager(size_t max_bytes = 0);
     ~L2PersistenceManager();
-    
+
     // Request persistence for a buffer
     bool requestPersistedAccess(void* ptr, size_t bytes);
-    
+
     // Release persistence
     void releasePersistedAccess(void* ptr);
-    
+
     // Query status
     size_t maxBytes() const { return max_persistent_bytes_; }
     size_t currentBytes() const { return current_persistent_bytes_; }
     float utilization() const {
         return static_cast<float>(current_persistent_bytes_) / max_persistent_bytes_;
     }
-    
+
     // Check if persistence is possible
     bool canPersist(size_t bytes) const {
         return current_persistent_bytes_ + bytes <= max_persistent_bytes_;
     }
-    
+
     // For working sets: update which buffers should persist
     void updateWorkingSet(const std::vector<void*>& active_ptrs);
 };
@@ -247,24 +247,24 @@ void useL2Persistence() {
     size_t l2_size;
     cudaDeviceGetL2CacheSize(&l2_size, device);
     memory::L2PersistenceManager l2{l2_size / 4};
-    
+
     // Allocate working buffers
     Buffer<float> buffer1(1024 * 1024);
     Buffer<float> buffer2(1024 * 1024);
-    
+
     // Request persistence (if budget allows)
     if (l2.canPersist(buffer1.size())) {
         l2.requestPersistedAccess(buffer1.data(), buffer1.size());
     }
-    
+
     // Iterative algorithm with working set
     for (int iter = 0; iter < 100; iter++) {
         kernel1<<<..., stream>>>(buffer1.data());  // Fast: persisted in L2
         kernel2<<<..., stream>>>(buffer2.data());
-        
+
         l2.updateWorkingSet({buffer1.data()});  // Only buffer1 persists
     }
-    
+
     // Cleanup
     l2.releasePersistedAccess(buffer1.data());
 }
@@ -297,39 +297,39 @@ namespace cuda::stream {
 class PriorityStreamPool {
 public:
     enum class Priority { High, Normal, Low };
-    
+
 private:
     struct StreamEntry {
         cudaStream_t stream;
         Priority priority;
         bool in_use = false;
     };
-    
+
     std::vector<StreamEntry> streams_;
     int priority_min_ = 0;
     int priority_max_ = 0;
     int device_id_ = 0;
-    
+
     // Prevent construction
     PriorityStreamPool() = default;
 
 public:
     // Singleton access
     static PriorityStreamPool& instance();
-    
+
     // Initialize with device
     void initialize(int device_id);
-    
+
     // Acquire a stream of the given priority
     struct AcquiredStream {
         cudaStream_t stream;
         Priority priority;
     };
     AcquiredStream acquire(Priority priority);
-    
+
     // Release a stream back to the pool
     void release(cudaStream_t stream);
-    
+
     // Query priorities
     int priorityRangeMin() const { return priority_min_; }
     int priorityRangeMax() const { return priority_max_; }
@@ -345,19 +345,19 @@ public:
 void usePriorityPool() {
     auto& pool = stream::PriorityStreamPool::instance();
     pool.initialize(0);
-    
+
     // High-priority for latency-sensitive work
     auto critical = pool.acquire(stream::PriorityStreamPool::Priority::High);
     kernel1<<<..., critical.stream>>>();
-    
+
     // Normal for standard operations
     auto normal = pool.acquire(stream::PriorityStreamPool::Priority::Normal);
     kernel2<<<..., normal.stream>>>();
-    
+
     // Low-priority for background work
     auto batch = pool.acquire(stream::PriorityStreamPool::Priority::Low);
     batchKernel<<<..., batch.stream>>>();
-    
+
     // Release when done
     pool.release(critical.stream);
     pool.release(normal.stream);
@@ -404,25 +404,25 @@ class AsyncErrorTracker {
     static constexpr size_t MAX_RECORDS = 1024;
     std::vector<ErrorRecord> records_;
     uint64_t start_time_;
-    
+
 public:
     AsyncErrorTracker();
-    
+
     // Record an operation and its potential error
     void record(const char* operation, cudaError_t result);
-    
+
     // After a sync point, check for errors
     void checkSyncPoint(cudaStream_t stream);
-    
+
     // Get first error encountered
     cudaError_t getFirstError() const;
-    
+
     // Get error with most context
     const ErrorRecord* getMostInformativeError() const;
-    
+
     // Clear records
     void reset();
-    
+
     // Diagnostics
     size_t errorCount() const;
     void dumpRecords() const;  // For logging/debugging
@@ -432,11 +432,11 @@ public:
 class TrackedStream {
     AsyncErrorTracker& tracker_;
     cudaStream_t stream_;
-    
+
 public:
     TrackedStream(AsyncErrorTracker& tracker, Priority priority = Priority::Normal);
     ~TrackedStream();
-    
+
     cudaStream_t get() const { return stream_; }
     operator cudaStream_t() const { return stream_; }
 };
@@ -449,19 +449,19 @@ public:
 ```cpp
 void useErrorTracker() {
     error::AsyncErrorTracker tracker;
-    
+
     {
         error::TrackedStream stream{tracker};
-        
+
         // Operations tracked automatically
         cudaMemcpyAsync(..., stream);
         kernel1<<<..., stream>>>();
         kernel2<<<..., stream>>>();
-        
+
         // Check at sync point
         cudaStreamSynchronize(stream);
         tracker.checkSyncPoint(stream);
-        
+
         // Get diagnostic info
         if (auto* err = tracker.getMostInformativeError()) {
             fmt::print("Error in {}: {}\n",
@@ -513,6 +513,7 @@ target_link_libraries(cuda_impl PRIVATE nvbench::nvbench)
 ### 5.3 Backward Compatibility
 
 All v2.4 components are additive:
+
 - Existing code continues to work unchanged
 - New features are opt-in via new classes/functions
 - No changes to existing API signatures

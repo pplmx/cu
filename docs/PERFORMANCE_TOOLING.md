@@ -136,13 +136,13 @@ for (const auto& rec : recommendations) {
 
 ### Known Fusion Patterns
 
-| Pattern | Description | Confidence |
-|---------|-------------|------------|
-| matmul_bias_act_relu | Matmul + bias + ReLU | HIGH |
-| matmul_bias_act_gelu | Matmul + bias + GELU | HIGH |
-| conv_bias_act_relu | Conv + bias + ReLU | HIGH |
-| relu_pool | ReLU + pooling | HIGH |
-| elementwise_chain | Element-wise chain | HIGH |
+| Pattern              | Description          | Confidence |
+| -------------------- | -------------------- | ---------- |
+| matmul_bias_act_relu | Matmul + bias + ReLU | HIGH       |
+| matmul_bias_act_gelu | Matmul + bias + GELU | HIGH       |
+| conv_bias_act_relu   | Conv + bias + ReLU   | HIGH       |
+| relu_pool            | ReLU + pooling       | HIGH       |
+| elementwise_chain    | Element-wise chain   | HIGH       |
 
 ## Memory Bandwidth Optimization
 
@@ -282,22 +282,22 @@ New performance domains added in v2.11:
 
 ## Requirements Coverage
 
-| Requirement | Component | Phase |
-|-------------|-----------|-------|
-| NVBlox-01 | NVBloxMetricsCollector | 93 |
-| NVBlox-02 | KernelProfiler | 93 |
-| NVBlox-03 | MetricAggregators | 93 |
-| FUSION-01 | KernelFusionAnalyzer | 94 |
-| FUSION-02 | FusionProfitabilityModel | 94 |
-| FUSION-03 | FusionRecommendationEngine | 94 |
-| BANDWIDTH-01 | RooflineModel | 95 |
-| BANDWIDTH-02 | BandwidthUtilizationTracker | 95 |
-| BANDWIDTH-03 | CacheAnalyzer | 95 |
-| DASH-01 | DashboardExporter | 96 |
-| DASH-02 | Roofline export | 96 |
-| DASH-03 | FlameGraphGenerator | 96 |
-| INT-01 | nvbench integration | 96 |
-| INT-02 | NVTX domains | 93 |
+| Requirement  | Component                   | Phase |
+| ------------ | --------------------------- | ----- |
+| NVBlox-01    | NVBloxMetricsCollector      | 93    |
+| NVBlox-02    | KernelProfiler              | 93    |
+| NVBlox-03    | MetricAggregators           | 93    |
+| FUSION-01    | KernelFusionAnalyzer        | 94    |
+| FUSION-02    | FusionProfitabilityModel    | 94    |
+| FUSION-03    | FusionRecommendationEngine  | 94    |
+| BANDWIDTH-01 | RooflineModel               | 95    |
+| BANDWIDTH-02 | BandwidthUtilizationTracker | 95    |
+| BANDWIDTH-03 | CacheAnalyzer               | 95    |
+| DASH-01      | DashboardExporter           | 96    |
+| DASH-02      | Roofline export             | 96    |
+| DASH-03      | FlameGraphGenerator         | 96    |
+| INT-01       | nvbench integration         | 96    |
+| INT-02       | NVTX domains                | 93    |
 
 ## See Also
 

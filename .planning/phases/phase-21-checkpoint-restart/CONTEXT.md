@@ -18,7 +18,7 @@
 
 ### Architecture
 
-```
+```text
 CheckpointManager (singleton)
 ├── StorageBackend (abstract)
 │   ├── FileStorageBackend

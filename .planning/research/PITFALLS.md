@@ -19,12 +19,14 @@ Generated output diverges from target model distribution, producing incorrect or
 
 **Why it happens:**
 The rejection sampling logic compares draft and target model probabilities incorrectly. Common mistakes:
+
 - Using argmax from draft instead of sampling
 - Incorrect handling of temperature during verification
 - Comparing unnormalized logits instead of proper probability distributions
 - Floating-point precision loss when computing acceptance ratios near 1.0
 
 **How to avoid:**
+
 ```cpp
 // CORRECT: Proper acceptance check per token
 float draft_prob = softmax(draft_logits)[draft_token];
@@ -36,6 +38,7 @@ if (draft_logits[token] >= target_logits[token]) // FAILS
 ```
 
 **Warning signs:**
+
 - Output quality degrades at longer sequence lengths
 - Acceptance rate too high (>95%) indicates loose verification
 - Different outputs on repeated runs with same seed
@@ -53,6 +56,7 @@ Rejected speculative tokens corrupt the KV cache, causing subsequent tokens to b
 When a speculative token is rejected, the KV cache still contains the attention states computed for that token. The next accepted token then attends over incorrect historical context.
 
 **How to avoid:**
+
 - Cache prefix tokens only (before speculative phase)
 - Use sequence IDs to track which tokens are "official" vs speculative
 - Implement rollback mechanism that restores KV cache to last accepted state
@@ -72,6 +76,7 @@ attention_mask.add_bias(is_prefix_token ? 0.0f : -inf);
 ```
 
 **Warning signs:**
+
 - Errors only appear after first rejection
 - Longer rejection chains produce worse output
 - Output improves when speculation depth is reduced to 1
@@ -89,6 +94,7 @@ Memory usage grows unbounded with sequence length, causing OOM errors on long ge
 Naive beam search stores `beam_width * sequence_length * vocab_size` scores at each step. With beam_width=8 and sequence_length=1000, this is significant.
 
 **How to avoid:**
+
 - Store only top-k candidate scores, not full beam state
 - Prune beams aggressively based on score delta threshold
 - Use compact beam representation (store parent pointers, not full history)
@@ -109,6 +115,7 @@ std::vector<BeamState> active_beams;  // Compact representation
 ```
 
 **Warning signs:**
+
 - Memory usage grows linearly with sequence length (should be sublinear)
 - OOM errors only occur past certain sequence threshold
 - Profiler shows memory allocation spikes at each decode step
@@ -126,6 +133,7 @@ Beam scores become -inf due to repeated multiplication of probabilities, causing
 Log probabilities are summed over long sequences. Each token contributes a negative logprob (~0.5-5.0). After 500 tokens with avg logprob of -2.0, cumulative score is -1000.0 — still representable. But after 2000 tokens with poor tokens (logprob -10.0), you get -20000.0, which underflows to -inf on float32.
 
 **How to avoid:**
+
 - Normalize scores per step: `score = score / length_penalty`
 - Use length normalization: `score = cumulative_logprob / (seq_len ^ alpha)`
 - Switch to float64 for cumulative scores (acceptable overhead for small beam state)
@@ -145,6 +153,7 @@ if (step % 100 == 0) {
 ```
 
 **Warning signs:**
+
 - Generation stops at exact same length across different prompts
 - Beam diversity drops to zero at longer sequences
 - Inf/nan appears in scores but not in logits
@@ -162,6 +171,7 @@ KV cache allocation becomes fragmented across many small blocks, causing memory 
 PagedAttention allocates memory in fixed-size blocks per token. With variable-length requests and concurrent sequences, the allocator produces many small holes. Over time, this fragments memory even when total free space is sufficient.
 
 **How to avoid:**
+
 - Implement block compaction during idle cycles
 - Use segregated free lists with power-of-two block sizes
 - Set `CUDA malloc pool reuse` for KV cache allocations
@@ -181,6 +191,7 @@ cudaMallocFromPoolAsync(&kv_ptr, size, kv_pool, stream);
 ```
 
 **Warning signs:**
+
 - Allocating small blocks (<512 bytes) repeatedly
 - Fragmentation ratio increases over time
 - Memory usage spikes when switching between batch sizes
@@ -199,6 +210,7 @@ KV cache is dominated by attention to first token ("attention sink"), wasting me
 Transformers exhibit attention sink phenomenon — excessive attention to first token. Without management, this first token's KV entries consume cache space disproportionately.
 
 **How to avoid:**
+
 - Implement importance-based cache eviction (evict low-attention entries)
 - Use streaming cache with configurable retention policy
 - Apply attention-aware prefetching based on attention patterns
@@ -221,6 +233,7 @@ void evict_low_attention_entries(int num_to_evict) {
 ```
 
 **Warning signs:**
+
 - Cache hit rate drops despite recent-token reuse patterns
 - First token dominates cache usage
 - Attention visualization shows heavy first-token attention

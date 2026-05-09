@@ -41,7 +41,7 @@ Features that seem good but create complexity or conflicts.
 
 ## Feature Dependencies
 
-```
+```text
 [Speculative Decoding Base]
     ├──requires──> [Draft Model Interface]
     │                  └──requires──> [Token Scoring Infrastructure]
@@ -72,7 +72,7 @@ Features that seem good but create complexity or conflicts.
 
 ### Speculative Decoding
 
-```
+```text
 Algorithm Flow:
 1. Draft model generates K candidate tokens (typically 4-8)
 2. Target model verifies ALL candidates in single forward pass
@@ -97,7 +97,7 @@ Key Implementation Details:
 
 ### Beam Search
 
-```
+```text
 Algorithm Flow:
 1. Start with K beam hypotheses (K = beam_width)
 2. For each step:
@@ -122,7 +122,8 @@ Key Implementation Details:
 ### KV Cache Improvements
 
 #### Cross-Sequence Prefix Sharing
-```
+
+```text
 Use Case: System prompts, few-shot examples shared across requests
 
 Implementation:
@@ -138,7 +139,8 @@ Expected Behavior:
 ```
 
 #### Dynamic Block Sizing
-```
+
+```text
 Use Case: Mixed workload with varying sequence lengths
 
 Implementation:
@@ -153,7 +155,8 @@ Expected Behavior:
 ```
 
 #### Chunked Prefill
-```
+
+```text
 Use Case: Long prompts that exceed GPU memory
 
 Implementation:
@@ -226,11 +229,13 @@ Expected Behavior:
 | Chunked Prefill | MEDIUM | MEDIUM | P2 | Medium |
 
 **Priority key:**
+
 - P1: Must have for launch (customer commitments, table stakes)
 - P2: Should have, add when possible (significant value, manageable cost)
 - P3: Nice to have, future consideration (speculative)
 
 **Risk key:**
+
 - Low: Straightforward implementation, clear spec
 - Medium: Some unknowns, needs profiling
 - High: Significant research needed, unclear approach
@@ -275,12 +280,12 @@ Expected Behavior:
 
 ## Sources
 
-- vLLM Speculative Decoding: https://docs.vllm.ai/en/latest/serving/spec_decode.html
-- HuggingFace TGI: https://huggingface.co/docs/text-generation-inference/conceptual/speculative_decoding
-- Flash Attention Paper: https://arxiv.org/abs/2205.14135
-- Medusa (Speculative Decoding): https://arxiv.org/abs/2305.04437
-- Eagle (Speculative Decoding): https://arxiv.org/abs/2401.15077
-- StreamingLLM: https://arxiv.org/abs/2309.17453
+- vLLM Speculative Decoding: <https://docs.vllm.ai/en/latest/serving/spec_decode.html>
+- HuggingFace TGI: <https://huggingface.co/docs/text-generation-inference/conceptual/speculative_decoding>
+- Flash Attention Paper: <https://arxiv.org/abs/2205.14135>
+- Medusa (Speculative Decoding): <https://arxiv.org/abs/2305.04437>
+- Eagle (Speculative Decoding): <https://arxiv.org/abs/2401.15077>
+- StreamingLLM: <https://arxiv.org/abs/2309.17453>
 
 ---
 

@@ -16,17 +16,20 @@ requirements:
 ## Verification Results
 
 ### COVR-01: HTML Coverage Report ✅
+
 - [x] CMake option `NOVA_COVERAGE=ON` enables instrumentation
 - [x] `scripts/coverage/generate_coverage.sh` generates HTML report
 - [x] Output at `build/coverage/index.html/index.html`
 - [x] Supports line, branch, and function coverage
 
 ### COVR-02: Coverage Gap Analysis ✅
+
 - [x] `scripts/coverage/coverage_gaps.sh` shows untested functions
 - [x] Output saved to `build/coverage/gaps/`
 - [x] Per-module gap analysis available
 
 ### COVR-03: Per-Module Breakdown ✅
+
 - [x] `scripts/coverage/coverage_summary.sh` shows per-module stats
 - [x] Modules: memory, algo, neural, fft, graph, raytrace, stream, etc.
 - [x] Coverage percentages displayed for each module
@@ -58,9 +61,11 @@ open build/coverage/index.html/index.html
 | `scripts/coverage/README.md` | Documentation |
 
 CMake Changes:
+
 - Added `NOVA_COVERAGE` option
 - Added `NOVA_COVERAGE_MIN` cache variable
 - Coverage flags added when enabled
 
 ---
-*Verification completed: 2026-04-26*
+
+## Verification completed: 2026-04-26

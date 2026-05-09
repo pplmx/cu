@@ -20,58 +20,73 @@
 ## Task Breakdown
 
 ### T-01: Memory Layer (2 source files)
+
 Priority: **High** (foundation layer)
 
 Files:
+
 - `src/cuda/memory/*.cpp`
 
 **Actions:**
+
 - Comment memory allocation strategies
 - Document buffer lifecycle management
 - Note CUDA memory type considerations (pinned, device, managed)
 
 ### T-02: Device Layer (2 source files)
+
 Priority: **High**
 
 Files:
+
 - `src/cuda/device/*.cpp`
 
 **Actions:**
+
 - Comment device selection logic
 - Document context management
 - Note CUDA device properties usage
 
 ### T-03: Algorithm Layer (2 source files)
+
 Priority: **Medium**
 
 Files:
+
 - `src/cuda/algo/*.cu`
 
 **Actions:**
+
 - Comment algorithm approach rationale
 - Document kernel configuration decisions
 - Note time/space complexity assumptions
 
 ### T-04: Neural/Inference (16 source files)
+
 Priority: **High** (most complex)
 
 Files:
+
 - `src/cuda/neural/*.cu` (13 files)
 - `src/cuda/inference/*.cu` (3 files)
 
 **Actions:**
+
 - Comment layer implementation rationale
 - Document gradient flow assumptions
 - Note precision/performance tradeoffs
 
 ### T-05: Distributed/Production (19 source files)
+
 Priority: **Medium**
 
 Files:
+
 - `src/cuda/nccl/*.cpp` (11 files)
 - `src/cuda/production/*.cpp` (8 files)
 
 **Actions:**
+
 - Comment collective communication patterns
 - Document fault tolerance mechanisms
 - Note production deployment considerations
@@ -87,6 +102,7 @@ Files:
 ## Verification
 
 After each task:
+
 1. Review modified files for comment coverage
 2. Verify comments explain "why" not "what"
 3. Check for TODO comments that can be resolved

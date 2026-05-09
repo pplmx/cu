@@ -48,6 +48,7 @@ score: 4/4
 ## Documentation
 
 Complete API reference for:
+
 - Observability: Timeline, Bandwidth, KernelStats, Occupancy
 - Algorithms: SegmentedSort, SpMV, SampleSort, SSSP
 - Testing: MemorySafety, TestIsolation, LayerErrorInjection, BoundaryTesting, FPDeterminism

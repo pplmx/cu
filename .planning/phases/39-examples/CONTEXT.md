@@ -35,4 +35,5 @@ examples/neural_net.cpp
 examples/distributed_training.cpp
 
 ---
-*Context created: 2026-04-26*
+
+## Context created: 2026-04-26

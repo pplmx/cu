@@ -38,6 +38,7 @@
 ## Milestone Completion
 
 **v2.10 Sparse Solver Acceleration** is now complete with:
+
 - Phase 88: Jacobi Preconditioner Foundation
 - Phase 89: RCM Matrix Ordering
 - Phase 90: ILU Preconditioner

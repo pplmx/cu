@@ -12,6 +12,7 @@
 ## Prior Work
 
 ### Phase 93: NVBlox Foundation
+
 - `KernelMetrics` struct with latency, throughput, occupancy, AI, BW
 - `NVBloxMetricsCollector` for metric collection
 - `KernelProfiler` for CUDA event-based profiling
@@ -20,22 +21,25 @@
 ### Existing Infrastructure
 
 #### graph_executor.h (v2.4)
+
 - `GraphExecutor` for CUDA graph capture
 - `MemoryNode`, `AlgoWrapper` for graph construction
 
 #### fused_matmul_bias_act.cu (v2.2)
+
 - Existing fused kernel: matmul + bias + activation
 
 ## Implementation Strategy
 
 ### KernelFusionAnalyzer Class
+
 ```cpp
 class KernelFusionAnalyzer {
 public:
     void analyze_operation_graph(const OpGraph& graph);
     std::vector<FusionOpportunity> detect_opportunities();
     FusionRecommendation generate_recommendation(const FusionOpportunity& opp);
-    
+
 private:
     std::vector<FusionPattern> patterns_;
     FusionProfitabilityModel model_;
@@ -43,7 +47,9 @@ private:
 ```
 
 ### FusionPattern Library
+
 Common fusion patterns to detect:
+
 - matmul + bias + activation (ReLU, GeLU, SiLU)
 - conv + bias + activation
 - relu + pooling
@@ -51,18 +57,20 @@ Common fusion patterns to detect:
 - reduction + normalization
 
 ### FusionProfitabilityModel
+
 ```cpp
 struct FusionProfitabilityModel {
     double launch_overhead_us;  // Typical kernel launch overhead
     double memory_coalescing_benefit;
     double register_pressure_cost;
-    
+
     bool is_profitable(const FusionOpportunity& opp) const;
     double profitability_score(const FusionOpportunity& opp) const;
 };
 ```
 
 ### Confidence Levels
+
 - **HIGH**: Exact pattern match (e.g., matmul+bias+ReLU sequence)
 - **MEDIUM**: Heuristic match (memory bound ops adjacent)
 - **LOW**: Statistical match (historical performance improvement)

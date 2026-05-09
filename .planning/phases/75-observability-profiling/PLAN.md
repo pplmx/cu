@@ -17,11 +17,13 @@
 ### 1. Chrome Trace Timeline Export (OBS-01)
 
 **Files:**
+
 - `cuda/observability/timeline.hpp` - Timeline exporter
 - `cuda/observability/timeline.cpp` - Implementation
 - `tests/observability/timeline_test.cpp` - Tests
 
 **Implementation:**
+
 ```cpp
 // Timeline export to Chrome trace format
 // JSON structure: {traceEvents: [...]}
@@ -29,17 +31,20 @@
 ```
 
 **Success criteria:**
+
 - User can export Chrome trace format files from NVTX annotations
 - Files load in chrome://tracing
 
 ### 2. Memory Bandwidth Measurement (OBS-02)
 
 **Files:**
+
 - `cuda/observability/bandwidth_tracker.hpp` - Bandwidth measurement API
 - `cuda/observability/bandwidth_tracker.cpp` - Implementation
 - `tests/observability/bandwidth_tracker_test.cpp` - Tests
 
 **Implementation:**
+
 ```cpp
 // Wrapper around NVbandwidth or custom timing kernels
 // Measure H2D, D2H, D2D bandwidth
@@ -47,16 +52,19 @@
 ```
 
 **Success criteria:**
+
 - User can measure H2D, D2H, D2D memory bandwidth
 
 ### 3. Kernel Statistics Collection (OBS-03)
 
 **Files:**
+
 - `cuda/observability/kernel_stats.hpp` - Stats collector
 - `cuda/observability/kernel_stats.cpp` - Implementation
 - `tests/observability/kernel_stats_test.cpp` - Tests
 
 **Implementation:**
+
 ```cpp
 // Per-kernel timing and statistics
 // cudaEvent_t for latency, throughput calculation
@@ -64,16 +72,19 @@
 ```
 
 **Success criteria:**
+
 - User can collect per-kernel statistics (latency, throughput, occupancy)
 
 ### 4. Occupancy Analyzer (OBS-04)
 
 **Files:**
+
 - `cuda/observability/occupancy_analyzer.hpp` - Occupancy feedback
 - `cuda/observability/occupancy_analyzer.cpp` - Implementation
 - `tests/observability/occupancy_analyzer_test.cpp` - Tests
 
 **Implementation:**
+
 ```cpp
 // cudaOccupancyMaxPotentialBlockSize for feedback
 // Register/shared memory pressure analysis
@@ -81,6 +92,7 @@
 ```
 
 **Success criteria:**
+
 - User can receive real-time feedback on block size selection
 
 ## Files to Create

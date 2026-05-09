@@ -8,28 +8,34 @@
 Comprehensive benchmark suite covering all major algorithm categories:
 
 ### Memory Operations (SUITE-07)
+
 - `BM_MemoryH2D` — Host to Device transfer
 - `BM_MemoryD2H` — Device to Host transfer
 - `BM_MemoryD2D` — Device to Device transfer
 
 ### Reduce Operations (SUITE-01)
+
 - `BM_AlgoReduceSum` — Sum reduction
 - `BM_AlgoReduceMax` — Max reduction
 - `BM_AlgoReduceOptimized` — Optimized sum reduction
 
 ### Scan Operations (SUITE-02)
+
 - `BM_AlgoScanInclusive` — Inclusive prefix sum
 - `BM_AlgoScanExclusive` — Exclusive prefix sum
 
 ### Sort Operations (SUITE-03)
+
 - `BM_SortOddEven` — Odd-even transposition sort
 - `BM_SortBitonic` — Bitonic sort
 
 ### FFT Operations (SUITE-04)
+
 - `BM_FFTForward` — Forward FFT
 - `BM_FFTInverse` — Inverse FFT
 
 ### Matmul Operations (SUITE-05)
+
 - `BM_NeuralMatmul` — Single matrix multiply
 - `BM_NeuralMatmulBatch` — Batch matrix multiply
 

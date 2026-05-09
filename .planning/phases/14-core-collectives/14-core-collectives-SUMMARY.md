@@ -75,33 +75,43 @@ NCCL-based collective operations (AllReduce, Broadcast, Barrier) with stream ord
 ## What Was Built
 
 ### NcclCollective Base Class
+
 Base class providing common infrastructure for NCCL collective operations:
+
 - NcclContext reference for communicator access
 - Helper methods: `has_nccl()`, `get_comm(device)`, `get_stream(device)`, `device_count()`
 - Integration with safe_nccl_call error handling
 
 ### NcclAllReduce
+
 Stream-based all-reduce using NCCL:
+
 - `all_reduce_async()` - async operation with safe_nccl_call wrapper
 - `all_reduce()` - blocking wrapper that syncs stream
 - `to_nccl_op()` - maps distributed::ReductionOp to ncclRedOp_t
 - `to_nccl_dtype()` - maps cudaDataType to ncclDataType_t
 
 ### NcclBroadcast
+
 Broadcast from root device to all others:
+
 - `broadcast_async()` - async broadcast with safe_nccl_call
 - `broadcast()` - blocking wrapper
 - Supports explicit root_rank specification
 
 ### NcclBarrier
+
 Multi-device synchronization:
+
 - `barrier_async()` - async barrier on device 0's stream
 - `barrier_async(device, stream)` - with device selection
 - `barrier()` - blocking wrappers
 - Unlike cudaStreamSynchronize, barriers ALL devices in mesh
 
 ### Unit Tests
+
 Comprehensive test suite in `tests/cuda/nccl/test_nccl_collectives.cpp`:
+
 - GPU detection with graceful skip on <2 GPUs
 - AllReduce sum and in-place tests
 - Broadcast from root tests
@@ -113,7 +123,8 @@ Comprehensive test suite in `tests/cuda/nccl/test_nccl_collectives.cpp`:
 
 ### Auto-fixed Issues
 
-**[Rule 2 - Missing Stub Types] Added stub definitions for non-NCCL builds**
+## [Rule 2 - Missing Stub Types] Added stub definitions for non-NCCL builds
+
 - Found during: Plan 14-03 Integration
 - Issue: Code using NCCL types failed to compile when NCCL disabled
 - Fix: Added stub definitions in nccl_types.h:
@@ -124,6 +135,7 @@ Comprehensive test suite in `tests/cuda/nccl/test_nccl_collectives.cpp`:
 - Commit: 7b33bfe
 
 **[Rule 3 - Blocking Issue] #ifdef vs #if for NOVA_NCCL_ENABLED**
+
 - Found during: Build verification
 - Issue: When cmake sets NOVA_NCCL_ENABLED=0, #ifdef still evaluated to TRUE
   because the symbol is defined. This caused NCCL code paths to be compiled

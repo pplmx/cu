@@ -4,12 +4,12 @@ Nova provides INT8 and FP8 quantization support for accelerated inference with r
 
 ## Quantization Modes
 
-| Mode | Precision | Speedup | Use Case |
-|------|-----------|---------|----------|
-| **FP16** | 16-bit | 1x baseline | Good accuracy |
-| **INT8** | 8-bit | 2-4x faster | General inference |
-| **FP8 (E4M3)** | 8-bit | 4-8x faster | Activations, small values |
-| **FP8 (E5M2)** | 8-bit | 4-8x faster | Weights, large values |
+| Mode           | Precision | Speedup     | Use Case                  |
+| -------------- | --------- | ----------- | ------------------------- |
+| **FP16**       | 16-bit    | 1x baseline | Good accuracy             |
+| **INT8**       | 8-bit     | 2-4x faster | General inference         |
+| **FP8 (E4M3)** | 8-bit     | 4-8x faster | Activations, small values |
+| **FP8 (E5M2)** | 8-bit     | 4-8x faster | Weights, large values     |
 
 ## Calibration
 
@@ -147,11 +147,11 @@ auto quantized = fq.simulate(weights, calibration_range);
 ## Performance Comparison
 
 | Configuration | Throughput | Memory | Accuracy |
-|---------------|------------|--------|----------|
-| FP32 | 1x | 1x | 100% |
-| FP16 | 1.5x | 0.5x | ~100% |
-| INT8 | 3x | 0.25x | 98-100% |
-| FP8 | 4-8x | 0.25x | 97-100% |
+| ------------- | ---------- | ------ | -------- |
+| FP32          | 1x         | 1x     | 100%     |
+| FP16          | 1.5x       | 0.5x   | ~100%    |
+| INT8          | 3x         | 0.25x  | 98-100%  |
+| FP8           | 4-8x       | 0.25x  | 97-100%  |
 
 ## See Also
 

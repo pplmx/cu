@@ -32,7 +32,8 @@ verification_date: "2026-05-01"
 ## Manual Verification
 
 Tested with standalone implementation:
-```
+
+```text
 CSR Matrix: 3x3, nnz=5
 ELL Matrix: 3x3, max_nnz_per_row=2, padded_nnz=6
 SELL Matrix: 3x3, slice_height=2, padded_nnz=8
@@ -56,9 +57,11 @@ All formats produce identical results.
 
 ## Next Phase
 
-**Phase 80: Krylov Solver Core + Roofline**
+## Phase 80: Krylov Solver Core + Roofline
+
 - Depends on: Phase 79 (SpMV operations required for Krylov iteration)
 - Requires: CG, GMRES, BiCGSTAB solvers + Roofline model
 
 ---
-*Verification generated: 2026-05-01*
+
+## Verification generated: 2026-05-01

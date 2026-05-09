@@ -12,7 +12,7 @@
 
 ## File Structure
 
-```
+```text
 include/cuda/sparse/
 ├── matrix.hpp              # NEW: Unified SparseMatrix<T> with Buffer<T>
 ├── cusparse_context.hpp    # NEW: cuSPARSE handle wrapper
@@ -39,6 +39,7 @@ CMakeLists.txt (tests)      # MODIFY: Add new test executables
 ### Task 83.1: Create SparseMatrix<T> Header
 
 **Files:**
+
 - Create: `include/cuda/sparse/matrix.hpp`
 
 - [ ] **Step 1: Write the header with SparseMatrix<T> class**
@@ -159,6 +160,7 @@ git commit -m "feat(sparse): add SparseMatrix<T> with cuda::memory::Buffer<T>"
 ### Task 83.2: Create SparseMatrix Tests
 
 **Files:**
+
 - Create: `tests/sparse/matrix_test.cpp`
 
 - [ ] **Step 1: Write the test file**
@@ -251,9 +253,9 @@ git commit -m "test(sparse): add SparseMatrix<T> tests"
 ### Task 84.1: Create cuSPARSE Context
 
 **Files:**
+
 - Create: `include/cuda/sparse/cusparse_context.hpp`
 - Create: `src/cuda/sparse/cusparse_context.cpp`
-
 - [ ] **Step 1: Write the header**
 
 ```cpp
@@ -344,9 +346,9 @@ git commit -m "feat(sparse): add cuSPARSE context singleton"
 ### Task 84.2: Implement GPU SpMV
 
 **Files:**
+
 - Create: `src/cuda/sparse/sparse_ops.cu`
 - Modify: `include/cuda/sparse/matrix.hpp` (add spmv function)
-
 - [ ] **Step 1: Add spmv declaration to matrix.hpp**
 
 Add after the SparseMatrix class:
@@ -514,6 +516,7 @@ git commit -m "feat(sparse): implement GPU SpMV via cuSPARSE"
 ### Task 85.1: Refactor Krylov to Use GPU
 
 **Files:**
+
 - Modify: `include/cuda/sparse/krylov.hpp`
 
 - [ ] **Step 1: Add GPU solver implementations**
@@ -688,6 +691,7 @@ git commit -m "feat(krylov): refactor to use GPU with cuSPARSE/cuBLAS"
 ### Task 86.1: Deprecate Old API
 
 **Files:**
+
 - Modify: `include/cuda/sparse/sparse_matrix.hpp`
 
 - [ ] **Step 1: Add deprecation attribute**
@@ -730,6 +734,7 @@ git commit -m "feat(sparse): deprecate SparseMatrixCSR, add conversion to Sparse
 ### Task 86.2: Update CMake Build
 
 **Files:**
+
 - Modify: `CMakeLists.txt`
 
 - [ ] **Step 1: Add cuSPARSE/cuSOLVER linking**
@@ -785,6 +790,7 @@ git commit -m "build: add cuSPARSE/cuSOLVER linking and sparse tests"
 ### Task 87.1: End-to-End Validation
 
 **Files:**
+
 - Modify: `tests/sparse/krylov_test.cpp`
 
 - [ ] **Step 1: Add GPU vs CPU comparison test**

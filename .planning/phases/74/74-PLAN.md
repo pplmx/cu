@@ -107,6 +107,7 @@ TEST(IntegrationTest, EndToEndInference) {
 ### 5. NVTX Integration with Scheduler
 
 Update Scheduler to annotate phases:
+
 - `begin_prefill()` on batch start
 - `begin_attention()` during attention
 - `end_decode()` after token generation

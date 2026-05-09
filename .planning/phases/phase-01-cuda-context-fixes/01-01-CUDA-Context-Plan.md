@@ -72,55 +72,69 @@ Add `cudaSetDevice(0)` to all test fixtures that currently skip with "CUDA conte
 ## Tasks
 
 ### Task 1: Fix JacobiPreconditionerTest fixture
+
 - **File:** tests/sparse/preconditioner_test.cpp
 - **Change:** Replace `GTEST_SKIP() << "JacobiPreconditioner tests have CUDA context issues - skipping"` with:
+
   ```cpp
   void SetUp() override {
       cudaSetDevice(0);
       cudaDeviceSynchronize();
   }
   ```
+
 - **Verification:** Test suite runs without skips for this fixture
 
 ### Task 2: Fix RCMReordererTest fixture
+
 - **File:** tests/sparse/reordering_test.cpp
 - **Change:** Replace `GTEST_SKIP() << "RCMReorderer tests have CUDA context issues - skipping"` with:
+
   ```cpp
   void SetUp() override {
       cudaSetDevice(0);
       cudaDeviceSynchronize();
   }
   ```
+
 - **Verification:** Test suite runs without skips for this fixture
 
 ### Task 3: Fix PreconditionedSolverTest fixture
+
 - **File:** tests/sparse/preconditioned_solver_test.cpp
 - **Change:** Replace `GTEST_SKIP() << "PreconditionedSolver tests have CUDA context issues - skipping"` with:
+
   ```cpp
   void SetUp() override {
       cudaSetDevice(0);
       cudaDeviceSynchronize();
   }
   ```
+
 - **Verification:** Test suite runs without skips for this fixture
 
 ### Task 4: Fix SSSPTest fixture
+
 - **File:** tests/algo/sssp_test.cpp
 - **Change:** Replace `GTEST_SKIP() << "SSSPTest has CUDA context issues - skipping"` with:
+
   ```cpp
   void SetUp() override {
       cudaSetDevice(0);
       cudaDeviceSynchronize();
   }
   ```
+
 - **Verification:** Test suite runs without skips for this fixture
 
 ### Task 5: Fix MemoryNodeTest fixture
+
 - **File:** tests/cuda/production/memory_node_test.cpp
 - **Change:** Replace `GTEST_SKIP() << "MemoryNodeTest has CUDA context issues - skipping"` or add SetUp with cudaSetDevice(0)
 - **Verification:** Test suite runs without skips for this fixture
 
 ### Task 6: Fix GraphExecutorTest fixture
+
 - **File:** tests/cuda/production/graph_executor_test.cpp
 - **Change:** Replace `GTEST_SKIP() << "GraphExecutorTest has CUDA context issues - skipping"` or add SetUp with cudaSetDevice(0)
 - **Verification:** Test suite runs without skips for this fixture

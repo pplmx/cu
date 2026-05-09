@@ -30,17 +30,17 @@ python scripts/benchmark/run_benchmarks.py --filter "*Reduce*"
 
 ### 3. Verify Requirements
 
-| Requirement | Verification |
-|-------------|--------------|
-| BENCH-01 | `python scripts/benchmark/run_benchmarks.py --all` completes |
-| BENCH-02 | CUDA events used in `include/cuda/benchmark/benchmark.h:66-84` |
-| BENCH-03 | Warmup iterations in `benchmark.h:128-131` |
-| BENCH-04 | NVTX toggle in `include/cuda/benchmark/nvtx.h:16-20` |
-| BENCH-05 | NVTX macros are no-ops when disabled (`nvtx.h:130-160`) |
+| Requirement | Verification                                                   |
+| ----------- | -------------------------------------------------------------- |
+| BENCH-01    | `python scripts/benchmark/run_benchmarks.py --all` completes   |
+| BENCH-02    | CUDA events used in `include/cuda/benchmark/benchmark.h:66-84` |
+| BENCH-03    | Warmup iterations in `benchmark.h:128-131`                     |
+| BENCH-04    | NVTX toggle in `include/cuda/benchmark/nvtx.h:16-20`           |
+| BENCH-05    | NVTX macros are no-ops when disabled (`nvtx.h:130-160`)        |
 
 ### 4. Expected Output
 
-```
+```text
 GPU: NVIDIA A100-SXM4-40GB
 Driver: 535.54.03
 Memory: 40.0 GB

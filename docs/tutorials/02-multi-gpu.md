@@ -24,18 +24,18 @@ Nova provides `DeviceMesh` for easy multi-GPU coordination:
 int main() {
     // Initialize device mesh
     auto& mesh = nova::DeviceMesh::instance();
-    
+
     // Get local device count
     int device_count = mesh.device_count();
     int local_rank = mesh.local_rank();
-    
+
     printf("Using %d GPU(s), this is GPU %d\n", device_count, local_rank);
-    
+
     // Set device for current rank
     mesh.set_device(local_rank);
-    
+
     // Your computation here...
-    
+
     return 0;
 }
 ```
@@ -69,10 +69,10 @@ Enable direct GPU-to-GPU transfers:
 if (mesh.can_access_peer(src_device, dst_device)) {
     // Enable peer access
     mesh.enable_peer_access(src_device, dst_device);
-    
+
     // Perform direct copy
     mesh.peer_copy(dst_device, dst, src_device, src, size);
-    
+
     // Disable when done
     mesh.disable_peer_access(src_device, dst_device);
 }
@@ -113,29 +113,29 @@ int main() {
     auto& mesh = nova::DeviceMesh::instance();
     int local_rank = mesh.local_rank();
     int device_count = mesh.device_count();
-    
+
     const size_t size = 1024 * 1024;
-    
+
     // Each GPU computes partial sum
     nova::memory::Buffer<float> local_data(size);
     initialize_data(local_data);
-    
+
     nova::memory::Buffer<float> partial_sum(1);
     nova::algo::reduce(local_data.device_data(), 
                        partial_sum.device_data(), 
                        size);
-    
+
     // All-reduce to get global sum
     nova::distributed::all_reduce(
         partial_sum.device_data(), 1, 0, mesh.get_stream()
     );
-    
+
     // Print result (only on root GPU)
     if (local_rank == 0) {
         partial_sum.sync_to_host();
         printf("Global sum: %f\n", partial_sum.host_data()[0]);
     }
-    
+
     return 0;
 }
 ```

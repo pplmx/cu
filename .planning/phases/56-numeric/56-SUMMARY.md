@@ -26,4 +26,5 @@
 | NUM-04: Interpolation | ✅ Implemented |
 
 ---
-*Phase 56: Numerical Methods — Complete*
+
+## Phase 56: Numerical Methods — Complete

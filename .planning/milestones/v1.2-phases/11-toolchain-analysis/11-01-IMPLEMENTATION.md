@@ -7,6 +7,7 @@
 ## Overview
 
 This document details the concrete changes required to upgrade the toolchain:
+
 - C++20 → C++23
 - CUDA 17 → CUDA 20
 - CMake 3.25 → 4.0+
@@ -49,6 +50,7 @@ No changes required — inherits standards from parent project.
 **File:** `.github/workflows/*.yml`
 
 Check for CUDA version specification:
+
 ```yaml
 # If using cuda setup action
 - uses: awslabs/aws-cuda-toolkit/install@v1
@@ -59,9 +61,11 @@ Check for CUDA version specification:
 ### 4. Documentation Updates
 
 **File:** `README.md`
+
 - Update "Requirements" section to reflect new minimum versions
 
 **File:** `CONTRIBUTING.md`
+
 - Update build instructions if necessary
 
 ## Rollback Strategy
@@ -79,6 +83,7 @@ rm -rf build/
 ## Implementation Order
 
 1. **Create backup branch**
+
    ```bash
    git checkout -b v1.2-toolchain-upgrade
    ```
@@ -97,6 +102,7 @@ rm -rf build/
    - Any CONTRIBUTING.md build instructions
 
 5. **Build and test**
+
    ```bash
    rm -rf build/
    mkdir build && cd build

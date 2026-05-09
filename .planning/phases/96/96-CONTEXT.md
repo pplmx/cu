@@ -14,20 +14,24 @@
 ## Prior Work
 
 ### Phase 93: NVBlox Foundation
+
 - NVBloxMetricsCollector for kernel metrics
 - KernelProfiler with CUDA event tracking
 
 ### Phase 94: Kernel Fusion Analysis
+
 - KernelFusionAnalyzer for pattern detection
 - FusionRecommendation with confidence levels
 
 ### Phase 95: Memory Bandwidth
+
 - RooflineModel for operational intensity
 - BandwidthUtilizationTracker
 
 ### Existing Infrastructure
 
 #### generate_dashboard.py
+
 - HTML dashboard with Plotly charts
 - Regression tracking and comparison
 - Environment context display
@@ -35,6 +39,7 @@
 ## Implementation Strategy
 
 ### DashboardDataExporter
+
 ```cpp
 class DashboardDataExporter {
     void export_roofline_data(const RooflineModel& model);
@@ -44,12 +49,15 @@ class DashboardDataExporter {
 ```
 
 ### FlameGraphGenerator
+
 - Parse NVTX Chrome trace data
 - Generate flame graph JSON format
 - Hierarchical kernel timing
 
 ### NVTX Extensions
+
 Added in Phase 93:
+
 - `nova.performance` - General performance
 - `nova.performance.nvblox` - NVBlox metrics
 - `nova.performance.fusion` - Fusion analysis

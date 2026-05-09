@@ -25,6 +25,7 @@ completed_at: "2026-05-07"
 ## Deliverables
 
 ### README.md Updates
+
 - Added Key Features section (sparse, quantization, multi-GPU)
 - Added Quick Start with code examples
 - Updated Modules table with v2.x features
@@ -32,11 +33,13 @@ completed_at: "2026-05-07"
 - Linked to new documentation guides
 
 ### CHANGELOG.md Updates
+
 - Added all v2.x milestones (v2.0 through v2.14)
 - Added v1.x milestones (v1.1 through v1.9)
 - Follows keepachangelog.com format
 
 ### New Documentation
+
 - `docs/ARCHITECTURE.md` - Five-layer architecture with diagrams
 - `docs/SPARSE.md` - Sparse matrix operations guide with code examples
 - `docs/QUANTIZATION.md` - Quantization guide covering INT8/FP8

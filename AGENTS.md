@@ -6,7 +6,7 @@
 - **Body:** Always include detailed body explaining the "why", not just the "what"
 - **Format:**
 
-```
+```text
 <type>: <short summary>
 
 <detailed body explaining motivation, changes, and any trade-offs made>

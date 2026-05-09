@@ -15,6 +15,7 @@ files_modified:
 ### Files Modified
 
 **include/cuda/sparse/roofline.hpp:**
+
 - Added `ClassificationConfidence` struct with confidence percentage
 - Added `classify_with_confidence()` method for detailed classification
 - Added `bound_to_string()` helper for JSON export
@@ -64,4 +65,5 @@ Classification confidence: 99.07%
 Classification: MEMORY_BOUND
 
 ---
-*Summary generated: 2026-05-01*
+
+## Summary generated: 2026-05-01

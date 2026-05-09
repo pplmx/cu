@@ -17,22 +17,26 @@ requirements:
 ## Verification Results
 
 ### PROP-01: Mathematical Invariants ✅
+
 - [x] `property_test.hpp` - Custom property testing framework
 - [x] `mathematical_tests.cpp` - Matmul identity, transpose involution
 - [x] CMake target `property_mathematical` configured
 - [x] Test verifies A @ I = A and (A^T)^T = A
 
 ### PROP-02: Algorithmic Correctness ✅
+
 - [x] `algorithmic_tests.cpp` - Sort, reduce, scan correctness
 - [x] Tests verify sorted output, associativity, prefix sums
 - [x] CMake target `property_algorithmic` configured
 
 ### PROP-03: Numerical Stability ✅
+
 - [x] `numerical_tests.cpp` - Precision mode tests
 - [x] Tests NaN/Inf propagation, FP16/FP32/FP64 consistency
 - [x] CMake target `property_numerical` configured
 
 ### PROP-04: Reproducible Seeds ✅
+
 - [x] Each test accepts seed as command-line argument
 - [x] Failed tests output seed for exact reproduction
 - [x] Seed displayed in output: "Seed: 12345 | Iterations: 100"
@@ -40,11 +44,13 @@ requirements:
 ## Build Configuration
 
 Property tests are built by default:
+
 ```bash
 cmake -B build && cmake --build build
 ```
 
 Run tests:
+
 ```bash
 ./build/bin/property_mathematical  # With optional seed
 ./build/bin/property_algorithmic 12345
@@ -63,4 +69,5 @@ Run tests:
 | `tests/CMakeProperty.txt` | CMake configuration |
 
 ---
-*Verification completed: 2026-04-26*
+
+## Verification completed: 2026-04-26

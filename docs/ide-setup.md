@@ -30,8 +30,8 @@ code .
 1. Press `Ctrl+Shift+P` and run **CMake: Configure**
 2. Select Ninja as the generator
 3. Choose your build options:
-   - `NOVA_ENABLE_NCCL` - Enable NCCL support (default: ON)
-   - `NOVA_ENABLE_MPI` - Enable MPI support (default: OFF)
+    - `NOVA_ENABLE_NCCL` - Enable NCCL support (default: ON)
+    - `NOVA_ENABLE_MPI` - Enable MPI support (default: OFF)
 
 ### 4. Build the Project
 
@@ -64,6 +64,7 @@ brew install clangd
 Copy `.clangd/config.yaml` from this repository to your project root.
 
 Key settings:
+
 - Uses `-xcuda` for CUDA file parsing
 - Targets `sm_80` (Ampere) architecture
 - Filters out nvcc-specific flags that clangd can't understand
@@ -81,9 +82,11 @@ cmake --build build
 2. Go to **File > Settings > Build, Execution, Deployment > CMake**
 3. Set Generator: **Ninja**
 4. Add CMake options:
-   ```
+
+   ```text
    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
    ```
+
 5. Apply and reload CMake
 
 ## Troubleshooting

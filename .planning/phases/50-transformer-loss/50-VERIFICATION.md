@@ -20,6 +20,7 @@ requirements:
 ### OP-01: User can run multi-head attention with configurable heads and dropout
 
 **Verification:**
+
 - `MultiHeadAttention` class implemented with:
   - Configurable `num_heads`, `head_dim`, `dropout_rate`
   - `forward()` for cross-attention
@@ -28,6 +29,7 @@ requirements:
 - Tests: 4 tests passing
 
 **Files:**
+
 - `include/cuda/neural/transformer/attention.h`
 - `src/cuda/neural/transformer/attention.cu`
 - `tests/neural/transformer/attention_test.cpp`
@@ -35,6 +37,7 @@ requirements:
 ### OP-02: User can apply positional encoding (sinusoidal or learned)
 
 **Verification:**
+
 - `PositionalEncoding` class with:
   - `Sinusoidal` and `Learned` encoding types
   - `forward()` method
@@ -43,12 +46,14 @@ requirements:
 - Tests: 4 tests passing
 
 **Files:**
+
 - `include/cuda/neural/transformer/attention.h`
 - `src/cuda/neural/transformer/attention.cu`
 
 ### OP-03: User can compute cross-entropy loss with numerical stability
 
 **Verification:**
+
 - `cross_entropy_loss()` function with:
   - Log-sum-exp trick for numerical stability
   - Configurable `reduction_mean`
@@ -57,12 +62,14 @@ requirements:
 - Tests: 8 tests passing
 
 **Files:**
+
 - `include/cuda/neural/loss/loss_functions.h`
 - `src/cuda/neural/loss/loss_functions.cu`
 
 ### OP-04: User can compute focal loss for class imbalance
 
 **Verification:**
+
 - `focal_loss()` function with:
   - Configurable `gamma` (focusing parameter)
   - Configurable `alpha` (weighting factor)
@@ -72,6 +79,7 @@ requirements:
 ### OP-05: User can compute contrastive loss for representation learning
 
 **Verification:**
+
 - `contrastive_loss()` function with:
   - Cosine similarity computation
   - Temperature scaling
@@ -81,7 +89,7 @@ requirements:
 
 ## Test Results
 
-```
+```text
 Running 12 tests from 2 test suites.
 [  PASSED  ] 12 tests.
 ```

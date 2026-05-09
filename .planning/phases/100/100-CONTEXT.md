@@ -85,7 +85,8 @@ Computes per-channel scales for activations.
 
 ## Files to Create
 
-### New files:
+### New files
+
 - `include/cuda/quantize/calibrator.hpp`
 - `tests/quantize/calibrator_test.cpp`
 

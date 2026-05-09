@@ -35,4 +35,5 @@ docs/tutorials/03-checkpoint.md - Saving and restoring training state
 docs/tutorials/04-profiling.md - Using benchmarks for performance analysis
 
 ---
-*Context created: 2026-04-26*
+
+## Context created: 2026-04-26

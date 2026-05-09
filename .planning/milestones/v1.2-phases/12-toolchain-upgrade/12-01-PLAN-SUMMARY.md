@@ -45,7 +45,7 @@ Phase 12 completed successfully. All toolchain components upgraded and all tests
 
 ## Test Results
 
-```
+```text
 100% tests passed (444/444 tests)
 Build: SUCCESS
 Toolchain: CMake 4.0, C++23, CUDA 20

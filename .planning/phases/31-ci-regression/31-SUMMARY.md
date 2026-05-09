@@ -6,6 +6,7 @@
 ## Deliverables
 
 ### GitHub Actions Workflow (`.github/workflows/benchmark.yml`)
+
 - Runs on push to main and on pull requests
 - Self-hosted GPU runner configuration
 - Benchmark execution with baseline comparison
@@ -14,10 +15,12 @@
 - Quick validation job for CPU-only checks
 
 ### Baseline Management Scripts
+
 - `scripts/benchmark/update_baseline.py` — Update baselines with versioned storage
 - `scripts/benchmark/check_baseline_freshness.py` — Monitor baseline staleness
 
 ### Enhanced Regression Detection
+
 - Statistical significance testing using Welch's t-test (when scipy available)
 - CI failure only on statistically significant regressions
 - Clear diagnostic output showing current, baseline, and delta

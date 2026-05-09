@@ -19,45 +19,57 @@
 ## Task Breakdown
 
 ### T-01: Error Message Improvements
+
 Priority: **High**
 
 Files:
+
 - `src/cuda/error/*.cpp`
 
 **Actions:**
+
 - Review all error messages for actionability
 - Add "how to fix" guidance to all error types
 - Include relevant context (device ID, stream, operation)
 
 ### T-02: Log Level Implementation
+
 Priority: **High**
 
 Files:
+
 - `include/cuda/observability/logger.hpp` (create if missing)
 
 **Actions:**
+
 - Define log levels: ERROR, WARN, INFO, DEBUG, TRACE
 - Create NOVA_LOG macro with level filtering
 - Support compile-time disable via NDEBUG
 
 ### T-03: Solver Diagnostics
+
 Priority: **Medium**
 
 Files:
+
 - `src/cuda/sparse/krylov.cpp`
 
 **Actions:**
+
 - Add iteration count logging at INFO level
 - Add convergence warnings at WARN level
 - Add detailed residual logging at DEBUG level
 
 ### T-04: Memory Allocation Context
+
 Priority: **Medium**
 
 Files:
+
 - `src/cuda/memory/distributed_pool.cpp`
 
 **Actions:**
+
 - Add allocation size logging at INFO level
 - Add device selection logging at DEBUG level
 - Add memory pressure warnings at WARN level

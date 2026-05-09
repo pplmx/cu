@@ -31,18 +31,20 @@ void dangerous() {
 ```
 
 **Consequences:**
+
 - Silent data corruption
 - Device memory errors (cudaErrorInvalidDevicePointer)
 - Random failures that appear intermittent
 
 **Prevention:**
+
 ```cpp
 // SAFE: Use graph memory nodes for allocation lifecycle
 class GraphExecutor {
     cudaGraph_t graph_;
     cudaGraphExec_t exec_;
     std::vector<cudaGraphNode_t> mem_nodes_;  // Track allocations
-    
+
 public:
     void addMemoryAllocation(Buffer& buffer) {
         cudaGraphNode_t alloc_node;
@@ -51,13 +53,13 @@ public:
         params.poolProps.allocType = cudaMemAllocationTypePinned;
         params.poolProps.location.type = cudaMemLocationTypeDevice;
         params.poolProps.location.id = device_id_;
-        
+
         cudaGraphAddMemAllocNode(&alloc_node, graph_, {}, 0, &params);
         cudaGraphAddMemFreeNode(&free_node, graph_, {alloc_node}, 1, 
                                 &params.dptr);
         mem_nodes_.push_back(alloc_node);
     }
-    
+
     // Alternative: Pin memory and never free during graph lifetime
     void addPinnedMemory(void* ptr, size_t size) {
         // Memory must remain valid for graph lifetime
@@ -79,11 +81,13 @@ public:
 **Why it happens:** `cudaStreamAddCallback()` is not supported in stream capture mode. Some callback-based patterns (e.g., profiling callbacks, progress tracking) cannot be captured.
 
 **Consequences:**
+
 - Capture fails silently with `cudaErrorStreamCaptureInvalidated`
 - Profiling instrumentation missing from graph execution
 - Progress callbacks not triggered
 
 **Prevention:**
+
 ```cpp
 // CHECK: Before capture
 bool isCapturable(const cudaStream_t stream) {
@@ -96,7 +100,7 @@ bool isCapturable(const cudaStream_t stream) {
 class GraphExecutor {
     // Instead of callbacks, use events
     cudaEvent_t completion_event_;
-    
+
 public:
     // Post-launch synchronization
     void launchAndWait(cudaStream_t stream) {
@@ -104,7 +108,7 @@ public:
         cudaEventRecord(completion_event_, stream);
         cudaEventSynchronize(completion_event_);
     }
-    
+
     // Or: CPU-side polling
     bool isComplete() {
         return cudaEventQuery(completion_event_) == cudaSuccess;
@@ -121,16 +125,19 @@ public:
 **What goes wrong:** Conditional graph nodes (IF/WHILE/SWITCH) have complex constraints that cause runtime errors.
 
 **Why it happens:** Conditional nodes require:
+
 - All paths to produce the same memory access pattern
 - Valid node handles for both branches
 - Proper stream capture synchronization
 
 **Consequences:**
+
 - `cudaErrorInvalidValue` on graph instantiation
 - Undefined behavior when condition is true at wrong time
 - Memory allocation mismatches between branches
 
 **Prevention:**
+
 ```cpp
 // SIMPLE: Prefer parameterizable graphs over conditionals
 // Instead of IF(condition) { kernelA } else { kernelB }
@@ -186,29 +193,31 @@ void detected() {
 ```
 
 **Consequences:**
+
 - Failures attributed to wrong operation
 - Memory leaks from continued execution
 - Corrupted state from partially-completed work
 
 **Prevention:**
+
 ```cpp
 // PRODUCTION: Wrapper that checks async errors
 class CheckedStream {
     cudaStream_t stream_;
-    
+
 public:
     template<typename Func>
     cudaError_t execute(Func&& f) {
         cudaError_t err = f();
         if (err != cudaSuccess) return err;
-        
+
         // Synchronize to catch async errors
         err = cudaStreamSynchronize(stream_);
         if (err != cudaSuccess) return err;
-        
+
         return cudaSuccess;
     }
-    
+
     // Alternative: Lazy error checking with error callback
     void launch(const void* kernel, dim3 grid, dim3 block, ...) {
         cudaLaunchKernel(kernel, grid, block, ..., stream_);
@@ -251,6 +260,7 @@ void lostError() {
 ```
 
 **Prevention:**
+
 ```cpp
 // CAPTURE: Save errors at each operation
 struct OperationResult {
@@ -262,19 +272,19 @@ struct OperationResult {
 class ErrorTracker {
     std::vector<OperationResult> results_;
     cudaStream_t stream_;
-    
+
 public:
     void record(const char* name, cudaError_t err) {
         results_.push_back({name, err, now_ns()});
     }
-    
+
     cudaError_t getFirstError() const {
         for (const auto& r : results_) {
             if (r.error != cudaSuccess) return r.error;
         }
         return cudaSuccess;
     }
-    
+
     // Print diagnostic on failure
     void dumpErrors() const {
         for (const auto& r : results_) {
@@ -309,17 +319,19 @@ void exhausted() {
 ```
 
 **Consequences:**
+
 - `cudaErrorMemoryAllocation` on late allocations
 - Performance degradation as some data becomes non-persistent
 - Unpredictable behavior based on allocation order
 
 **Prevention:**
+
 ```cpp
 // MANAGED: Limit total persistent memory
 class L2PersistenceManager {
     size_t max_persistent_bytes_;
     size_t current_persistent_bytes_ = 0;
-    
+
 public:
     bool requestPersistence(size_t bytes) {
         if (current_persistent_bytes_ + bytes > max_persistent_bytes_) {
@@ -328,11 +340,11 @@ public:
         current_persistent_bytes_ += bytes;
         return true;
     }
-    
+
     void releasePersistence(size_t bytes) {
         current_persistent_bytes_ -= bytes;
     }
-    
+
     // For iterative algorithms, keep only active working set
     void updateWorkingSet(const std::vector<Buffer*>& active) {
         // Release non-active, allocate for new active
@@ -355,16 +367,17 @@ L2PersistenceManager l2_manager(
 **Why it happens:** Persistence is beneficial for data accessed repeatedly. Setting it on single-use data (e.g., input that won't be reused) reduces effective cache size.
 
 **Prevention:**
+
 ```cpp
 // PROFILE: Before enabling persistence
 bool shouldPersist(const Buffer& buffer, const Workload& w) {
     // Access count estimation
     if (w.iterations <= 1) return false;  // Single use
     if (w.temporalLocality < 0.5f) return false;  // Poor reuse
-    
+
     // Size threshold
     if (buffer.size() > l2_size_ / 4) return false;  // Too large
-    
+
     return true;
 }
 
@@ -397,23 +410,25 @@ void inversion() {
     cudaStream_t low, high;
     cudaStreamCreateWithPriority(&low, ...);
     cudaStreamCreateWithPriority(&high, ...);  // Higher priority
-    
+
     // Low priority kernel starts and takes all SMs
     lowPriorityKernel<<<..., low>>>();
-    
+
     // High priority kernel queued but can't start
     highPriorityKernel<<<..., high>>>();  // Waits
-    
+
     // Even with priority, can't preempt in-flight kernel
 }
 ```
 
 **Consequences:**
+
 - Latency-sensitive work delayed
 - Priority-based scheduling not guaranteeing preemptability
 - Unpredictable latency for "high-priority" operations
 
 **Prevention:**
+
 ```cpp
 // DESIGN: Priority streams for scheduling, not preemption
 // GPU work is not preemptible, so priority affects:
@@ -424,11 +439,11 @@ void inversion() {
 class StreamPool {
     cudaStream_t critical_stream_;  // High priority
     std::vector<cudaStream_t> batch_streams_;  // Low priority
-    
+
 public:
     // Use critical for latency-sensitive kernels
     cudaStream_t critical() { return critical_stream_; }
-    
+
     // Batch work gets dedicated streams
     cudaStream_t getBatchStream(int idx) {
         return batch_streams_[idx % batch_streams_.size()];
@@ -448,6 +463,7 @@ public:
 **Why it happens:** Not all GPUs support stream priorities. Query can fail or return degenerate ranges.
 
 **Prevention:**
+
 ```cpp
 // ROBUST: Check priority support
 std::pair<int, int> getStreamPriorityRange() {
@@ -468,7 +484,7 @@ cudaStream_t createPriorityStream(bool high_priority) {
         // No priority support, create normal stream
         return createStream();
     }
-    
+
     int priority = high_priority ? max_pri : min_pri;
     cudaStream_t stream;
     cudaStreamCreateWithPriority(&stream, cudaStreamNonBlocking, priority);
@@ -487,6 +503,7 @@ cudaStream_t createPriorityStream(bool high_priority) {
 **Why it happens:** NVTX calls have overhead (string hashing, timestamp capture). Fine-grained ranges every kernel can add 5-10% overhead.
 
 **Prevention:**
+
 ```cpp
 // COMPILE-TIME TOGGLE
 #if defined(NVTX_ENABLED)
@@ -514,22 +531,23 @@ void profile_sample() {
 **What goes wrong:** NVTX traces show failures but not why or which operation caused them.
 
 **Prevention:**
+
 ```cpp
 // ENRICHED: Attach error context to ranges
 class TracedStream {
     nvtxDomainHandle_t domain_;
     cudaStream_t stream_;
-    
+
 public:
     void launch(const char* name, ...) {
         nvtxRangePushA(domain_, name);
         nvtxPayloadPush_int32(domain_, getCurrentSize());
-        
+
         cudaLaunchKernel(...);
-        
+
         // Record expected completion
         nvtxMarkEx(domain_, name, cudaEvent_t completion_event);
-        
+
         nvtxRangePop(domain_);
     }
 };
@@ -546,15 +564,16 @@ public:
 **Why it happens:** Only injecting a few error codes, not covering all failure paths.
 
 **Prevention:**
+
 ```cpp
 // COMPREHENSIVE: Test all error codes
 void testAllCudaErrors() {
     for (int e = 0; e < cudaErrorApiFailureBase; e++) {
         cudaError_t err = static_cast<cudaError_t>(e);
         const char* name = cudaGetErrorName(err);
-        
+
         if (name == nullptr) continue;  // Unknown error
-        
+
         // Only test meaningful errors
         if (isRecoverable(err)) {
             testRecovery(err);
@@ -566,13 +585,13 @@ void testAllCudaErrors() {
 void chaosTesting() {
     // Simulate ECC memory errors
     injectEccError(device_ptr, byte_offset);
-    
+
     // Simulate device reset
     simulateDeviceReset();
-    
+
     // Simulate Xid error (NVIDIA driver error)
     injectXidError(45);  // Generic error from Xid
-    
+
     // Verify graceful degradation
 }
 ```

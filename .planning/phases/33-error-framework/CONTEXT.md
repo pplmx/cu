@@ -26,6 +26,7 @@ Developers can understand and recover from CUDA errors quickly
 ## Existing Codebase
 
 ### Error Handling Location
+
 - **Primary:** `include/cuda/device/error.h` — current error exceptions and macros
 - **Memory Errors:** `include/cuda/memory_error/memory_error_handler.h` — memory-specific error handling
 
@@ -51,6 +52,7 @@ class CublasException : public std::runtime_error {
 ```
 
 ### Current Usage
+
 - `CUDA_CHECK` is used **201 times** across the codebase in `.cu` files
 - `CUBLAS_CHECK` is used in `src/cuda/device/cublas_context.cu`
 
@@ -78,5 +80,6 @@ From `.planning/research/SUMMARY.md`:
 4. How to handle async kernel errors (cudaGetLastError)?
 
 ---
+
 *Context created: 2026-04-26*
 *Ready for planning*

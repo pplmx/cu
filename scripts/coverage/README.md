@@ -19,22 +19,22 @@ ctest --test-dir build-coverage
 
 ## Scripts
 
-| Script | Purpose |
-|--------|---------|
+| Script                 | Purpose                       |
+| ---------------------- | ----------------------------- |
 | `generate_coverage.sh` | Generate full coverage report |
-| `coverage_gaps.sh` | Show untested functions |
-| `coverage_summary.sh` | Per-module breakdown |
+| `coverage_gaps.sh`     | Show untested functions       |
+| `coverage_summary.sh`  | Per-module breakdown          |
 
 ## CMake Options
 
-| Option | Description |
-|--------|-------------|
-| `NOVA_COVERAGE` | Enable coverage instrumentation |
+| Option              | Description                             |
+| ------------------- | --------------------------------------- |
+| `NOVA_COVERAGE`     | Enable coverage instrumentation         |
 | `NOVA_COVERAGE_MIN` | Minimum required coverage (default: 80) |
 
 ## Coverage Report Structure
 
-```
+```text
 build/coverage/
 ├── index.html          # Main HTML report
 ├── lcov/               # Raw lcov data files
@@ -50,11 +50,11 @@ build/coverage/
 
 ## Requirements
 
-| ID | Requirement | Status |
-|----|-------------|--------|
-| COVR-01 | HTML coverage report | ✅ |
-| COVR-02 | Coverage gap analysis | ✅ |
-| COVR-03 | Per-module breakdown | ✅ |
+| ID      | Requirement           | Status |
+| ------- | --------------------- | ------ |
+| COVR-01 | HTML coverage report  | ✅     |
+| COVR-02 | Coverage gap analysis | ✅     |
+| COVR-03 | Per-module breakdown  | ✅     |
 
 ## Dependencies
 

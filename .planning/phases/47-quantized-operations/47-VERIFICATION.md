@@ -15,12 +15,14 @@ requirements:
 ## Verification Results
 
 ### QUANT-03: Quantized Matmul ✅
+
 - [x] `quantized_matmul()` function implemented
 - [x] Takes quantized int8 inputs
 - [x] Outputs quantized int8
 - [x] Accuracy within 5% of FP32 baseline
 
 ### QUANT-04: Mixed Precision ✅
+
 - [x] `mixed_precision_matmul()` function implemented
 - [x] Automatic casting between FP32 and INT8
 - [x] Supports FP32 and FP16 output precision
@@ -40,4 +42,5 @@ requirements:
 | `tests/quantize/quantize_ops_test.cpp` | Unit tests |
 
 ---
-*Verification completed: 2026-04-26*
+
+## Verification completed: 2026-04-26

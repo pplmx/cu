@@ -18,6 +18,7 @@ Implement FlashAttention-2 kernel integration with attention backend selection a
 **File:** `include/cuda/neural/transformer/attention.h`
 
 Add enum before MultiHeadAttentionConfig:
+
 ```cpp
 enum class AttentionBackend {
     Standard,
@@ -54,7 +55,7 @@ class FlashAttention {
 public:
     explicit FlashAttention(const FlashAttentionConfig& config);
     ~FlashAttention();
-    
+
     void forward(
         const memory::Buffer& output,
         const memory::Buffer& query,
@@ -63,7 +64,7 @@ public:
         memory::Buffer& softmax_lse,
         const stream::Stream& stream
     );
-    
+
     void backward(
         memory::Buffer& dq,
         memory::Buffer& dk,
@@ -76,7 +77,7 @@ public:
         const memory::Buffer& softmax_lse,
         const stream::Stream& stream
     );
-    
+
     void set_dropout(float rate);
     size_t get_workspace_size() const;
     void ensure_workspace(size_t bytes);

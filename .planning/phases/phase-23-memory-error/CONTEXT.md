@@ -16,7 +16,7 @@
 
 ## Architecture
 
-```
+```text
 MemoryErrorHandler
 ├── ErrorDetector
 │   ├── detect_cuda_error()

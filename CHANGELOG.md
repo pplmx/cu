@@ -162,12 +162,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Multi-node support
-  - MPI integration (MpiContext, rank discovery)
-  - Topology detection (NIC enumeration, RDMA capability)
-  - Cross-node communicators (MultiNodeContext, HierarchicalAllReduce)
+    - MPI integration (MpiContext, rank discovery)
+    - Topology detection (NIC enumeration, RDMA capability)
+    - Cross-node communicators (MultiNodeContext, HierarchicalAllReduce)
 - Build system improvements
-  - Auto-detect CPU cores for parallel builds
-  - Ninja generator support
+    - Auto-detect CPU cores for parallel builds
+    - Ninja generator support
 
 ## [1.3.0] - 2026-04-24
 
@@ -195,10 +195,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Five-layer architecture
-  - Layer 0: `cuda::memory` - Buffer, unique_ptr, MemoryPool
-  - Layer 1: `cuda::device` - Pure device kernels
-  - Layer 2: `cuda::algo` - Algorithm wrappers
-  - Layer 3: `cuda::api` - High-level API
+    - Layer 0: `cuda::memory` - Buffer, unique_ptr, MemoryPool
+    - Layer 1: `cuda::device` - Pure device kernels
+    - Layer 2: `cuda::algo` - Algorithm wrappers
+    - Layer 3: `cuda::api` - High-level API
 - Core algorithms: reduce, scan, sort
 - Image processing: brightness, gaussian_blur, sobel_edge
 - Matrix operations: add, mult

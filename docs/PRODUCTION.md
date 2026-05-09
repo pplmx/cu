@@ -16,10 +16,10 @@ using namespace nova::error;
 // RAII guard for automatic timeout tracking
 {
     timeout_guard guard("matrix_multiply", std::chrono::seconds{30});
-    
+
     // Your CUDA operation here
     cudaError_t err = cudaMemcpy(dst, src, size, cudaMemcpyDeviceToDevice);
-    
+
     if (guard.is_expired()) {
         // Handle timeout
     }
@@ -164,12 +164,12 @@ try {
 
 ## Configuration Defaults
 
-| Parameter | Default Value |
-|-----------|--------------|
-| Default Timeout | 30 seconds |
-| Watchdog Interval | 100 ms |
-| Retry Base Delay | 100 ms |
-| Retry Multiplier | 2.0 |
-| Max Retry Attempts | 5 |
-| Circuit Breaker Threshold | 5 failures |
-| Reset Timeout | 30 seconds |
+| Parameter                 | Default Value |
+| ------------------------- | ------------- |
+| Default Timeout           | 30 seconds    |
+| Watchdog Interval         | 100 ms        |
+| Retry Base Delay          | 100 ms        |
+| Retry Multiplier          | 2.0           |
+| Max Retry Attempts        | 5             |
+| Circuit Breaker Threshold | 5 failures    |
+| Reset Timeout             | 30 seconds    |

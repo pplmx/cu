@@ -36,29 +36,36 @@ verification_date: "2026-05-01"
 ## Component Verification
 
 **SolverWorkspace:**
+
 - Pre-allocates work vectors for CG, GMRES, BiCGSTAB
 - `reset()` clears vectors for reuse
 
 **SolverDiagnostics:**
+
 - Convergence rate calculation: history [1, 0.5, 0.25, 0.125, 0.0625] → rate = 0.5
 
 **SpMV:**
+
 - Tridiagonal matrix A * [1,1,1,1,1] = [3,3,3,3,3] ✓
 
 **Roofline:**
+
 - SpMV AI: 0.083 FLOPs/byte
 
 **NVTX:**
+
 - Domain: "nova_sparse"
 - Macros: NOVA_NVTX_SCOPED_RANGE, NOVA_NVTX_MARKER
 
 ## Milestone Complete
 
 v2.8 Numerical Computing & Performance is now complete with all 4 phases finished:
+
 - Phase 79: Sparse Format Foundation (ELL, SELL)
 - Phase 80: Krylov Solver Core + Roofline
 - Phase 81: Extended Formats + Roofline Analysis (HYB)
 - Phase 82: Integration & Production
 
 ---
-*Verification generated: 2026-05-01*
+
+## Verification generated: 2026-05-01

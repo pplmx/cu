@@ -17,6 +17,7 @@ requirements:
 ### PERF-02: User can configure automatic memory pool tuning based on workload patterns
 
 **Verification:**
+
 - `AdaptiveMemoryPoolTuner` class implemented with:
   - `record_allocation()` / `record_deallocation()` for workload tracking
   - `suggest_pool_size()` for adaptive pool sizing
@@ -31,12 +32,14 @@ requirements:
   - MemoryOptimizerTest.AdaptiveMemoryPoolTunerProfileDetection ✓
 
 **Files:**
+
 - `include/cuda/memory_opt/memory_optimizer.h`
 - `src/cuda/memory_opt/memory_optimizer.cpp`
 
 ### PERF-04: User can enable memory compression for checkpoint data with configurable ratio
 
 **Verification:**
+
 - `CheckpointCompressor` class with ZSTD/LZ4 support:
   - `set_config()` with compression_level and target_compression_ratio
   - `compress()` / `decompress()` methods
@@ -52,12 +55,13 @@ requirements:
   - MemoryOptimizerTest.CheckpointCompressorStats ✓
 
 **Files:**
+
 - `include/cuda/memory_opt/memory_optimizer.h`
 - `src/cuda/memory_opt/memory_optimizer.cpp`
 
 ## Test Results
 
-```
+```text
 Running 8 tests from 1 test suite.
 [  PASSED  ] 8 tests.
 ```

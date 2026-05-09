@@ -116,7 +116,7 @@ public:
 
 ### 4. Create inference Directory Structure
 
-```
+```text
 include/cuda/inference/
 ├── block_manager.h
 └── types.h

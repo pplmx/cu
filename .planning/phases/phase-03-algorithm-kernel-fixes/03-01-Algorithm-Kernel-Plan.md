@@ -36,6 +36,7 @@ Enable SegmentedSortTest by adding proper CUDA context initialization.
 **File:** tests/algo/segmented_sort_test.cpp
 
 **Change:** Replace `GTEST_SKIP()` with proper CUDA device initialization:
+
 ```cpp
 void SetUp() override {
     cudaSetDevice(0);

@@ -16,6 +16,7 @@ files_modified:
 ### Implementation Details
 
 **ELL SpMV Algorithm:**
+
 ```cpp
 for each row i:
     sum = 0
@@ -28,6 +29,7 @@ for each row i:
 ```
 
 **SELL SpMV Algorithm:**
+
 ```cpp
 for each slice s:
     slice_base = slice_ptr[s]
@@ -50,9 +52,11 @@ Added `sparse_mv()` overloads for ELL and SELL that delegate to `SparseOps::spmv
 ### Numerical Accuracy
 
 Both implementations produce bit-exact results matching CSR baseline:
+
 - y[0] = 7.0 (1×1 + 2×3)
 - y[1] = 6.0 (3×2)
 - y[2] = 19.0 (4×1 + 5×3)
 
 ---
-*Summary generated: 2026-05-01*
+
+## Summary generated: 2026-05-01

@@ -36,6 +36,7 @@ Enhanced memory management with pool tuning and compression.
 ### PERF-02: Adaptive Memory Pool Tuning
 
 Enhanced `AdaptiveMemoryPoolTuner`:
+
 - Record allocation/deallocation patterns
 - Suggest pool size based on workload profile
 - Detect workload profiles (SmallBatch, LargeBatch, Inference, Training)
@@ -44,6 +45,7 @@ Enhanced `AdaptiveMemoryPoolTuner`:
 ### PERF-04: Checkpoint Compression
 
 Enhanced `CheckpointCompressor`:
+
 - ZSTD compression with configurable level
 - Tracks compression statistics
 - Reports compression ratio

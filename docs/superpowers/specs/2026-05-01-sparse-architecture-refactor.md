@@ -156,7 +156,7 @@ private:
 
 Format-specific storage continues to exist for formats not fully supported by cuSPARSE:
 
-```
+```text
 include/cuda/sparse/
 ├── matrix.hpp           # Unified SparseMatrix<T> base
 ├── cusparse_context.hpp # cuSPARSE handle wrapper
@@ -188,6 +188,7 @@ SparseMatrixCSR {
 ```
 
 Migration path:
+
 1. Old code continues to work (with deprecation warnings)
 2. New code uses `cuda::sparse::SparseMatrix<T>`
 3. Tests updated to verify both paths work

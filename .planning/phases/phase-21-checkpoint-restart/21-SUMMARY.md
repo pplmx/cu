@@ -16,12 +16,15 @@
 ## Files Created
 
 ### Headers
+
 - `include/cuda/checkpoint/checkpoint_manager.h` — CheckpointManager, StorageBackend, FileStorageBackend
 
 ### Implementation
+
 - `src/cuda/checkpoint/checkpoint_manager.cpp` — Full implementation
 
 ### CMake Updates
+
 - `CMakeLists.txt` — Added cuda_checkpoint library (NOVA_ENABLE_CHECKPOINT option), OpenSSL dependency
 
 ## Key Components

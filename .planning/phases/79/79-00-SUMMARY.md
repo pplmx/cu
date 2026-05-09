@@ -30,6 +30,7 @@ files_modified:
 ### Interfaces Declared
 
 **SparseMatrixELL<T>:**
+
 - `static FromCSR(const SparseMatrixCSR<T>&)` — Convert CSR to ELL
 - `int num_rows() const` / `int num_cols() const`
 - `int nnz() const` / `int padded_nnz() const`
@@ -38,6 +39,7 @@ files_modified:
 - `const int* row_offsets() const`
 
 **SparseMatrixSELL<T>:**
+
 - `static FromCSR(const SparseMatrixCSR<T>&, int slice_height=32)`
 - `int num_rows() const` / `int num_cols() const`
 - `int nnz() const` / `int padded_nnz() const`
@@ -46,8 +48,10 @@ files_modified:
 - `const int* slice_ptr() const`
 
 **SparseOps<T>:**
+
 - `static void spmv(const SparseMatrixELL<T>&, const T* x, T* y)`
 - `static void spmv(const SparseMatrixSELL<T>&, const T* x, T* y)`
 
 ---
-*Summary generated: 2026-05-01*
+
+## Summary generated: 2026-05-01

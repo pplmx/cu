@@ -14,11 +14,13 @@
 ## Files Created
 
 ### Integration
+
 - `include/cuda/testing/integration.h` - Integration test runner
 - `src/testing/integration.cpp` - Implementation
 - `tests/testing/integration_test.cpp` - Tests
 
 ### Documentation
+
 - `docs/CHANGELOG_v2.7.md` - v2.7 release documentation
 
 ## Success Criteria Verified

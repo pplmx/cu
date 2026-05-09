@@ -25,14 +25,17 @@ completed_at: "2026-05-07"
 ## Files Commented
 
 ### Memory Layer (2 files)
+
 - `src/cuda/memory/distributed_pool.cpp` — Full inline comments
 - `src/cuda/memory/streaming_cache_manager.cpp` — Full inline comments
 
 ### Device Layer (2 files)
+
 - `src/cuda/device/cublas_context.cu` — Full inline comments
 - `src/cuda/device/reduce_kernels.cu` — Full inline comments
 
 ### Algorithm Layer (2 files)
+
 - `src/cuda/algo/reduce.cu` — Full inline comments
 
 ## Comment Style Applied

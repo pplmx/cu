@@ -6,6 +6,7 @@
 ## Deliverables
 
 ### HTML Dashboard Generator (`scripts/benchmark/generate_dashboard.py`)
+
 - Self-contained HTML output with inline CSS and CDN Plotly
 - Comparison bar charts showing current vs baseline
 - Detailed results table with status badges
@@ -13,6 +14,7 @@
 - Color-coded status: red (regression), green (improvement), gray (stable)
 
 ### Dashboard Features
+
 - Statistics cards showing regression/improvement/stable counts
 - Interactive Plotly charts
 - Responsive design
@@ -47,7 +49,8 @@ python scripts/benchmark/generate_dashboard.py \
 - Dashboard uses Plotly from CDN (self-contained within generated HTML)
 - Comparison requires baseline to be loaded via --baseline flag
 - Reports directory structure:
-  ```
+
+  ```text
   reports/
   └── index.html  # Main dashboard
   ```
@@ -55,6 +58,7 @@ python scripts/benchmark/generate_dashboard.py \
 ## v1.7 Complete
 
 All 4 phases completed:
+
 - Phase 29: Benchmark Infrastructure Foundation ✓
 - Phase 30: Comprehensive Benchmark Suite ✓
 - Phase 31: CI Regression Testing ✓

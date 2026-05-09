@@ -32,16 +32,18 @@ doxygen -g Doxyfile
 ```
 
 Key settings:
+
 - OUTPUT_DIRECTORY = docs/api
 - GENERATE_HTML = YES
 - INPUT = include/
-- FILE_PATTERNS = *.hpp *.h
+- FILE_PATTERNS = *.hpp*.h
 - ENABLE_PREPROCESSING = YES
 - EXPAND_PREPROC = YES
 
 ### 2. Add Doxygen Comments to Headers
 
 Group by module:
+
 - @defgroup memory Memory Management
 - @defgroup device Device Management
 - @defgroup algo Algorithms
@@ -49,7 +51,7 @@ Group by module:
 
 ### 3. Module Structure
 
-```
+```text
 docs/api/html/
 ├── index.html
 ├── group__memory.html
@@ -59,4 +61,5 @@ docs/api/html/
 ```
 
 ---
-*Context created: 2026-04-26*
+
+## Context created: 2026-04-26

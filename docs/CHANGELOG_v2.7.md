@@ -12,6 +12,7 @@ This release adds comprehensive robustness testing, enhanced profiling capabilit
 ### Observability & Profiling (Phase 75)
 
 #### Timeline Visualization
+
 Export NVTX annotations to Chrome trace format for visualization in `chrome://tracing`.
 
 ```cpp
@@ -23,6 +24,7 @@ NOVA_TIMELINE_EXPORT("/path/to/trace.json");
 ```
 
 #### Memory Bandwidth Measurement
+
 Measure H2D, D2H, and D2D memory bandwidth.
 
 ```cpp
@@ -34,6 +36,7 @@ std::cout << "Bandwidth: " << result.bandwidth_gbps << " GB/s\n";
 ```
 
 #### Kernel Statistics
+
 Collect per-kernel latency, throughput, and occupancy.
 
 ```cpp
@@ -45,6 +48,7 @@ auto stats = collector.get_stats("my_kernel");
 ```
 
 #### Occupancy Analyzer
+
 Real-time block size recommendations.
 
 ```cpp
@@ -58,6 +62,7 @@ std::cout << "Optimal block size: " << rec.recommended_block_size << "\n";
 ### Algorithm Extensions (Phase 76)
 
 #### Segmented Sort
+
 Sort elements within groups without full array copy.
 
 ```cpp
@@ -68,6 +73,7 @@ cuda::algo::segmented::sort_by_key(keys, segment_ids, out_keys, out_segments,
 ```
 
 #### Sparse Matrix-Vector Multiply
+
 SpMV using CSR/CSC formats from v2.1.
 
 ```cpp
@@ -77,6 +83,7 @@ cuda::algo::spmv::multiply_csr(values, row_offsets, col_indices, x, y, num_rows)
 ```
 
 #### Sample Sort
+
 For large datasets beyond radix sort efficiency.
 
 ```cpp
@@ -86,6 +93,7 @@ auto result = cuda::algo::sample_sort::sort_large_dataset(input, count);
 ```
 
 #### Delta-Stepping SSSP
+
 Single-source shortest path for weighted graphs.
 
 ```cpp
@@ -97,6 +105,7 @@ auto distances = cuda::algo::sssp::compute_distances(graph, source);
 ### Robustness & Testing (Phase 77)
 
 #### Memory Safety Validation
+
 ```cpp
 #include "cuda/testing/memory_safety.h"
 
@@ -104,6 +113,7 @@ MemorySafetyValidator::instance().validate_allocation(ptr, size);
 ```
 
 #### Test Isolation
+
 ```cpp
 #include "cuda/testing/test_isolation.h"
 
@@ -113,6 +123,7 @@ TestIsolationContext::execute_isolated([]() {
 ```
 
 #### Layer-Aware Error Injection
+
 ```cpp
 #include "cuda/testing/layer_error_injection.h"
 
@@ -123,6 +134,7 @@ injector.inject_at_layer(LayerBoundary::Memory,
 ```
 
 #### Boundary Condition Testing
+
 ```cpp
 #include "cuda/testing/boundary_testing.h"
 
@@ -132,6 +144,7 @@ is_valid_block_size(dim3(256, 1, 1));  // Check valid block size
 ```
 
 #### FP Determinism Control
+
 ```cpp
 #include "cuda/testing/fp_determinism.h"
 
@@ -153,7 +166,9 @@ FPDeterminismControl::instance().set_level(DeterminismLevel::GpuToGpu);
 ## Migration Notes
 
 ### CUB to CCCL Migration
+
 Replace CUB includes:
+
 ```cpp
 // Before
 #include <cub/cub.cuh>
@@ -164,12 +179,12 @@ Replace CUB includes:
 
 ## Performance Baselines
 
-| Operation | Baseline |
-|-----------|----------|
-| Timeline export | < 1ms overhead |
-| Memory bandwidth | ~90% peak HBM |
-| Kernel stats | < 0.1ms per kernel |
-| Occupancy analysis | < 5ms |
+| Operation          | Baseline           |
+| ------------------ | ------------------ |
+| Timeline export    | < 1ms overhead     |
+| Memory bandwidth   | ~90% peak HBM      |
+| Kernel stats       | < 0.1ms per kernel |
+| Occupancy analysis | < 5ms              |
 
 ## Testing
 

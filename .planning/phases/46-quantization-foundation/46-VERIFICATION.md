@@ -15,12 +15,14 @@ requirements:
 ## Verification Results
 
 ### QUANT-01: INT8 Quantization ✅
+
 - [x] `QuantizedTensor<int8_t>` with scale and zero_point
 - [x] `FromFloat()` factory with auto-calibration
 - [x] Custom scale support
 - [x] `ToFloat()` dequantization
 
 ### QUANT-02: FP16 Quantization ✅
+
 - [x] `float16` type with IEEE 754 conversion
 - [x] `QuantizedTensor<float16>` type alias
 - [x] `FromFloat()` with type conversion
@@ -40,4 +42,5 @@ requirements:
 | `tests/quantize/quantize_tensor_test.cpp` | Unit tests |
 
 ---
-*Verification completed: 2026-04-26*
+
+## Verification completed: 2026-04-26

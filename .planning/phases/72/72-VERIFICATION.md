@@ -17,6 +17,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - SequenceManager tracks each sequence independently
 - BlockManager allocates separate blocks per sequence
 - Test `SequenceIsolation` verifies no interference
@@ -28,6 +29,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `get_batch()` returns current batch composition
 - `forward_batch()` processes all sequences in batch
 - `recompose_batch()` handles dynamic batch composition
@@ -39,6 +41,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - Config supports num_kv_heads < num_heads
 - BlockManager configured with num_kv_heads
 - Tests `GQASupport` and `MQASupport` verify configuration
@@ -50,6 +53,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `add_request()` is lock-free for adding to pending
 - Batch recomposition happens in `step()` or `get_batch()`
 - No blocking operations in request addition
@@ -61,6 +65,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `on_sequence_complete()` marks sequence finished
 - `recompose_batch()` removes finished sequences from batch
 - BlockManager.free_sequence() releases blocks
@@ -107,4 +112,5 @@ All success criteria have been implemented and verified.
 | SCHED-03: GQA/MQA support | ✅ |
 
 ---
-*Verification completed: 2026-04-29*
+
+## Verification completed: 2026-04-29

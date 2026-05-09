@@ -27,7 +27,7 @@
 
 ### Feature Matrix Output
 
-```
+```text
 Nova 0.1.0: NCCL [OFF]
 Nova 0.1.0: MPI [OFF]
 Nova 0.1.0: CUDA 12.9.86
@@ -58,5 +58,6 @@ This installs to `/usr/local/lib/cmake/nova/`
 - ✅ find_package test passes
 
 ---
+
 *Phase completed: 2026-04-26*
 *Requirements: CMK-01 ✓, CMK-02 ✓, CMK-03 ✓, CMK-04 ✓*

@@ -5,6 +5,7 @@ How to measure and optimize Nova CUDA performance using benchmarks.
 ## Overview
 
 Nova includes comprehensive benchmarks for:
+
 - Memory operations (H2D, D2H, D2D)
 - Algorithms (reduce, scan, sort, FFT)
 - Neural net primitives (matmul, softmax)

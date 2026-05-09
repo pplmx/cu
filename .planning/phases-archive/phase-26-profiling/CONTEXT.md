@@ -9,6 +9,7 @@
 ### PROF-01: Kernel-level profiling with CUDA profiling tools integration
 
 Integration points:
+
 - CUDA events for timing
 - nvprof/nsys markers
 - Custom annotation macros
@@ -16,6 +17,7 @@ Integration points:
 ### PROF-02: Memory bandwidth and compute throughput metrics
 
 Metrics to track:
+
 - Memory throughput (GB/s)
 - Compute throughput (TFLOPS)
 - Kernel occupancy
@@ -24,6 +26,7 @@ Metrics to track:
 ### PROF-03: Collective operation latency tracking
 
 Track:
+
 - All-reduce latency
 - Broadcast latency
 - All-gather latency
@@ -36,6 +39,7 @@ Track:
 **Decision:** Scoped timer RAII pattern
 
 **Rationale:**
+
 - Automatic start/stop via destructor
 - Stack-allocated for minimal overhead
 - Works with existing code without major refactoring
@@ -45,6 +49,7 @@ Track:
 **Decision:** In-memory metrics with optional export
 
 **Rationale:**
+
 - Minimal I/O overhead during profiling
 - Export on demand to JSON/text
 - Thread-safe for multi-threaded use
@@ -54,13 +59,14 @@ Track:
 **Decision:** Compile-time enable/disable
 
 **Rationale:**
+
 - Zero overhead when disabled
 - Simple macro-based API
 - CUDA events are lightweight
 
 ## Architecture
 
-```
+```text
 PerformanceProfiler
 ├── Timer
 │   ├── start()

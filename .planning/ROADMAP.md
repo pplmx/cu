@@ -23,6 +23,7 @@
 **Requirements:** CTX-01, CTX-02, CTX-03
 
 **Success Criteria:**
+
 1. JacobiPreconditionerTest (11 tests) - add SetUp with cudaSetDevice
 2. RCMReordererTest (13 tests) - add SetUp with cudaSetDevice  
 3. PreconditionedSolverTest (6 tests) - add SetUp with cudaSetDevice
@@ -33,6 +34,7 @@
 8. All 45 tests pass
 
 **Files to modify:**
+
 - `tests/sparse/preconditioner_test.cpp`
 - `tests/sparse/reordering_test.cpp`
 - `tests/sparse/preconditioned_solver_test.cpp`
@@ -49,6 +51,7 @@
 **Requirements:** MEM-01, MEM-02, MEM-03, MEM-04
 
 **Success Criteria:**
+
 1. BlockManager tests - reduce num_gpu_blocks from 8192 to 256
 2. DynamicBlockSizing tests - reduce max_model_len from 32768 to 8192
 3. BeamSearch tests - reduce beam width or block allocation
@@ -57,6 +60,7 @@
 6. Verify functionality still works with smaller allocations
 
 **Files to modify:**
+
 - `tests/inference/block_manager_edge_test.cpp`
 - `tests/inference/beam_search_test.cpp`
 - `tests/inference/chunked_prefill_test.cpp`
@@ -70,6 +74,7 @@
 **Requirements:** ALGO-01, ALGO-02, ALGO-03, ALGO-04
 
 **Success Criteria:**
+
 1. FlashAttention - fix causal masking in kernel
    - Verify causal output differs from non-causal
    - Test with various sequence lengths
@@ -82,6 +87,7 @@
    - Verify LRU eviction works correctly
 
 **Files to modify:**
+
 - `src/cuda/algo/flash_attention.cu`
 - `src/cuda/algo/sort.cu` (select_top_k)
 - `src/cuda/algo/segmented_sort.cu`
@@ -96,6 +102,7 @@
 **Requirements:** TEST-01, TEST-02, TEST-03, TEST-04
 
 **Success Criteria:**
+
 1. PositionalEncoding - verify correct encoding formula
    - Test with known inputs
    - Compare against numpy implementation
@@ -107,6 +114,7 @@
    - Test with known allocation patterns
 
 **Files to modify:**
+
 - `tests/algo/positional_encoding_test.cpp`
 - `tests/algo/fused_matmul_bias_act_test.cpp`
 - `tests/inference/prefix_sharing_test.cpp`
@@ -121,6 +129,7 @@
 **Requirements:** ERR-01, ERR-02, ERR-03, ERR-04, SAFE-01, SAFE-02, SAFE-03
 
 **Success Criteria:**
+
 1. TimeoutPropagation - verify timeout callbacks work
    - Test with short timeouts
    - Verify callback invoked
@@ -138,6 +147,7 @@
    - Test device/host/managed allocations
 
 **Files to modify:**
+
 - `tests/cuda/error/timeout_propagation_test.cpp`
 - `tests/cuda/error/retry_test.cpp`
 - `tests/cuda/distributed/hierarchical_all_reduce_test.cpp`

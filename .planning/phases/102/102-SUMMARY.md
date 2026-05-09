@@ -10,6 +10,7 @@
 ## Deliverables
 
 ### QuantizationBenchmark (BENCH-01)
+
 - Benchmark harness for quantization operations
 - Configurable warmup/benchmark runs
 - FP8, INT8 quantization benchmarks
@@ -17,12 +18,14 @@
 - Calibration benchmarks
 
 ### Accuracy Comparison (BENCH-02)
+
 - L2 error computation
 - KL divergence computation
 - Roundtrip accuracy testing
 - Results export to JSON
 
 ### Benchmark Results
+
 - Throughput (GB/s) measurements
 - Latency (us) measurements
 - Relative error tracking
@@ -51,6 +54,7 @@
 ## v2.12 Milestone Complete
 
 All 5 phases completed:
+
 | Phase | Goal | Status |
 |-------|------|--------|
 | 98 | FP8 Foundation | ✅ |

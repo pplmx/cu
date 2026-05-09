@@ -4,7 +4,7 @@ Nova uses a five-layer architecture designed for education, research, and produc
 
 ## Layer Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │  Layer 4: Domain-Specific (Sparse, Quantize, GNN)               │
 │  cuda::sparse, cuda::quantize, cuda::gnn                        │
@@ -33,19 +33,20 @@ Nova uses a five-layer architecture designed for education, research, and produc
 
 ## Layer Responsibilities
 
-| Layer | Namespace | Purpose | Dependencies |
-|-------|-----------|---------|--------------|
-| **Layer 0** | `cuda::memory` | Memory allocation, RAII, pooling, distributed pools | CUDA runtime |
-| **Layer 1** | `cuda::device` | Pure CUDA kernels, warp primitives | Layer 0 |
-| **Layer 2** | `cuda::algo` | Algorithm orchestration, device memory management | Layers 0, 1 |
-| **Layer 3** | `cuda::api` | STL-style containers (DeviceVector, Stream) | Layers 0, 1, 2 |
-| **Layer 4** | `cuda::sparse/quantize/gnn` | Domain-specific operations | Layers 0-3 |
+| Layer       | Namespace                   | Purpose                                             | Dependencies   |
+| ----------- | --------------------------- | --------------------------------------------------- | -------------- |
+| **Layer 0** | `cuda::memory`              | Memory allocation, RAII, pooling, distributed pools | CUDA runtime   |
+| **Layer 1** | `cuda::device`              | Pure CUDA kernels, warp primitives                  | Layer 0        |
+| **Layer 2** | `cuda::algo`                | Algorithm orchestration, device memory management   | Layers 0, 1    |
+| **Layer 3** | `cuda::api`                 | STL-style containers (DeviceVector, Stream)         | Layers 0, 1, 2 |
+| **Layer 4** | `cuda::sparse/quantize/gnn` | Domain-specific operations                          | Layers 0-3     |
 
 ## Domain Modules
 
 ### cuda::sparse
 
 Sparse matrix operations including:
+
 - Storage formats: CSR, ELL, SELL, HYB
 - SpMV operations
 - Iterative solvers: CG, GMRES, BiCGSTAB
@@ -54,6 +55,7 @@ Sparse matrix operations including:
 ### cuda::quantize
 
 Quantization support:
+
 - INT8 quantization with calibration
 - FP8 support (H100/H200)
 - Quantization-aware training (QAT)
@@ -62,13 +64,14 @@ Quantization support:
 ### cuda::gnn
 
 Graph neural network operations:
+
 - Graph sampling (neighbor, k-hop)
 - Message passing primitives
 - Graph attention networks
 
 ## Directory Structure
 
-```
+```text
 include/cuda/
 ├── memory/              # Layer 0: Memory Foundation
 │   ├── buffer.h         # cuda::memory::Buffer<T>
@@ -107,7 +110,7 @@ src/cuda/
 
 ## Memory Model
 
-```
+```text
 Host Memory                    Device Memory
      │                              │
      │  cuda::memory::Buffer        │

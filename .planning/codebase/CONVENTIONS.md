@@ -32,6 +32,7 @@ Enforced by `.clang-tidy` and `.clang-format`:
 **Tool:** clang-format (`.clang-format`)
 
 **Key settings:**
+
 - Style: Google-based
 - Column limit: 180 characters
 - Indent width: 4 spaces (no tabs)
@@ -41,6 +42,7 @@ Enforced by `.clang-tidy` and `.clang-format`:
 - Access modifier offset: -4 (for `public:`, `private:` alignment within classes)
 
 **Pre-commit hooks** (`.pre-commit-config.yaml`):
+
 - Trailing whitespace fixer
 - TOML/YAML validator
 - Mixed line ending fixer (LF)
@@ -52,6 +54,7 @@ Enforced by `.clang-tidy` and `.clang-format`:
 **Tool:** clang-tidy (`.clang-tidy`)
 
 **Enabled checks:**
+
 - `bugprone-*` - Bug-prone code patterns
 - `readability-*` - Readability improvements
 - `performance-*` - Performance anti-patterns
@@ -69,6 +72,7 @@ Enforced by `.clang-tidy` and `.clang-format`:
 ### Include Guards
 
 **Pattern for headers:**
+
 ```cpp
 #pragma once
 ```
@@ -110,7 +114,7 @@ namespace cuda::module {
 
 ### Directory Layout
 
-```
+```text
 include/
 ├── cuda/              # Public CUDA headers
 │   ├── memory/        # Memory management
@@ -202,6 +206,7 @@ explicit RandomGenerator(uint64_t seed);
 ```
 
 **Usage:**
+
 ```cpp
 void Buffer<T>::copy_from(const T* host_data, size_t count) {
     CUDA_CHECK(cudaMemcpy(data_, host_data, count * sizeof(T), cudaMemcpyHostToDevice));
@@ -327,6 +332,7 @@ data_ = nullptr;  // Release ownership
 
 **Use inline functions/lambdas over macros when possible.**
 Use macros only for:
+
 - Error checking patterns (`CUDA_CHECK`)
 - Code generation (`NOVA_PROPERTY_TEST`)
 - Compile-time configuration
@@ -360,4 +366,4 @@ Tests follow GoogleTest pattern - see `TESTING.md` for details.
 
 ---
 
-*Convention analysis: 2026-04-30*
+## Convention analysis: 2026-04-30

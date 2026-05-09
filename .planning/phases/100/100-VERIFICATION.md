@@ -32,7 +32,7 @@
 ## Compilation Verification
 
 ```bash
-$ nvcc -std=c++20 -I../include calibrator.cpp -o calibrator.o
+nvcc -std=c++20 -I../include calibrator.cpp -o calibrator.o
 # Success (warnings only)
 ```
 
@@ -41,6 +41,7 @@ $ nvcc -std=c++20 -I../include calibrator.cpp -o calibrator.o
 ## Test Coverage
 
 ### Calibrator Tests (9 tests)
+
 - MinMaxSymmetricCalibration
 - MinMaxAsymmetricCalibration
 - MinMaxCacheRoundtrip
@@ -59,4 +60,4 @@ All success criteria met. Phase 100 verified.
 
 ---
 
-*Verification completed: 2026-05-03*
+## Verification completed: 2026-05-03

@@ -31,10 +31,10 @@
 ## Compilation Verification
 
 ```bash
-$ nvcc -std=c++20 -I../include int8_kernels.cu -o int8_kernels.o
+nvcc -std=c++20 -I../include int8_kernels.cu -o int8_kernels.o
 # Success (warnings only)
 
-$ nvcc -std=c++20 -I../include int8_kernels_test.cpp -o int8_kernels_test.o
+nvcc -std=c++20 -I../include int8_kernels_test.cpp -o int8_kernels_test.o
 # Success (warnings only)
 ```
 
@@ -43,6 +43,7 @@ $ nvcc -std=c++20 -I../include int8_kernels_test.cpp -o int8_kernels_test.o
 ## Test Coverage
 
 ### INT8 Kernels Tests (8 tests)
+
 - SymmetricQuantization — verify vs CPU reference
 - SymmetricDequantization — verify vs CPU reference
 - RoundtripAccuracy — FP32 → INT8 → FP32
@@ -59,4 +60,4 @@ All success criteria met. Phase 99 verified.
 
 ---
 
-*Verification completed: 2026-05-03*
+## Verification completed: 2026-05-03

@@ -15,11 +15,11 @@ cmake --build --preset dev --parallel
 
 Nova includes CMake presets for common build configurations:
 
-| Preset | Build Type | Purpose |
-|--------|------------|---------|
-| `dev` | Debug | Development with ccache enabled |
-| `release` | Release | Optimized build with unity builds |
-| `ci` | Release | CI-optimized, no ccache |
+| Preset    | Build Type | Purpose                           |
+| --------- | ---------- | --------------------------------- |
+| `dev`     | Debug      | Development with ccache enabled   |
+| `release` | Release    | Optimized build with unity builds |
+| `ci`      | Release    | CI-optimized, no ccache           |
 
 ### Using Presets
 
@@ -57,12 +57,14 @@ ccache --version
 
 ### Enabling ccache
 
-**Option 1: CMake Preset (recommended)**
+## Option 1: CMake Preset (recommended)
+
 ```bash
 cmake --preset dev  # dev preset has ccache enabled by default
 ```
 
-**Option 2: Manual configuration**
+## Option 2: Manual configuration
+
 ```bash
 cmake -B build -DNOVA_USE_CCACHE=ON
 cmake --build build
@@ -93,12 +95,14 @@ Unity builds combine multiple source files into single compilation units, signif
 
 ### Enabling Unity Builds
 
-**Option 1: CMake Preset (recommended)**
+## Option 1: CMake Preset (recommended)
+
 ```bash
 cmake --preset release  # release preset has unity builds enabled
 ```
 
-**Option 2: Manual configuration**
+## Option 2: Manual configuration
+
 ```bash
 cmake -B build -DNOVA_ENABLE_UNITY_BUILD=ON
 cmake --build build
@@ -108,20 +112,22 @@ cmake --build build
 
 Nova automatically adjusts batch size based on CPU cores:
 
-| CPU Cores | Batch Size |
-|-----------|------------|
-| 64+ | 64 |
-| 32+ | 32 |
-| <32 | 4 (default) |
+| CPU Cores | Batch Size  |
+| --------- | ----------- |
+| 64+       | 64          |
+| 32+       | 32          |
+| <32       | 4 (default) |
 
 ### Known Limitations
 
 Unity builds may cause:
+
 - Longer link times
 - Reduced parallel compilation
 - Occasional symbol collisions (rare)
 
 If you encounter issues, disable unity builds:
+
 ```bash
 cmake -B build -DNOVA_ENABLE_UNITY_BUILD=OFF
 ```
@@ -138,6 +144,7 @@ cmake --build build
 ```
 
 Or use the preset:
+
 ```bash
 cmake --preset dev -G Ninja
 ```
@@ -154,12 +161,12 @@ cmake --preset dev -G Ninja
 
 Typical build times on a 32-core machine:
 
-| Configuration | Initial Build | Rebuild |
-|---------------|---------------|---------|
-| Release (no cache) | 5 min | 5 min |
-| Release (ccache) | 5 min | 1 min |
-| Release (unity) | 4 min | 4 min |
-| Release (ccache + unity) | 4 min | 45 sec |
+| Configuration            | Initial Build | Rebuild |
+| ------------------------ | ------------- | ------- |
+| Release (no cache)       | 5 min         | 5 min   |
+| Release (ccache)         | 5 min         | 1 min   |
+| Release (unity)          | 4 min         | 4 min   |
+| Release (ccache + unity) | 4 min         | 45 sec  |
 
 ## CI Integration
 
@@ -172,6 +179,7 @@ ctest --preset ci
 ```
 
 The `ci` preset:
+
 - Disables ccache (unnecessary in CI)
 - Enables unity builds
 - Fails on missing tests
@@ -191,6 +199,7 @@ cmake -B build -DNOVA_USE_CCACHE=OFF
 ### Low ccache hit rate
 
 Check for:
+
 - Different compiler flags between builds
 - Missing `CCACHE_BASEDIR` environment variable
 - Source file modifications

@@ -16,12 +16,15 @@
 ## Files Created
 
 ### Headers
+
 - `include/cuda/comm/comm_error_recovery.h` — HealthMonitor, RetryHandler, ErrorClassifier, CommErrorRecovery
 
 ### Implementation
+
 - `src/cuda/comm/comm_error_recovery.cpp` — Full implementation
 
 ### CMake Updates
+
 - `CMakeLists.txt` — Added cuda_comm library
 
 ## Key Components

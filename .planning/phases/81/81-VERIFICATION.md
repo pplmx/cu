@@ -30,18 +30,21 @@ verification_date: "2026-05-01"
 ## Manual Verification
 
 **HYB Matrix Test:**
+
 - CSR matrix: 10x10 with 29 non-zeros
 - ELL rows: 3 (threshold: nnz > 2)
 - COO rows: 7
 - SpMV: CSR and HYB results identical (max diff: 0)
 
 **Roofline Classification Test:**
+
 - SpMV AI: 0.093 FLOPs/byte
 - Bandwidth ceiling: 93 GFLOPS
 - Peak compute: 10000 GFLOPS
 - Classification: MEMORY_BOUND (99% confidence)
 
 **JSON Export:**
+
 - Valid JSON structure with metadata
 - Includes device_peaks and kernels array
 - Compatible with external visualization tools
@@ -55,9 +58,11 @@ verification_date: "2026-05-01"
 
 ## Next Phase
 
-**Phase 82: Integration & Production**
+## Phase 82: Integration & Production
+
 - Depends on: Phase 79, Phase 80, Phase 81
 - Requires: Memory pool, diagnostics, E2E tests, benchmarks, NVTX, docs
 
 ---
-*Verification generated: 2026-05-01*
+
+## Verification generated: 2026-05-01

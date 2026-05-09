@@ -33,16 +33,16 @@
 ## Compilation Verification
 
 ```bash
-$ nvcc -std=c++20 -I../include fp8_types_test.cpp -o fp8_types_test.o
+nvcc -std=c++20 -I../include fp8_types_test.cpp -o fp8_types_test.o
 # Success (warnings only)
 
-$ nvcc -std=c++20 -I../include fp8_gemm_test.cpp -o fp8_gemm_test.o
+nvcc -std=c++20 -I../include fp8_gemm_test.cpp -o fp8_gemm_test.o
 # Success (warnings only)
 
-$ nvcc -std=c++20 -I../include fp8_kernels.cu -o fp8_kernels.o
+nvcc -std=c++20 -I../include fp8_kernels.cu -o fp8_kernels.o
 # Success (warnings only)
 
-$ nvcc -std=c++20 -I../include fp8_gemm.cu -o fp8_gemm.o
+nvcc -std=c++20 -I../include fp8_gemm.cu -o fp8_gemm.o
 # Success (warnings only)
 ```
 
@@ -51,6 +51,7 @@ $ nvcc -std=c++20 -I../include fp8_gemm.cu -o fp8_gemm.o
 ## Test Coverage
 
 ### FP8 Types Tests (26 tests)
+
 - Construction from zero, positive, negative values
 - Roundtrip accuracy verification
 - Positive/Negative Infinity handling
@@ -62,6 +63,7 @@ $ nvcc -std=c++20 -I../include fp8_gemm.cu -o fp8_gemm.o
 - Trait verification (is_fp8_type_v)
 
 ### FP8 GEMM Tests
+
 - Small matrix (4x4) multiplication
 - Identity matrix multiplication
 - Random matrices with error bounds
@@ -73,12 +75,14 @@ $ nvcc -std=c++20 -I../include fp8_gemm.cu -o fp8_gemm.o
 ## Implementation Notes
 
 ### FP8E4M3 Range
+
 - Max normal: 240.0
 - Min normal: 0.015625 (2^-6)
 - Exponent bias: 7
 - Mantissa bits: 3
 
 ### FP8E5M2 Range
+
 - Max normal: 57344.0 (2^15 * 1.75)
 - Min normal: ~5.96e-5 (2^-14)
 - Exponent bias: 15
@@ -92,4 +96,4 @@ All success criteria met. Phase 98 verified.
 
 ---
 
-*Verification completed: 2026-05-03*
+## Verification completed: 2026-05-03

@@ -9,6 +9,7 @@ A production-ready CUDA parallel algorithms library with a five-layer architectu
 **Goal:** Fix all 89 failing tests with real implementation fixes - no skipping tests or relaxing tolerances
 
 **Target features:**
+
 - CUDA Context fixes: Add cudaSetDevice initialization to 40+ test fixtures
 - Memory Allocation: Fix OOM tests with proper resource management
 - Algorithm Kernels: Fix FlashAttention, TopK, SegmentedSort implementations
@@ -20,6 +21,7 @@ A production-ready CUDA parallel algorithms library with a five-layer architectu
 **Goal:** Comprehensive documentation sweep
 
 **Shipped:**
+
 - API Documentation: 30 headers documented with Doxygen comments — Phase 107
 - Code Comments: 5 source files commented (memory, device, algo layers) — Phase 108
 - Error/Log Messages: Structured logging infrastructure (5 levels) — Phase 109
@@ -271,7 +273,6 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 - [x] Performance regression testing with automated detection — Phase 30
 - [x] Continuous profiling hooks (NVTX, CI baseline comparison) — Phase 31
 - [x] Performance dashboards (HTML reports, trend charts, regression alerts) — Phase 32
-
 - [x] GPU checkpoint/restart with full state serialization — Phase 21
 - [x] Communication error recovery for NCCL/TCP failures — Phase 22
 - [x] Memory error detection and ECC error handling — Phase 23
@@ -285,6 +286,7 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 ## Context
 
 **Project:** nova CUDA library at `https://github.com/pplmx/nova`
+
 - **Current:** C++23, CUDA 20, CMake 4.0+
 - Target architectures: 6.0, 7.0, 8.0, 9.0 (Pascal through Ampere)
 - Five-layer architecture with clear separation of concerns
@@ -292,6 +294,7 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 - **v1.2 shipped:** Toolchain upgrade (C++23, CUDA 20, CMake 4.0)
 
 **Current capabilities:**
+
 - Device mesh detection and peer memory access between GPUs
 - Multi-GPU collective operations (all-reduce, broadcast, all-gather, barrier)
 - Distributed memory pool spanning multiple GPUs
@@ -299,35 +302,41 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 - All v1.0-v1.5 features: FFT, Ray Tracing, Graph Algorithms, Neural Net Primitives, Async/Streaming, NCCL, Tensor Parallelism, Pipeline Parallelism, Fault Tolerance
 
 **Added in v1.4:**
+
 - MPI-based NCCL bootstrapping for multi-node
 - Topology-aware collective algorithm selection
 - Hierarchical cross-node communicators
 
 **Added in v1.5:**
+
 - GPU checkpoint/restart with full state serialization
 - Communication error recovery with exponential backoff
 - Memory error detection and device health monitoring
 - Job preemption signal handling (SIGTERM/SIGUSR1)
 
 **Added in v1.6:**
+
 - Distributed batch normalization with NCCL all-reduce
 - CUDA event-based kernel profiling infrastructure
 - Matmul-bias-activation kernel fusion
 - ZSTD/LZ4 checkpoint compression and gradient buffering
 
 **Added in v1.7:**
+
 - Comprehensive benchmark suite with Google Benchmark + Python harness
 - Performance regression testing with CI-gated detection and statistical significance
 - NVTX profiling annotations and automated baseline comparison
 - HTML performance dashboards with Plotly charts and color-coded status
 
 **Added in v1.8:**
+
 - Error message framework with std::error_code integration
 - CMake package export with find_package(nova) support
 - IDE configuration for clangd and VS Code
 - CMakePresets.json with dev/release/ci build presets
 
 **Added in v2.3:**
+
 - GPU sorting algorithms (CUB-based radix sort, top-K, binary search)
 - Linear algebra extras (cuSOLVER SVD, EVD, QR, Cholesky)
 - Numerical methods (Monte Carlo, integration, root finding, interpolation)
@@ -389,6 +398,7 @@ A reliable, high-performance CUDA compute library that can be trusted in product
 This document evolves at phase transitions and milestone boundaries.
 
 **After each phase transition:**
+
 1. Requirements invalidated? → Move to Out of Scope with reason
 2. Requirements validated? → Move to Validated with phase reference
 3. New requirements emerged? → Add to Active
@@ -396,12 +406,14 @@ This document evolves at phase transitions and milestone boundaries.
 5. "What This Is" still accurate? → Update if drifted
 
 **After each milestone:**
+
 1. Full review of all sections
 2. Core Value check — still the right priority?
 3. Audit Out of Scope — reasons still valid?
 4. Update Context with current state (users, feedback, metrics)
 
 ---
+
 ### Completed (v2.11)
 
 - ✓ NVBlox integration for kernel-level analysis — Phase 93

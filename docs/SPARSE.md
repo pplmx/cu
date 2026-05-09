@@ -4,12 +4,12 @@ Nova provides comprehensive sparse matrix support including multiple storage for
 
 ## Supported Formats
 
-| Format | Use Case | Pros | Cons |
-|--------|----------|------|------|
-| **CSR** | General purpose | Simple, flexible | Slower SpMV |
-| **ELL** | Regular sparsity | Fast SpMV | Wasteful for irregular |
-| **SELL** | Irregular sparsity | Balanced | More complex |
-| **HYB** | Mixed patterns | Adaptive | Most complex |
+| Format   | Use Case           | Pros             | Cons                   |
+| -------- | ------------------ | ---------------- | ---------------------- |
+| **CSR**  | General purpose    | Simple, flexible | Slower SpMV            |
+| **ELL**  | Regular sparsity   | Fast SpMV        | Wasteful for irregular |
+| **SELL** | Irregular sparsity | Balanced         | More complex           |
+| **HYB**  | Mixed patterns     | Adaptive         | Most complex           |
 
 ## Quick Start
 

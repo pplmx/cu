@@ -7,6 +7,7 @@
 ## Executive Summary
 
 This report documents the analysis of upgrading the Nova CUDA library toolchain:
+
 - C++ Standard: 20 → 23
 - CUDA Standard: 17 → 20
 - CMake Version: 3.25 → 4.0+
@@ -32,6 +33,7 @@ This report documents the analysis of upgrading the Nova CUDA library toolchain:
 ### C++20 Features Used
 
 The codebase currently uses **no C++20-specific features** that would break under C++23:
+
 - No concepts/requires clauses
 - No coroutines (co_await, co_return, co_yield)
 - No consteval
@@ -42,6 +44,7 @@ The codebase currently uses **no C++20-specific features** that would break unde
 **Backward Compatible:** All C++20 code will compile under C++23 without changes.
 
 **Optional Enhancements for Future:**
+
 1. `std::expected<T, E>` — Replace `std::variant<T, std::error_code>` pattern
 2. `std::to_underlying` — Cleaner enum casting
 3. `std::views::chunk_by` — Range grouping
@@ -62,6 +65,7 @@ The codebase currently uses **no C++20-specific features** that would break unde
 ### CUDA Version-Specific Analysis
 
 **Current CUDA 17 Usage:**
+
 - Standard kernel launches (`<<< >>>`)
 - Device/host code separation
 - cuBLAS integration (`cuda::blas::Context`)
@@ -69,6 +73,7 @@ The codebase currently uses **no C++20-specific features** that would break unde
 - Unified memory operations
 
 **CUDA 20 Compatibility:**
+
 - All CUDA 17 APIs are expected to remain available
 - No deprecated APIs detected in current codebase
 - Device code follows standard patterns
@@ -78,6 +83,7 @@ The codebase currently uses **no C++20-specific features** that would break unde
 Current: `60 70 80 90` (Kepler through Ampere)
 
 **CUDA 20 Consideration:**
+
 - CUDA 20 may add support for compute capability 10.x (if new hardware exists)
 - Current architectures should remain supported
 - No changes expected to `CMAKE_CUDA_ARCHITECTURES`
@@ -129,11 +135,13 @@ Current: `60 70 80 90` (Kepler through Ampere)
 ## Verification Plan
 
 ### Before Upgrade
+
 - [ ] Check CUDA 20 availability in CI
 - [ ] Review CUDA 20 release notes for breaking changes
 - [ ] Verify CMake 4.0+ available in development environments
 
 ### After Upgrade
+
 - [ ] Run full test suite (418 tests)
 - [ ] Verify no compiler warnings
 - [ ] Check performance regression (benchmark suite)

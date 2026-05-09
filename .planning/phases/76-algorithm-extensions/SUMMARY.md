@@ -14,18 +14,21 @@
 ## Files Created
 
 ### Headers
+
 - `include/cuda/algo/segmented_sort.h` - Segmented sort API
 - `include/cuda/algo/spmv.h` - Sparse matrix-vector multiply
 - `include/cuda/algo/sample_sort.h` - Sample sort for large datasets
 - `include/cuda/algo/sssp.h` - Delta-stepping SSSP
 
 ### Implementations
+
 - `src/algo/segmented_sort.cpp`
 - `src/algo/spmv.cpp`
 - `src/algo/sample_sort.cpp`
 - `src/algo/sssp.cpp`
 
 ### Tests
+
 - `tests/algo/segmented_sort_test.cpp`
 - `tests/algo/spmv_test.cpp`
 - `tests/algo/sample_sort_test.cpp`

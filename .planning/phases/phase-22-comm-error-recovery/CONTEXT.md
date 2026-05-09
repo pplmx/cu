@@ -16,7 +16,7 @@
 
 ## Architecture
 
-```
+```text
 CommErrorRecovery
 ├── HealthMonitor (watchdog thread)
 │   ├── periodic_check()

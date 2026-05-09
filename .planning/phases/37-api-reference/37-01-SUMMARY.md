@@ -58,5 +58,6 @@ open docs/api/html/index.html
 - ✅ Module structure defined (@defgroup, @ingroup)
 
 ---
+
 *Phase completed: 2026-04-26*
 *Requirements: API-01 ✓, API-02 ✓, API-03 ✓, API-04 ✓*

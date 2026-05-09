@@ -5,9 +5,9 @@ This directory contains fuzzing infrastructure for Nova using libFuzzer.
 ## Directory Structure
 
 - `corpus/` - Seed corpus for each fuzz target (committed to git)
-  - `memory_pool/` - Seeds for memory pool fuzzing
-  - `algorithm/` - Seeds for algorithm fuzzing
-  - `matmul/` - Seeds for matmul fuzzing
+    - `memory_pool/` - Seeds for memory pool fuzzing
+    - `algorithm/` - Seeds for algorithm fuzzing
+    - `matmul/` - Seeds for matmul fuzzing
 - `crashes/` - Crash artifacts (gitignored, for local analysis)
 - `baseline/` - Baseline corpus for CI comparison
 
@@ -53,10 +53,13 @@ Fuzz tests run in CI with corpus baseline comparison:
 ## Fuzzer Details
 
 ### Memory Pool Fuzzing (FUZZ-01)
+
 Tests allocation/deallocation patterns and edge cases in memory management.
 
 ### Algorithm Fuzzing (FUZZ-02)
+
 Tests reduce, scan, and sort operations with varied input sizes and values.
 
 ### Matmul Fuzzing (FUZZ-03)
+
 Tests matrix multiplication with varied tensor shapes and precision modes.

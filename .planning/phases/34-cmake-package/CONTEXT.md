@@ -59,6 +59,7 @@ endif()
 ```
 
 Install rules:
+
 ```cmake
 install(EXPORT NovaTargets 
         FILE NovaTargets.cmake
@@ -82,5 +83,6 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/NovaConfigVersion.cmake
 3. How to expose optional components (NCCL, MPI)
 
 ---
+
 *Context created: 2026-04-26*
 *Ready for planning*

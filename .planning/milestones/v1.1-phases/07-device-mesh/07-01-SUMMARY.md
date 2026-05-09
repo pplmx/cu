@@ -22,17 +22,21 @@ DeviceMesh singleton, PeerCapabilityMap, and PeerCopy async P2P primitive implem
 ## Files Created
 
 ### Headers
+
 - `include/cuda/mesh/device_mesh.h` - DeviceMesh, PeerCapabilityMap, PeerInfo, ScopedDevice
 - `include/cuda/mesh/peer_copy.h` - PeerCopy async copy primitive
 
 ### Implementations
+
 - `src/cuda/mesh/device_mesh.cu` - DeviceMesh and PeerCapabilityMap implementation
 - `src/cuda/mesh/peer_copy.cu` - PeerCopy implementation
 
 ### Tests
+
 - `tests/mesh/device_mesh_test.cu` - 25 comprehensive tests
 
 ### Build Files Modified
+
 - `CMakeLists.txt` - Added MESH_SOURCES and CUDA_MESH_DIR
 - `tests/CMakeLists.txt` - Added mesh test file and include directory
 
@@ -69,7 +73,7 @@ DeviceMesh singleton, PeerCapabilityMap, and PeerCopy async P2P primitive implem
 
 ## Test Results
 
-```
+```text
 Running main() from /home/mystvio/repos/nova/build/_deps/googletest-src/googletest/src/gtest_main.cc
 Note: Google Test filter = *DeviceMesh*:*PeerCopy*:*ScopedDevice*
 [==========] Running 25 tests from 3 test suites.
@@ -80,11 +84,13 @@ Note: Google Test filter = *DeviceMesh*:*PeerCopy*:*ScopedDevice*
 ## Verification
 
 Run tests with:
+
 ```bash
 ./build/bin/nova-tests --gtest_filter="*DeviceMesh*:*PeerCopy*:*ScopedDevice*"
 ```
 
 Single-GPU verification:
+
 ```bash
 CUDA_VISIBLE_DEVICES="" ./build/bin/nova-tests --gtest_filter="*SingleGpu*"
 ```

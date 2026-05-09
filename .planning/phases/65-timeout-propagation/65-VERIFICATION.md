@@ -19,13 +19,16 @@ completed: 2026-04-28
 ## Implementation Summary
 
 ### Files Created
+
 - `include/cuda/error/timeout_context.hpp` — Context and scoped timeout headers
 - `src/cuda/error/timeout_context.cpp` — Implementation
 - `tests/timeout_propagation_test.cpp` — Unit tests
 
 ### Files Modified
+
 - `CMakeLists.txt` — Added timeout_context.cpp to ERROR_SOURCES
 - `tests/CMakeLists.txt` — Added timeout_propagation_test.cpp
 
 ---
-*Phase 65 verification completed: 2026-04-28*
+
+## Phase 65 verification completed: 2026-04-28

@@ -37,7 +37,7 @@
 ## Compilation Verification
 
 ```bash
-$ nvcc -std=c++20 -I../include qat.cpp -o qat.o
+nvcc -std=c++20 -I../include qat.cpp -o qat.o
 # Success (warnings only)
 ```
 
@@ -46,6 +46,7 @@ $ nvcc -std=c++20 -I../include qat.cpp -o qat.o
 ## Test Coverage
 
 ### QAT Tests (22 tests total after additions)
+
 - FakeQuantizeForward
 - FakeQuantizeBackward
 - FakeQuantizeSte
@@ -73,4 +74,4 @@ All success criteria met. Phase 101 verified.
 
 ---
 
-*Verification completed: 2026-05-03*
+## Verification completed: 2026-05-03

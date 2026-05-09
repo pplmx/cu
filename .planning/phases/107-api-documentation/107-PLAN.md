@@ -20,7 +20,9 @@
 ## Task Breakdown
 
 ### T-01: Error Module (6 headers)
+
 Files:
+
 - `include/cuda/error/cuda_error.hpp` — already documented ✓
 - `include/cuda/error/cublas_error.hpp`
 - `include/cuda/error/timeout.hpp`
@@ -29,13 +31,16 @@ Files:
 - `include/cuda/error/retry.hpp`
 
 **Actions:**
+
 - Add @file documentation with @defgroup error
 - Document public functions with @param/@return
 - Add @see cross-references between error types
 - Add examples for error handling patterns
 
 ### T-02: Sparse Module (11 headers)
+
 Files:
+
 - `include/cuda/sparse/sparse_matrix.hpp`
 - `include/cuda/sparse/matrix.hpp`
 - `include/cuda/sparse/sparse_ops.hpp`
@@ -49,6 +54,7 @@ Files:
 - `include/cuda/sparse/roofline.hpp`
 
 **Actions:**
+
 - Add @defgroup sparse
 - Document all SparseMatrix format classes (CSR, CSC, ELL, SELL, HYB)
 - Add @deprecated with migration guidance for SparseMatrixCSR
@@ -57,7 +63,9 @@ Files:
 - Add @note performance annotations for solvers (krylov.hpp)
 
 ### T-03: Quantize Module (10 headers)
+
 Files:
+
 - `include/cuda/quantize/quantize_tensor.hpp`
 - `include/cuda/quantize/int8_kernels.hpp`
 - `include/cuda/quantize/fp8_kernels.hpp`
@@ -70,6 +78,7 @@ Files:
 - `include/cuda/quantize/qat.hpp`
 
 **Actions:**
+
 - Add @defgroup quantize
 - Document quantization types (int8, fp8)
 - Document calibration API
@@ -77,12 +86,15 @@ Files:
 - Add @see links to related operations
 
 ### T-04: GNN Module (3 headers)
+
 Files:
+
 - `include/cuda/gnn/sampling.hpp`
 - `include/cuda/gnn/message_passing.hpp`
 - `include/cuda/gnn/attention.hpp`
 
 **Actions:**
+
 - Add @defgroup gnn
 - Document sampling strategies
 - Document message passing API
@@ -98,6 +110,7 @@ Files:
 ## Verification
 
 After each task:
+
 1. Run `doxygen Doxyfile 2>&1 | grep -c warning` — target: 0 warnings
 2. Verify @brief on all documented headers
 3. Check @defgroup membership via generated HTML

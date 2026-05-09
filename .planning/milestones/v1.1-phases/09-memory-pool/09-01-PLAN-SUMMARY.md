@@ -49,7 +49,7 @@ Multi-GPU memory pool with per-device allocation, auto-device selection, and own
 
 ## Test Results
 
-```
+```text
 [==========] Running 22 tests from 1 test suite.
 [  PASSED  ] 21 tests
 [  SKIPPED ] 1 test (SingleGpuFallback - skipped on multi-GPU machine)

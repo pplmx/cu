@@ -11,6 +11,7 @@
 **Goal:** Implement SVD decomposition using cuSOLVER gesvdj
 
 **Tasks:**
+
 1. Create cuda::linalg namespace with svd() function
 2. Implement standard SVD (full/thin modes)
 3. Add condition number estimation
@@ -21,6 +22,7 @@
 **Goal:** Implement symmetric eigenvalue decomposition using cuSOLVER syevd
 
 **Tasks:**
+
 1. Implement eigenvalue_decomposition() function
 2. Support eigenvectors computation
 3. Return condition number
@@ -31,6 +33,7 @@
 **Goal:** Implement QR, Cholesky decompositions
 
 **Tasks:**
+
 1. Implement qr_decomposition() using geqrf + orgqr
 2. Implement cholesky_decomposition() using potrf
 3. Check for positive definiteness in Cholesky
@@ -40,6 +43,7 @@
 **Goal:** Integrate linalg module into build system
 
 **Tasks:**
+
 1. Add LINALG_SOURCES to CMakeLists.txt
 2. Link CUDA::cusolver library
 3. Add include directories
@@ -47,6 +51,7 @@
 ---
 
 **Success Criteria:**
+
 1. User can compute SVD with standard and randomized modes
 2. User can compute eigenvalues/eigenvectors of symmetric matrices
 3. User can compute QR, Cholesky factorizations
@@ -55,5 +60,6 @@
 **Status:** All plans executed
 
 ---
+
 *Plan created: 2026-04-28*
 *Phase 55: Linear Algebra Extras*

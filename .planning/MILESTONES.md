@@ -16,6 +16,7 @@
 **Requirements delivered:** 58 total (PERF-01 to PERF-06, BMCH-01 to BMCH-04, ASYNC-01 to ASYNC-04, POOL-01 to POOL-04, FFT-01 to FFT-04, RAY-01 to RAY-04, GRAPH-01 to GRAPH-04, NN-01 to NN-04)
 
 **Core features implemented:**
+
 - Device capability queries and auto block size selection
 - Memory pool statistics and fragmentation reporting
 - Stream-based async operations with event synchronization
@@ -40,6 +41,7 @@
 **Requirements delivered:** 13 total (MGPU-01 to MGPU-13)
 
 **Core features implemented:**
+
 - Device mesh detection and peer memory access between GPUs
 - Multi-GPU collective operations (all-reduce, broadcast, all-gather, barrier)
 - Distributed memory pool spanning multiple GPUs
@@ -61,6 +63,7 @@
 **Requirements delivered:** 9 total (TC-01 to TC-09)
 
 **Core features implemented:**
+
 - C++23 standard (CMAKE_CXX_STANDARD 23)
 - CUDA 20 standard (CMAKE_CUDA_STANDARD 20)
 - CMake 4.0+ minimum version
@@ -85,6 +88,7 @@
 **Requirements delivered:** 26 total (NCCL-01 to NCCL-05, COLL-01 to COLL-05, EXTD-01 to EXTD-05, TENS-01 to TENS-06, PIPE-01 to PIPE-06)
 
 **Core features implemented:**
+
 - NCCL 2.25+ integration with P2P fallback
 - Stream-based NCCL collectives with async error handling
 - Column/row parallel matmul for transformer layers
@@ -109,6 +113,7 @@
 **Requirements delivered:** 15 total (MULN-01 to MULN-05, TOPO-01 to TOPO-05, CNOD-01 to CNOD-05)
 
 **Core features implemented:**
+
 - MPI 3.1+ detection with OpenMPI/MPICH support
 - MpiContext with world_rank, local_rank, node_id discovery
 - TopologyMap with NIC type and RDMA capability detection
@@ -133,6 +138,7 @@
 **Requirements delivered:** 20 total (CKPT-01 to CKPT-05, COMM-01 to COMM-05, MEM-01 to MEM-05, PEMP-01 to PEMP-05)
 
 **Core features implemented:**
+
 - CheckpointManager with async writes and configurable interval
 - Full state serialization (weights + optimizer states + RNG state)
 - FileStorageBackend with atomic writes
@@ -162,6 +168,7 @@
 **Requirements delivered:** 27 total (BENCH-01 to BENCH-05, SUITE-01 to SUITE-09, CI-01 to CI-07, DASH-01 to DASH-06)
 
 **Core features implemented:**
+
 - NVTX annotation framework with RAII scoped range guards and compile-time toggle
 - Python benchmark harness (`scripts/benchmark/run_benchmarks.py`) with JSON output and regression detection
 - Comprehensive C++ benchmark suite using Google Benchmark v1.9.1
@@ -188,6 +195,7 @@
 **Requirements delivered:** 16 total (ERR-01 to ERR-04, CMK-01 to CMK-04, IDE-01 to IDE-04, BLD-01 to BLD-04)
 
 **Core features implemented:**
+
 - Error framework with descriptive CUDA errors and recovery hints
 - CMake package export with find_package(nova REQUIRED) support
 - IDE configuration for clangd and VS Code with CUDA support
@@ -210,6 +218,7 @@
 **Requirements delivered:** 12 total (API-01 to API-04, TUT-01 to TUT-04, EX-01 to EX-04)
 
 **Core features implemented:**
+
 - Doxygen configuration in `Doxyfile` with full HTML output
 - Doxygen-documented `cuda_error.hpp` with @defgroup and @ingroup
 - 4 tutorial documents covering quick start through profiling
@@ -233,6 +242,7 @@
 **Requirements delivered:** 12 total (FUZZ-01 to FUZZ-04, PROP-01 to PROP-04, COVR-01 to COVR-04)
 
 **Core features implemented:**
+
 - Fuzz testing infrastructure with seed corpus
 - Property testing framework with reproducible seeds
 - Coverage report generation with gap analysis
@@ -256,6 +266,7 @@
 **Requirements delivered:** 12 total (SPARSE-01 to SPARSE-04, GNN-01 to GNN-04, QUANT-01 to QUANT-04)
 
 **Core features implemented:**
+
 - Sparse matrix operations using CSR/CSC formats
 - GNN primitives for message passing and graph attention
 - Tensor quantization for INT8 and FP16
@@ -279,6 +290,7 @@
 **Requirements delivered:** 18 total (PERF-01 to PERF-04, OP-01 to OP-08, TOOL-01 to TOOL-06, DOC-01 to DOC-04)
 
 **Core features implemented:**
+
 - Fused matmul + bias + activation with configurable activations
 - Autotuning infrastructure with persistent caching
 - Adaptive memory pool sizing based on workload profiles
@@ -307,6 +319,7 @@
 **Requirements delivered:** 15 total (GRAPH-01 to GRAPH-03, PERF-01 to PERF-03, OBS-01 to OBS-03, STRESS-01 to STRESS-03, INT-01 to INT-03)
 
 **Core features implemented:**
+
 - CUDA Graphs with 10-50x launch overhead reduction for batch workloads
 - L2 cache persistence with RAII control for iterative algorithms
 - Priority stream pool (low/normal/high) for latency-sensitive operations
@@ -318,6 +331,7 @@
 - Production hardening guide (docs/PRODUCTION.md)
 
 **New modules:**
+
 - `cuda/production/` - Production hardening components
 - `cuda/observability/` - Observability extensions
 
@@ -340,6 +354,7 @@
 **Requirements delivered:** 12 total (TO-01 to TO-04, RT-01 to RT-04, GD-01 to GD-04)
 
 **Core features implemented:**
+
 - Timeout management with per-operation tracking and watchdog monitoring
 - Deadline propagation across async operation chains
 - Exponential backoff with configurable base delay and jitter
@@ -350,6 +365,7 @@
 - Integration tests for timeout→retry→degrade chain
 
 **New modules:**
+
 - `cuda/error/` - Error handling extensions (timeout, retry, degrade)
 
 ---
@@ -368,6 +384,7 @@
 **Requirements delivered:** 16 total (OBS-01 to OBS-04, ALGO-01 to ALGO-04, ROB-01 to ROB-05, INT-01 to INT-04)
 
 **Core features implemented:**
+
 - Chrome trace timeline export from NVTX annotations
 - Memory bandwidth measurement (H2D/D2H/D2D)
 - Per-kernel statistics collection (latency, throughput, occupancy)
@@ -383,6 +400,7 @@
 - FP determinism control (not_guaranteed, run_to_run, gpu_to_gpu)
 
 **New modules:**
+
 - `cuda/observability/` - Timeline, bandwidth tracker, kernel stats, occupancy
 - `cuda/testing/` - Memory safety, test isolation, error injection, boundary tests, FP determinism
 - `cuda/algo/` - Segmented sort, SpMV, sample sort, SSSP
@@ -406,6 +424,7 @@
 **Requirements delivered:** 7 total (ARCH-01 to ARCH-05)
 
 **Core features implemented:**
+
 - SparseMatrix<T> class with RAII GPU memory management
 - CusparseContext singleton for handle management
 - GPU-accelerated spmv() using cuSPARSE
@@ -414,6 +433,7 @@
 - ToSparseMatrix() conversion function
 
 **New files:**
+
 - `include/cuda/sparse/matrix.hpp` - Unified SparseMatrix<T>
 - `include/cuda/sparse/cusparse_context.hpp` - cuSPARSE handle wrapper
 - `src/cuda/sparse/cusparse_context.cpp`
@@ -429,6 +449,7 @@
 **Goal:** Comprehensive performance tooling — NVBlox integration, kernel fusion analysis, memory bandwidth optimization
 
 **Requirements delivered:**
+
 - NVBlox-01 to NVBlox-03: NVBloxMetricsCollector, KernelProfiler, MetricAggregators
 - FUSION-01 to FUSION-03: KernelFusionAnalyzer, FusionProfitabilityModel, FusionRecommendationEngine
 - BANDWIDTH-01 to BANDWIDTH-03: RooflineModel, BandwidthUtilizationTracker, CacheAnalyzer
@@ -444,6 +465,7 @@
 - **Phase 97: Integration & Validation** - Integration tests, PERFORMANCE_TOOLING.md
 
 **New modules:**
+
 - `cuda/performance/nvblox_metrics.h` - NVBlox metrics collection
 - `cuda/performance/kernel_profiler.h` - Kernel profiling hooks
 - `cuda/performance/metric_aggregators.h` - AI, FLOP/s, BW aggregators
@@ -452,6 +474,7 @@
 - `cuda/performance/dashboard/` - Dashboard export and flame graphs
 
 **Documentation:**
+
 - `docs/PERFORMANCE_TOOLING.md` - Comprehensive tooling guide
 
 **Next:** TBD

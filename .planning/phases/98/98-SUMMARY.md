@@ -10,6 +10,7 @@
 ## Deliverables
 
 ### FP8 Type Definitions (FP8-01)
+
 - `include/cuda/quantize/fp8_types.hpp` — FP8E4M3 and FP8E5M2 types
   - IEEE 754-like semantics for E4M3 (4-bit exp, 3-bit mantissa) and E5M2 (5-bit exp, 2-bit mantissa)
   - Conversion operators: `FP8(f)` and `static_cast<float>(fp8)`
@@ -18,6 +19,7 @@
   - `is_fp8_type<T>` trait
 
 ### CUDA Kernels (FP8-01)
+
 - `include/cuda/quantize/fp8_kernels.hpp` — Kernel declarations
 - `src/cuda/quantize/fp8_kernels.cu` — Kernel implementations
   - `quantize_f32_to_fp8e4m3()` — FP32 → FP8E4M3 CUDA kernel
@@ -27,6 +29,7 @@
   - Batched variants for efficiency
 
 ### FP8 GEMM (FP8-02)
+
 - `include/cuda/quantize/fp8_gemm.hpp` — GEMM class definition
 - `src/cuda/quantize/fp8_gemm.cu` — GEMM implementation
   - `FP8GEMM::forward()` — FP8 matrix multiplication with FP32 accumulation
@@ -35,6 +38,7 @@
   - Configurable scaling: scale_a, scale_b, scale_out
 
 ### FP8 Activations (FP8-03)
+
 - `include/cuda/quantize/fp8_activation.hpp`
   - `relu_fp8()` — ReLU with clamping to 0
   - `gelu_fp8()` — GELU activation
@@ -42,6 +46,7 @@
   - Sigmoid and LeakyReLU variants
 
 ### Unit Tests
+
 - `tests/quantize/fp8_types_test.cpp` — 26 test cases covering:
   - Type construction and conversion
   - Roundtrip accuracy (<0.1% relative error)
@@ -59,6 +64,7 @@
 ## Files Created/Modified
 
 ### New Files
+
 | File | Purpose |
 |------|---------|
 | `include/cuda/quantize/fp8_types.hpp` | FP8 type definitions |
@@ -71,6 +77,7 @@
 | `tests/quantize/fp8_gemm_test.cpp` | GEMM correctness tests |
 
 ### Modified Files
+
 | File | Changes |
 |------|---------|
 | `CMakeLists.txt` | Added QUANTIZE_SOURCES |

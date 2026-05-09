@@ -40,23 +40,23 @@ int main() {
     // Create a buffer on GPU
     size_t size = 1024;
     nova::memory::Buffer<float> input(size);
-    
+
     // Initialize with data
     for (size_t i = 0; i < size; i++) {
         input.host_data()[i] = 1.0f;
     }
     input.sync_to_device();
-    
+
     // Create output buffer
     nova::memory::Buffer<float> output(1);
-    
+
     // Sum reduction
     nova::algo::reduce(input.device_data(), output.device_data(), size);
-    
+
     // Get result
     output.sync_to_host();
     printf("Sum: %f\n", output.host_data()[0]);
-    
+
     return 0;
 }
 ```
@@ -101,6 +101,7 @@ NOVA_CHECK(cudaMemcpy(dst, src, size, cudaMemcpyDeviceToDevice));
 ### Algorithms
 
 Available algorithms:
+
 - `nova::algo::reduce` - Sum/min/max reduction
 - `nova::algo::scan` - Prefix sum (inclusive/exclusive)
 - `nova::algo::sort` - Bitonic/odd-even merge sort
@@ -117,6 +118,7 @@ Available algorithms:
 ### "No CUDA-capable device is detected"
 
 Ensure:
+
 1. NVIDIA GPU is installed: `nvidia-smi`
 2. CUDA drivers are installed: `nvcc --version`
 3. You're running on the GPU machine (not via SSH without GPU passthrough)

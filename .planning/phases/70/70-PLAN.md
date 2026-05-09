@@ -62,11 +62,11 @@ public:
     std::vector<KVCacheBlock*> allocate(int64_t sequence_id, int num_tokens);
     std::vector<KVCacheBlock*> append(int64_t sequence_id, int num_tokens);
     void free(int64_t sequence_id);
-    
+
     void evict(int num_blocks_needed);
     std::vector<KVCacheBlock*> get_blocks(int64_t sequence_id) const;
     KVCacheBlock* get_block(int64_t sequence_id, int block_index) const;
-    
+
     struct PrefixMatch {
         int64_t sequence_id;
         int num_matching_tokens;
@@ -76,7 +76,7 @@ public:
         const void* prefix_tokens,
         int prefix_length
     ) const;
-    
+
     KVCacheStats get_stats() const;
     void reset_stats();
 

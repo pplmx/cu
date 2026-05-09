@@ -23,30 +23,36 @@ Add CSR/CSC sparse matrix formats and sparse operations (SpMV, SpMM).
 ## Implementation Decisions
 
 ### Formats
+
 - CSR (Compressed Sparse Row) as primary format
 - CSC (Compressed Sparse Column) for column-wise operations
 - cuSPARSE integration when available, fallback otherwise
 
 ### Operations
+
 - SpMV: Sparse Matrix-Vector Multiplication
 - SpMM: Sparse Matrix-Dense Matrix Multiplication
 
 ## Specific Ideas
 
 ### SPARSE-01: CSR Format
+
 - SparseMatrixCSR class with values, row_offsets, col_indices
 - FromDense() factory method
 
 ### SPARSE-02: CSC Format  
+
 - SparseMatrixCSC class with values, col_offsets, row_indices
 - ToCSC() conversion from CSR
 
 ### SPARSE-03: SpMV
+
 - sparse_mv() function for y = A * x
 
 ### SPARSE-04: SpMM
+
 - sparse_mm() function for C = A * B
 
 ---
 
-*Context generated for Phase 44: Sparse Matrix Support*
+## Context generated for Phase 44: Sparse Matrix Support

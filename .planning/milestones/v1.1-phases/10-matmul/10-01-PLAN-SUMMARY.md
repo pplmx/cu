@@ -16,6 +16,7 @@ Row-wise split multi-GPU matrix multiply infrastructure with single-GPU fallback
 ## Key Files
 
 ### Created
+
 | File | Description |
 |------|-------------|
 | `include/cuda/distributed/matmul.h` | DistributedMatmul class, ParallelismStrategy enum, options structs |
@@ -23,6 +24,7 @@ Row-wise split multi-GPU matrix multiply infrastructure with single-GPU fallback
 | `tests/distributed/distributed_matmul_test.cu` | Numerical correctness tests for fallback path |
 
 ### Modified
+
 | File | Description |
 |------|-------------|
 | `CMakeLists.txt` | Added matmul.cu to DISTRIBUTED_SOURCES |
@@ -50,6 +52,7 @@ class DistributedMatmul {
 ```
 
 ### ParallelismStrategy Enum
+
 - `DataParallel`: Row-partition input A (current implementation)
 - `TensorParallel`: Column-partition weights (deferred)
 - `PipelineParallel`: Layer pipelining (deferred)
@@ -64,11 +67,13 @@ class DistributedMatmul {
 | MGPU-13 | Single-GPU fallback bypasses multi-GPU code | Fully implemented |
 
 ### MGPU-13 (Single-GPU Fallback)
+
 - Always delegates to `cuda::neural::matmul` for correctness
 - No multi-GPU primitives called
 - Works on single-GPU CI runners
 
 ### MGPU-12 (Multi-GPU Infrastructure)
+
 - Row partition computation implemented
 - Per-device cuBLAS handle management
 - **Note:** True multi-GPU operation requires multi-process execution (e.g., NCCL)
@@ -88,13 +93,14 @@ class DistributedMatmul {
 
 ## Test Results
 
-```
+```text
 [==========] Running 12 tests from 1 test suite.
 [  PASSED  ] 11 tests.
 [  SKIPPED ] 1 test (MultiGpu_RequiresMultiProcess - documents multi-process requirement)
 ```
 
 ### Passing Tests
+
 - NeedsMultiGpu
 - SingleGpuFallback_Identity
 - SingleGpuFallback_Random
@@ -112,11 +118,13 @@ class DistributedMatmul {
 ## Deviations from Plan
 
 ### 1. Multi-GPU Execution Model
+
 **Plan expected:** Each GPU participates in collective all-gather
 **Actual:** Single-process test framework doesn't support true multi-GPU execution
 **Resolution:** Always use single-GPU fallback for correctness; multi-GPU infrastructure ready for NCCL integration
 
 ### 2. All-Gather Implementation
+
 **Plan described:** Using DistributedAllGather for output aggregation
 **Actual:** The existing DistributedAllGather has limitations in single-process context
 **Resolution:** Documented that true multi-GPU requires multi-process framework
@@ -159,7 +167,7 @@ class DistributedMatmul {
 
 ## Commit
 
-```
+```text
 05d6f79 feat(distributed): add DistributedMatmul for multi-GPU matrix multiply
 ```
 

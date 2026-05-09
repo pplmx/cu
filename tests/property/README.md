@@ -4,11 +4,11 @@ This directory contains property-based tests that verify mathematical invariants
 
 ## Test Executables
 
-| Executable | Description |
-|------------|-------------|
+| Executable              | Description                                                             |
+| ----------------------- | ----------------------------------------------------------------------- |
 | `property_mathematical` | Tests mathematical invariants (matmul identity, FFT inverse, transpose) |
-| `property_algorithmic` | Tests algorithmic correctness (sort, reduce, scan) |
-| `property_numerical` | Tests numerical stability across precision modes |
+| `property_algorithmic`  | Tests algorithmic correctness (sort, reduce, scan)                      |
+| `property_numerical`    | Tests numerical stability across precision modes                        |
 
 ## Running Tests
 
@@ -37,7 +37,8 @@ Each test run generates a random seed for reproducibility:
 ```
 
 When a test fails, it outputs the seed used:
-```
+
+```text
 [FAIL] Test Name
   Seed: 9876543210 | Iterations: 50
   Reason: Property failed on iteration 23
@@ -61,24 +62,27 @@ auto result = CheckProperty("Test Name", [&](auto& gen) {
 ## Properties Tested
 
 ### Mathematical Invariants (PROP-01)
+
 - **Matmul Identity**: A @ I = A
 - **Transpose Involution**: (A^T)^T = A
 
 ### Algorithmic Correctness (PROP-02)
+
 - **Sort**: Output is sorted
 - **Reduce**: Associative operation order-independent
 - **Scan**: Prefix sum correctness
 
 ### Numerical Stability (PROP-03)
+
 - **Precision Consistency**: FP16/FP32/FP64 relationships
 - **NaN Propagation**: NaN only when expected
 - **Inf Propagation**: Inf only when expected
 
 ## Requirements
 
-| ID | Requirement | Status |
-|----|-------------|--------|
-| PROP-01 | Mathematical invariants | ✅ |
-| PROP-02 | Algorithmic correctness | ✅ |
-| PROP-03 | Numerical stability | ✅ |
-| PROP-04 | Reproducible seeds | ✅ |
+| ID      | Requirement             | Status |
+| ------- | ----------------------- | ------ |
+| PROP-01 | Mathematical invariants | ✅     |
+| PROP-02 | Algorithmic correctness | ✅     |
+| PROP-03 | Numerical stability     | ✅     |
+| PROP-04 | Reproducible seeds      | ✅     |

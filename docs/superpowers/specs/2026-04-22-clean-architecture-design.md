@@ -15,7 +15,7 @@
 
 ## 2. Final Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  Public API (cuda::<Domain>::<Operation>)                              │
 │                                                                         │
@@ -420,7 +420,7 @@ void sort(memory::Buffer<T>& data, size_t size);
 
 ## 8. Files Structure
 
-```
+```text
 include/
 ├── cuda/
 │   ├── memory/
@@ -497,26 +497,31 @@ int main() {
 ## 10. Implementation Phases
 
 ### Phase 1: Core Infrastructure
+
 - [ ] KernelLauncher implementation + tests
 - [ ] CublasHandle implementation + tests
 - [ ] Buffer already exists
 
 ### Phase 2: Matrix Module
+
 - [ ] Implement add, scale, transpose
 - [ ] Implement multiply with CublasHandle
 - [ ] Tests
 
 ### Phase 3: Image Module
+
 - [ ] Refactor brightness (remove raw kernel)
 - [ ] Implement sobel
 - [ ] Implement gaussian_blur
 - [ ] Tests
 
 ### Phase 4: Parallel Module
+
 - [ ] Update scan, sort, histogram signatures
 - [ ] Tests
 
 ### Phase 5: Convolution
+
 - [ ] Implement conv2d
 - [ ] Tests
 

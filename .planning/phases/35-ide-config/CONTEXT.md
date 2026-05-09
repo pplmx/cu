@@ -64,10 +64,12 @@ Add to CMakeLists.txt post-install step or use cmake link script.
 ### 4. `docs/ide-setup.md`
 
 Quick guide for:
+
 - Installing clangd
 - VS Code clangd extension
 - CMake Tools configuration
 - Building and indexing
 
 ---
-*Context created: 2026-04-26*
+
+## Context created: 2026-04-26

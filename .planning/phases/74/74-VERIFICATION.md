@@ -17,6 +17,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `InferenceGraphExecutor` extends `GraphExecutor`
 - `capture_inference_pass()` captures batch
 - `replay_inference()` replays captured computation
@@ -29,6 +30,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `InferenceNVTXDomain` with phase markers
 - Scoped guards: `ScopedPrefill`, `ScopedDecode`, `ScopedAttention`, `ScopedScheduling`
 - `record_batch_size()` and `record_sequence_length()` for metrics
@@ -41,6 +43,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `BM_Throughput` benchmark with variable batch sizes
 - `BM_LatencyPerToken` for per-token latency
 - Sets `ItemsProcessed` for throughput calculation
@@ -52,6 +55,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `BM_KVCacheMemoryEfficiency` calculates waste percentage
 - Measures actual blocks vs ideal blocks
 - Reports waste percentage as benchmark label
@@ -63,6 +67,7 @@ All success criteria have been implemented and verified.
 **Status:** ✅ PASSED
 
 **Evidence:**
+
 - `integration_test.cpp` with 10 test cases covering:
   - E2E single/multi-sequence
   - Continuous batching loop
@@ -111,6 +116,7 @@ All success criteria have been implemented and verified.
 ## Requirements Mapped
 
 All 18 requirements from v2.6:
+
 - FA-01 to FA-04 (FlashAttention) ✅
 - KV-01 to KV-04 (KV Cache) ✅
 - PA-01 to PA-04 (Paged Attention) ✅
@@ -118,5 +124,6 @@ All 18 requirements from v2.6:
 - SP-01 to SP-03 (Sequence Parallelism) ✅
 
 ---
+
 *Verification completed: 2026-04-29*
 *Milestone v2.6 COMPLETE*

@@ -5,6 +5,7 @@
 **Goal:** Transform flat CUDA samples into a production-ready layered architecture with kernel/algo/api separation
 
 **Architecture:** Three-layer architecture following cuBLAS/cuDNN patterns:
+
 - Layer 1 (kernel): Pure device kernels, no memory management
 - Layer 2 (algo): Algorithm wrappers with memory management
 - Layer 3 (api): STL-style high-level API
@@ -15,7 +16,7 @@
 
 ## File Structure Overview
 
-```
+```text
 include/cuda/
 ├── kernel/
 │   ├── reduce.h          # kernel declarations
@@ -55,6 +56,7 @@ tests/
 ## Task 1: Create Directory Structure
 
 **Files:**
+
 - Create: `include/cuda/kernel/`
 - Create: `include/cuda/algo/`
 - Create: `include/cuda/api/`
@@ -63,7 +65,6 @@ tests/
 - Create: `src/benchmark/`
 - Create: `tests/unit/`
 - Create: `tests/integration/`
-
 - [ ] **Step 1: Create all directories**
 
 ```bash
@@ -86,9 +87,9 @@ git add -A && git commit -m "chore: create layered directory structure"
 ## Task 2: Refactor CMake for Modern Architecture
 
 **Files:**
+
 - Modify: `CMakeLists.txt`
 - Modify: `tests/CMakeLists.txt`
-
 - [ ] **Step 1: Write new CMakeLists.txt with INTERFACE libraries**
 
 ```cmake
@@ -200,6 +201,7 @@ git add CMakeLists.txt && git commit -m "build: modernize CMake with layered INT
 ## Task 3: Create Layer 1 - Kernel Utilities
 
 **Files:**
+
 - Create: `include/cuda/kernel/cuda_utils.h`
 
 - [ ] **Step 1: Write cuda_utils.h with kernel utilities**
@@ -261,9 +263,9 @@ git add include/cuda/kernel/cuda_utils.h && git commit -m "feat: add Layer 1 ker
 ## Task 4: Create Layer 1 - Reduce Kernel
 
 **Files:**
+
 - Create: `include/cuda/kernel/reduce.h`
 - Create: `src/kernel/reduce.cu`
-
 - [ ] **Step 1: Write reduce kernel header**
 
 ```cpp
@@ -383,6 +385,7 @@ git add include/cuda/kernel/reduce.h src/kernel/reduce.cu && git commit -m "feat
 ## Task 5: Create Layer 2 - Device Buffer (RAII Memory)
 
 **Files:**
+
 - Create: `include/cuda/algo/device_buffer.h`
 
 - [ ] **Step 1: Write device_buffer.h**
@@ -465,9 +468,9 @@ git add include/cuda/algo/device_buffer.h && git commit -m "feat: add DeviceBuff
 ## Task 6: Create Layer 2 - Reduce Algorithm Wrapper
 
 **Files:**
+
 - Create: `include/cuda/algo/reduce.h`
 - Create: `src/algo/reduce.cpp`
-
 - [ ] **Step 1: Write reduce algorithm header**
 
 ```cpp
@@ -596,7 +599,8 @@ REDUCE_ALGO_INSTANTIATE(unsigned int)
 
 Run: `cat >> CMakeLists.txt << 'EOF'
 
-# Compile algo sources
+## Compile algo sources
+
 add_library(cuda_algo_impl OBJECT ${CUDA_SRC_ALGO}/reduce.cpp)
 target_link_libraries(cuda_algo_impl PRIVATE cuda_kernel CUDA::cudart)
 set_target_properties(cuda_algo_impl PROPERTIES
@@ -604,7 +608,8 @@ set_target_properties(cuda_algo_impl PROPERTIES
         POSITION_INDEPENDENT_CODE ON
 )
 
-# Compile kernel sources
+## Compile kernel sources
+
 add_library(cuda_kernel_impl OBJECT ${CUDA_SRC_KERNEL}/reduce.cu)
 target_link_libraries(cuda_kernel_impl PRIVATE CUDA::cudart)
 set_target_properties(cuda_kernel_impl PROPERTIES
@@ -626,9 +631,10 @@ git add include/cuda/algo/reduce.h src/algo/reduce.cpp CMakeLists.txt && git com
 
 ---
 
-## Task 7: Create Layer 3 - Device Vector
+### Task 7: Create Layer 3 - Device Vector
 
 **Files:**
+
 - Create: `include/cuda/api/device_vector.h`
 
 - [ ] **Step 1: Write device_vector.h**
@@ -682,14 +688,14 @@ git add include/cuda/api/device_vector.h && git commit -m "feat: add Layer 3 Dev
 
 ---
 
-## Task 8: Create Forwarding Headers (Backward Compatibility)
+### Task 8: Create Forwarding Headers (Backward Compatibility)
 
 **Files:**
+
 - Create: `include/reduce.h` (forwards to `include/cuda/kernel/reduce.h`)
 - Create: `include/scan.h` (placeholder)
 - Create: `include/sort.h` (placeholder)
 - Create: `include/cuda_utils.h` (forwards to `include/cuda/kernel/cuda_utils.h`)
-
 - [ ] **Step 1: Write forwarding headers**
 
 ```cpp
@@ -789,9 +795,10 @@ git add include/reduce.h include/cuda_utils.h tests/CMakeLists.txt && git commit
 
 ---
 
-## Task 9: Migrate Main Demo
+### Task 9: Migrate Main Demo
 
 **Files:**
+
 - Modify: `src/main.cpp`
 
 - [ ] **Step 1: Update main.cpp to use new layered API**
@@ -894,12 +901,12 @@ git add src/main.cpp && git commit -m "feat: update main demo to use layered API
 
 ---
 
-## Task 10: Final Verification
+### Task 10: Final Verification
 
 **Files:**
+
 - Verify: All files in correct locations
 - Verify: Tests pass
-
 - [ ] **Step 1: Run all tests**
 
 Run: `cd build && ctest --output-on-failure`
@@ -918,7 +925,7 @@ git add -A && git commit -m "feat: complete layered architecture refactoring"
 
 ---
 
-## Spec Coverage Checklist
+### Spec Coverage Checklist
 
 | Requirement | Task |
 |-------------|------|

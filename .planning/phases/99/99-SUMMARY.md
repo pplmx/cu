@@ -10,6 +10,7 @@
 ## Deliverables
 
 ### INT8 Quantization Kernels (KERN-01)
+
 - `include/cuda/quantize/int8_kernels.hpp` — Kernel declarations
 - `src/cuda/quantize/int8_kernels.cu` — Kernel implementations
   - `quantize_f32_to_int8()` — FP32 → INT8 CUDA kernel
@@ -18,10 +19,12 @@
   - Async variants for stream-based execution
 
 ### Vectorized Load/Store (KERN-02)
+
 - `quantize_f32_to_int8_vectorized_kernel` — 128-bit vectorized (float4, int4)
 - Efficient memory coalescing through vector types
 
 ### Calibration Infrastructure (Pre-Phase 100)
+
 - `build_histogram()` — Shared memory histogram accumulation
 - `compute_minmax()` — Parallel min/max reduction
 - `quantize_with_scale_from_histogram()` — Calibration-aware quantization
@@ -31,6 +34,7 @@
 ## Files Created/Modified
 
 ### New Files
+
 | File | Purpose |
 |------|---------|
 | `include/cuda/quantize/int8_kernels.hpp` | INT8 kernel declarations |
@@ -38,6 +42,7 @@
 | `tests/quantize/int8_kernels_test.cpp` | 8 unit tests |
 
 ### Modified Files
+
 | File | Changes |
 |------|---------|
 | `CMakeLists.txt` | Added int8_kernels.cu to QUANTIZE_SOURCES |

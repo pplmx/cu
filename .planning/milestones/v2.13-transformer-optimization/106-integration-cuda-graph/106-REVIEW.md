@@ -71,6 +71,7 @@ fixed_issues:
 ### CRITICAL
 
 #### 1. `compact()` corrupts `sequence_blocks_` map after block swap
+
 **File:** `include/cuda/memory/kv_cache_allocator.h:679-686`
 
 ```cpp
@@ -85,11 +86,13 @@ for (size_t i = 0; i < allocated_blocks.size(); ++i) {
 ```
 
 After `std::swap(blocks_[src_idx], blocks_[dst_idx])`, the `sequence_blocks_` map still contains the old block indices. The block metadata (sequence_id, in_use, etc.) is swapped in `blocks_`, but all `sequence_blocks_[seq_id]` vectors still point to the old indices. This causes:
+
 - `get_blocks()` returns blocks with wrong metadata
 - `free()` tries to free blocks that no longer match their sequence_id
 - Use-after-free and double-free vulnerabilities
 
 **Fix:** Update `sequence_blocks_` entries after each swap:
+
 ```cpp
 if (src_idx != dst_idx) {
     std::swap(blocks_[src_idx], blocks_[dst_idx]);
@@ -105,6 +108,7 @@ if (src_idx != dst_idx) {
 ---
 
 #### 2. `prefill_chunk()` allocates blocks but discards them without performing prefill
+
 **File:** `include/cuda/memory/kv_cache_allocator.h:805-825`
 
 ```cpp
@@ -116,6 +120,7 @@ void KVCacheAllocator::prefill_chunk(...) {
 ```
 
 The method allocates KV cache blocks but:
+
 - Never copies embedding data to GPU
 - Never initializes the KV cache with prefill data
 - Explicitly discards the allocated blocks
@@ -127,6 +132,7 @@ This is a no-op implementation that doesn't fulfill the chunked prefill requirem
 ---
 
 #### 3. Float-to-uint64_t cast causes undefined behavior with NaN/infinity
+
 **File:** `include/cuda/memory/kv_cache_allocator.h:489-495` and `594-600`
 
 ```cpp
@@ -135,6 +141,7 @@ uint64_t val = static_cast<uint64_t>(data[i]);
 ```
 
 Converting float to uint64_t is undefined behavior when:
+
 - Value is NaN → returns 0x8000000000000000
 - Value is negative → implementation-defined result
 - Value exceeds `UINT64_MAX` → implementation-defined result
@@ -142,6 +149,7 @@ Converting float to uint64_t is undefined behavior when:
 Tokens/embeddings could legitimately contain NaN or extreme values from model outputs.
 
 **Fix:** Use `std::isfinite()` check and clamp values:
+
 ```cpp
 float fval = data[i];
 if (!std::isfinite(fval)) fval = 0.0f;
@@ -153,6 +161,7 @@ uint64_t val = static_cast<uint64_t>(std::max(0.0f, fval));
 ### WARNING
 
 #### 4. `PagedAttention::forward()` is a stub with broken API
+
 **File:** `src/cuda/inference/block_manager.cpp:206-240`
 
 ```cpp
@@ -162,6 +171,7 @@ attention->forward(output, softmax_lse, query, dummy_key, dummy_value, stream);
 ```
 
 The method:
+
 - Passes `query` as key and value instead of using actual KV cache
 - Ignores `key_cache`, `value_cache`, and `block_table` parameters (cast to void)
 - Doesn't implement paged attention at all
@@ -173,6 +183,7 @@ This completely bypasses the KV cache mechanism.
 ---
 
 #### 5. `forward_batch()` reuses query as key/value cache
+
 **File:** `src/cuda/inference/block_manager.cpp:138`
 
 ```cpp
@@ -186,6 +197,7 @@ Uses `query` three times (Q, K, V). This defeats the purpose of KV caching and l
 ---
 
 #### 6. `allocate_with_dynamic_size()` sets inconsistent `num_tokens`
+
 **File:** `include/cuda/memory/kv_cache_allocator.h:791`
 
 ```cpp
@@ -193,6 +205,7 @@ block.num_tokens = block_size;  // dynamic size (e.g., 64)
 ```
 
 But block memory was allocated during constructor initialization with fixed `config_.block_size_tokens` (e.g., 16):
+
 ```cpp
 // Line 203: All blocks initialized with config_.block_size_tokens
 blocks_[i].num_tokens = config_.block_size_tokens;
@@ -205,6 +218,7 @@ block_memory_size_ = config_.num_layers * config_.num_heads * config_.head_dim *
 Dynamically sized blocks have `num_tokens = 64` but memory only covers 16 tokens.
 
 **Fix:** Either:
+
 1. Pre-allocate memory for the largest block size
 2. Use separate memory pools per block size
 3. Remove `num_tokens` override (keep it at allocation time size)
@@ -212,6 +226,7 @@ Dynamically sized blocks have `num_tokens = 64` but memory only covers 16 tokens
 ---
 
 #### 7. `cudaStreamSynchronize()` in `sync_block_tables()` defeats CUDA Graphs
+
 **File:** `src/cuda/inference/block_manager.cpp:141-143`
 
 ```cpp
@@ -221,10 +236,12 @@ void BlockManager::sync_block_tables(const stream::Stream& stream) {
 ```
 
 Synchronizing the entire stream blocks graph capture and replay. For CUDA Graphs:
+
 - Use events to track specific operations
 - Use `cudaEventQuery()` for polling without blocking
 
 **Fix:** Use event-based synchronization:
+
 ```cpp
 cudaEvent_t event;
 cudaEventCreate(&event);
@@ -235,6 +252,7 @@ cudaEventRecord(event, stream.get());
 ---
 
 #### 8. `block_table_gpu_` size assumes bounded sequence IDs
+
 **File:** `src/cuda/inference/block_manager.cpp:193` and `20-22`
 
 ```cpp
@@ -247,6 +265,7 @@ const int seq_offset = static_cast<int>(seq->id) * max_blocks_per_sequence_;
 If `seq->id > num_cpu_blocks`, this causes out-of-bounds access. No bounds check on `seq_offset`.
 
 **Fix:** Either:
+
 1. Use hash map instead of dense array for GPU block table
 2. Add validation that `seq->id < num_cpu_blocks`
 3. Allocate dynamic size based on max observed sequence ID
@@ -256,6 +275,7 @@ If `seq->id > num_cpu_blocks`, this causes out-of-bounds access. No bounds check
 ### INFO
 
 #### 9. Missing `prefill_chunked()` method in BlockManager
+
 **File:** `include/cuda/inference/block_manager.h`
 
 Acceptance criteria requires `BlockManager.prefill_chunked()` but the method is not declared or implemented. This is part of the incomplete phase scope.
@@ -263,6 +283,7 @@ Acceptance criteria requires `BlockManager.prefill_chunked()` but the method is 
 ---
 
 #### 10. `compact()` re-adds all blocks to free_list even after swap errors
+
 **File:** `include/cuda/memory/kv_cache_allocator.h:689-694`
 
 ```cpp
@@ -279,6 +300,7 @@ This works but is inefficient - should only update indices that changed during c
 ---
 
 #### 11. Race condition possible in `evict()` with concurrent access
+
 **File:** `include/cuda/memory/kv_cache_allocator.h:349-378`
 
 `evict()` iterates `sequence_blocks_` while `find_oldest_sequence()` also reads it. While mutex is held, the operations are atomic individually, but if `evict()` releases and re-acquires the lock between iterations, sequence state could change.

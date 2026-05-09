@@ -42,6 +42,7 @@ Enable kernel fusion for chained operations and autotuning infrastructure.
 ### PERF-01: Fused matmul + bias + activation
 
 Enhance existing `kernel_fusion.h` with:
+
 - `FusedMatmulBiasAct` class supporting configurable activation
 - CUDA fusion API integration with cublasLt for modern GPUs
 - Manual fallback fusion for older CUDA versions
@@ -49,6 +50,7 @@ Enhance existing `kernel_fusion.h` with:
 ### PERF-03: Autotuning infrastructure
 
 Create new `include/cuda/performance/autotuner.h`:
+
 - `Autotuner` class with device-specific parameter discovery
 - Grid search over block sizes with warmup runs
 - Config persistence to `autotune_config.json`

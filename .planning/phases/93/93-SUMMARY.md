@@ -33,6 +33,7 @@
 ### NVTX Extensions
 
 Added performance NVTX domains:
+
 - `nova.performance` - General performance profiling
 - `nova.performance.nvblox` - NVBlox-specific metrics
 - `nova.performance.fusion` - Kernel fusion analysis

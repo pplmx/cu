@@ -42,7 +42,7 @@
 
 ## Documentation Structure
 
-```
+```text
 docs/tutorials/
 ├── 01-quick-start.md  - Getting started
 ├── 02-multi-gpu.md    - Multi-GPU programming
@@ -58,5 +58,6 @@ docs/tutorials/
 - ✅ Links to API reference
 
 ---
+
 *Phase completed: 2026-04-26*
 *Requirements: TUT-01 ✓, TUT-02 ✓, TUT-03 ✓, TUT-04 ✓*

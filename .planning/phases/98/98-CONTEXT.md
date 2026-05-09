@@ -12,6 +12,7 @@
 ### What is FP8?
 
 FP8 (8-bit floating point) is a floating-point format using only 8 bits:
+
 - **E4M3:** 4-bit exponent, 3-bit mantissa (11 values: 1 sign + 4 exp + 3 mantissa)
   - Range: ~240 distinct positive values
   - Used for: Weights, activations with limited dynamic range
@@ -20,6 +21,7 @@ FP8 (8-bit floating point) is a floating-point format using only 8 bits:
   - Used for: Gradients, high dynamic range data
 
 ### IEEE 754-like semantics
+
 - E4M3: Max normal = 240.0, Min normal = 2^-6 = 0.015625
 - E5M2: Max normal = 57344.0, Min normal = 2^-14 ≈ 6.1e-5
 - Special values: 0, Inf, NaN, subnormal
@@ -29,6 +31,7 @@ FP8 (8-bit floating point) is a floating-point format using only 8 bits:
 ## Existing Code
 
 ### quantize_tensor.hpp (existing)
+
 ```cpp
 struct alignas(2) float16 {
     uint16_t value;
@@ -46,6 +49,7 @@ class QuantizedTensor {
 ```
 
 ### quantize_ops.hpp (existing)
+
 ```cpp
 enum class Precision { FP32, FP16, INT8 };
 class QuantizedMatmul {
@@ -89,6 +93,7 @@ struct alignas(1) FP8E5M2 {
 ### 2. Conversion Logic
 
 E4M3 conversion:
+
 1. Extract sign bit
 2. Get absolute value
 3. If abs > 240.0, clamp to INF
@@ -159,7 +164,8 @@ public:
 
 ## Files to Create/Modify
 
-### New files:
+### New files
+
 - `include/cuda/quantize/fp8_types.hpp`
 - `src/cuda/quantize/fp8_types.cpp`
 - `include/cuda/quantize/fp8_kernels.cuh`
@@ -169,7 +175,8 @@ public:
 - `tests/quantize/fp8_types_test.cpp`
 - `tests/quantize/fp8_gemm_test.cpp`
 
-### Modifications:
+### Modifications
+
 - `CMakeLists.txt` — Add fp8 sources
 - `tests/CMakeLists.txt` — Add fp8 tests
 - `include/cuda/quantize/quantize.hpp` — Export FP8 types

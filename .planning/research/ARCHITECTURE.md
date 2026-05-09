@@ -6,7 +6,7 @@
 
 ## Existing Architecture (5-Layer)
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                              API Layer (scheduler.h)                        │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -52,7 +52,7 @@
 
 ### 1. Speculative Decoding
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                    Speculative Decoding Integration                        │
 ├────────────────────────────────────────────────────────────────────────────┤
@@ -101,7 +101,7 @@
 
 ### 2. Beam Search
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                       Beam Search Integration                              │
 ├────────────────────────────────────────────────────────────────────────────┤
@@ -148,7 +148,7 @@
 
 ### 3. KV Cache Improvements
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                      KV Cache Improvement Integration                      │
 ├────────────────────────────────────────────────────────────────────────────┤
@@ -215,7 +215,7 @@
 
 ### Speculative Decoding Flow
 
-```
+```text
 Scheduler::step()
     │
     ├─▶ SpeculativeDecodingRunner::speculate()
@@ -237,7 +237,7 @@ Scheduler::step()
 
 ### Beam Search Flow
 
-```
+```text
 Scheduler::get_batch()
     │
     └─▶ BeamSearchManager::get_next_beams()
@@ -257,7 +257,7 @@ Scheduler::get_batch()
 
 ### KV Cache Improvement Flow
 
-```
+```text
 KVCacheAllocator::append()
     │
     ├─▶ allocate_blocks_internal()
@@ -276,7 +276,7 @@ KVCacheAllocator::append()
 
 ## Build Order (Dependency-Aware)
 
-```
+```text
 Phase 1: KV Cache Foundation
 ├── NEW: memory/streaming_cache.h
 ├── NEW: memory/eviction_predictor.h  
