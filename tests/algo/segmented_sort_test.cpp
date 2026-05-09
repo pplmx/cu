@@ -10,7 +10,8 @@ namespace cuda::algo::segmented::test {
 class SegmentedSortTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        GTEST_SKIP() << "SegmentedSort kernel has implementation issues - skipping";
+        cudaSetDevice(0);
+        cudaDeviceSynchronize();
     }
     void TearDown() override {}
 };
