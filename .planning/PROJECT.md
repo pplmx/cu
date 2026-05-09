@@ -4,9 +4,16 @@
 
 A production-ready CUDA parallel algorithms library with a five-layer architecture, supporting education, extensibility, and production use cases. This project adds production-quality foundations and new algorithm capabilities.
 
-## Current Milestone: Planning Next Milestone
+## Current Milestone: v2.15 Test Quality Assurance
 
-**Status:** v2.14 complete — run `/gsd-new-milestone` to start planning
+**Goal:** Fix all 89 failing tests with real implementation fixes - no skipping tests or relaxing tolerances
+
+**Target features:**
+- CUDA Context fixes: Add cudaSetDevice initialization to 40+ test fixtures
+- Memory Allocation: Fix OOM tests with proper resource management
+- Algorithm Kernels: Fix FlashAttention, TopK, SegmentedSort implementations
+- Test Expectations: Correct wrong expected values in 15+ tests
+- Memory/Resource Leaks: Fix memory management issues
 
 ## Completed (v2.14 Documentation Quality)
 
@@ -435,5 +442,5 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-05-07 after v2.14 Documentation Quality shipped*
-*v2.15: Planning required*
+*Last updated: 2026-05-09 after v2.15 Test Quality Assurance started*
+*v2.15: In progress - fixing 89 failing tests*

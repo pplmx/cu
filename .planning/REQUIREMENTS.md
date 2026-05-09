@@ -1,116 +1,105 @@
 # Requirements: Nova CUDA Library Enhancement
 
-**Defined:** 2026-05-07
-**Core Value:** A reliable, high-performance CUDA compute library that can be trusted in production environments, with comprehensive algorithms for scientific computing, image processing, and emerging workloads.
+**Defined:** 2026-05-09
+**Core Value:** A reliable, high-performance CUDA compute library that can be trusted in production environments
 
 ## v1 Requirements
 
-Requirements for v2.14 Documentation Quality milestone. Each maps to roadmap phases.
+All requirements for v2.15 Test Quality Assurance - fixing failing tests.
 
-### API Documentation
+### CUDA Context Initialization
 
-- [ ] **APIDOC-01**: All public headers have Doxygen @brief descriptions
-- [ ] **APIDOC-02**: All public functions have @param and @return documentation
-- [ ] **APIDOC-03**: Complex types have @tparam documentation
-- [ ] **APIDOC-04**: Doxygen groups (@defgroup) organize headers by module
-- [ ] **APIDOC-05**: Deprecation notices use @deprecated with migration guidance
-- [ ] **APIDOC-06**: Examples in @code/@endcode blocks for key APIs
-- [ ] **APIDOC-07**: Cross-references (@see) link related functions
-- [ ] **APIDOC-08**: Performance notes (@note) for performance-critical APIs
+- [ ] **CTX-01**: All test fixtures must call cudaSetDevice(0) in SetUp() - 40+ fixtures need this fix
+- [ ] **CTX-02**: CUDA stream operations must have proper device context - fix stream tests
+- [ ] **CTX-03**: Multi-GPU tests must handle device context properly - fix distributed tests
 
-### Code Comments
+### Memory Allocation Fixes
 
-- [ ] **COMMENT-01**: All memory layer code (cuda/memory/) has inline comments
-- [ ] **COMMENT-02**: All device layer code (cuda/device/) has inline comments
-- [ ] **COMMENT-03**: All algorithm layer code (cuda/algo/) has inline comments
-- [ ] **COMMENT-04**: All API layer code (cuda/api/) has inline comments
-- [ ] **COMMENT-05**: All observability code (cuda/observability/) has inline comments
-- [ ] **COMMENT-06**: Complex algorithm logic has explanatory comments
-- [ ] **COMMENT-07**: Error handling paths are documented
-- [ ] **COMMENT-08**: Thread-safety guarantees are documented
+- [ ] **MEM-01**: BlockManager tests must allocate within GPU memory limits - reduce from 8192 to 256 blocks
+- [ ] **MEM-02**: DynamicBlockSizing tests must use smaller allocations - reduce from 512 to 64 blocks
+- [ ] **MEM-03**: BeamSearch tests must use reasonable memory allocation - reduce beam count or block size
+- [ ] **MEM-04**: ChunkedPrefill tests must handle memory limits gracefully
 
-### Error/Log Messages
+### Algorithm Kernel Fixes
 
-- [ ] **LOG-01**: All error messages include actionable guidance
-- [ ] **LOG-02**: Structured logging with severity levels (ERROR, WARN, INFO, DEBUG, TRACE)
-- [ ] **LOG-03**: Error messages include relevant context (device ID, stream, operation)
-- [ ] **LOG-04**: Log macros support compile-time disable
-- [ ] **LOG-05**: Performance-critical paths have DEBUG/TRACE options
-- [ ] **LOG-06**: Error categorization enables programmatic handling
-- [ ] **LOG-07**: NVTX annotations use descriptive range names
+- [ ] **ALGO-01**: FlashAttention causal masking must produce different results than non-causal
+- [ ] **ALGO-02**: TopK selection must return actual top K elements (not first K unsorted)
+- [ ] **ALGO-03**: SegmentedSort kernel must produce correct segment boundaries
+- [ ] **ALGO-04**: StreamingCache must properly manage eviction
 
-### README/docs
+### Test Expectation Corrections
 
-- [ ] **DOCS-01**: README.md reflects current v2.x capabilities
-- [ ] **DOCS-02**: CHANGELOG.md is updated for all v2.x milestones
-- [ ] **DOCS-03**: Architecture overview documents five-layer design
-- [ ] **DOCS-04**: Sparse matrix programming guide added (docs/SPARSE.md)
-- [ ] **DOCS-05**: Inference optimization guide added (docs/INFERENCE.md)
-- [ ] **DOCS-06**: Quantization guide added (docs/QUANTIZATION.md)
-- [ ] **DOCS-07**: Performance tuning guide updated with new tooling
-- [ ] **DOCS-08**: Contributing guide has documentation standards section
+- [ ] **TEST-01**: PositionalEncoding tests must use correct expected values
+- [ ] **TEST-02**: FusedMatmulBiasAct tests must use correct tolerances
+- [ ] **TEST-03**: PrefixSharing tests must correctly track reference counts
+- [ ] **TEST-04**: Fragmentation tests must calculate percentage correctly
+
+### Error Handling Fixes
+
+- [ ] **ERR-01**: TimeoutPropagation tests must properly test timeout behavior
+- [ ] **ERR-02**: RetryTest circuit breaker tests must use correct state transitions
+- [ ] **ERR-03**: HierarchicalAllReduce must handle null communicators properly
+- [ ] **ERR-04**: ErrorInjection tests must properly inject and detect errors
+
+### Memory Safety Fixes
+
+- [ ] **SAFE-01**: MemorySafetyTest must properly detect uninitialized memory
+- [ ] **SAFE-02**: AttentionSink must track sink blocks correctly
+- [ ] **SAFE-03**: MemoryNodeTest must handle allocation types properly
 
 ## v2 Requirements
 
-### API Documentation
+Deferred to future releases.
 
-- **APIDOC-09**: Generate and host API reference HTML (CI integration)
-- **APIDOC-10**: Add usage examples to Doxygen output
+### Integration Testing
 
-### Code Comments
-
-- **COMMENT-09**: Header-only inline documentation for templates
+- **INT-01**: E2E robustness tests must complete without memory leaks
+- **INT-02**: Timeline export tests must handle empty data properly
 
 ## Out of Scope
 
+Explicitly excluded. Documented to prevent scope creep.
+
 | Feature | Reason |
 |---------|--------|
-| Translation/localization | English documentation sufficient |
-| Video tutorials | Focus on written documentation |
-| Interactive documentation | Static Doxygen output for now |
-| API versioning documentation | Future consideration |
+| Rewriting entire FlashAttention kernel | Deep implementation work, may require architecture changes |
+| Multi-GPU NCCL tests without NCCL | Tests require multi-process environment |
+| Memory profiling infrastructure | Separate milestone |
 
 ## Traceability
 
+Which phases cover which requirements. Updated during roadmap creation.
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| APIDOC-01 | — | Pending |
-| APIDOC-02 | — | Pending |
-| APIDOC-03 | — | Pending |
-| APIDOC-04 | — | Pending |
-| APIDOC-05 | — | Pending |
-| APIDOC-06 | — | Pending |
-| APIDOC-07 | — | Pending |
-| APIDOC-08 | — | Pending |
-| COMMENT-01 | — | Pending |
-| COMMENT-02 | — | Pending |
-| COMMENT-03 | — | Pending |
-| COMMENT-04 | — | Pending |
-| COMMENT-05 | — | Pending |
-| COMMENT-06 | — | Pending |
-| COMMENT-07 | — | Pending |
-| COMMENT-08 | — | Pending |
-| LOG-01 | — | Pending |
-| LOG-02 | — | Pending |
-| LOG-03 | — | Pending |
-| LOG-04 | — | Pending |
-| LOG-05 | — | Pending |
-| LOG-06 | — | Pending |
-| LOG-07 | — | Pending |
-| DOCS-01 | — | Pending |
-| DOCS-02 | — | Pending |
-| DOCS-03 | — | Pending |
-| DOCS-04 | — | Pending |
-| DOCS-05 | — | Pending |
-| DOCS-06 | — | Pending |
-| DOCS-07 | — | Pending |
-| DOCS-08 | — | Pending |
+| CTX-01 | TBD | Pending |
+| CTX-02 | TBD | Pending |
+| CTX-03 | TBD | Pending |
+| MEM-01 | TBD | Pending |
+| MEM-02 | TBD | Pending |
+| MEM-03 | TBD | Pending |
+| MEM-04 | TBD | Pending |
+| ALGO-01 | TBD | Pending |
+| ALGO-02 | TBD | Pending |
+| ALGO-03 | TBD | Pending |
+| ALGO-04 | TBD | Pending |
+| TEST-01 | TBD | Pending |
+| TEST-02 | TBD | Pending |
+| TEST-03 | TBD | Pending |
+| TEST-04 | TBD | Pending |
+| ERR-01 | TBD | Pending |
+| ERR-02 | TBD | Pending |
+| ERR-03 | TBD | Pending |
+| ERR-04 | TBD | Pending |
+| SAFE-01 | TBD | Pending |
+| SAFE-02 | TBD | Pending |
+| SAFE-03 | TBD | Pending |
 
 **Coverage:**
-- v1 requirements: 31 total
+- v1 requirements: 21 total
 - Mapped to phases: 0
-- Unmapped: 31 ⚠️
+- Unmapped: 21 ⚠️
 
 ---
-*Requirements defined: 2026-05-07*
-*Last updated: 2026-05-07 after initial definition*
+*Requirements defined: 2026-05-09*
+*Last updated: 2026-05-09 after initial definition*
