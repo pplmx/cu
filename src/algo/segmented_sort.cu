@@ -3,6 +3,7 @@
 #include <cuda_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
+#include <thrust/gather.h>
 #include <thrust/functional.h>
 
 namespace cuda::algo::segmented {
@@ -31,29 +32,40 @@ namespace {
 template <typename T>
 void sort_by_key(const T* keys, const int* segment_ids, T* out_keys, int* out_segments,
                  size_t count, size_t num_segments, cudaStream_t stream) {
-    T* d_keys;
-    int* d_segment_ids;
-    cudaMalloc(&d_keys, count * sizeof(T));
-    cudaMalloc(&d_segment_ids, count * sizeof(int));
-    cudaMemcpy(d_keys, keys, count * sizeof(T), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_segment_ids, segment_ids, count * sizeof(int), cudaMemcpyHostToDevice);
+    T* d_keys_sorted;
+    T* d_keys_original;
+    int* d_segments_original;
+    int* d_indices;
+    cudaMalloc(&d_keys_sorted, count * sizeof(T));
+    cudaMalloc(&d_keys_original, count * sizeof(T));
+    cudaMalloc(&d_segments_original, count * sizeof(int));
+    cudaMalloc(&d_indices, count * sizeof(int));
+    cudaMemcpy(d_keys_original, keys, count * sizeof(T), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_segments_original, segment_ids, count * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_keys_sorted, keys, count * sizeof(T), cudaMemcpyHostToDevice);
 
-    thrust::device_ptr<T> d_keys_ptr(d_keys);
-    thrust::device_ptr<int> d_segments_ptr(d_segment_ids);
-    thrust::device_ptr<T> d_out_keys(out_keys);
-    thrust::device_ptr<int> d_out_segments(out_segments);
+    thrust::device_ptr<int> d_indices_ptr(d_indices);
+    thrust::sequence(d_indices_ptr, d_indices_ptr + count);
 
-    auto keys_begin = thrust::make_zip_iterator(thrust::make_tuple(d_keys_ptr, d_segments_ptr));
-    auto keys_end = keys_begin + count;
+    thrust::device_ptr<T> d_keys_sorted_ptr(d_keys_sorted);
 
     if (g_config.stable) {
-        thrust::stable_sort_by_key(keys_begin, keys_end, d_out_keys);
+        thrust::stable_sort_by_key(d_keys_sorted_ptr, d_keys_sorted_ptr + count, d_indices_ptr);
     } else {
-        thrust::sort_by_key(keys_begin, keys_end, d_out_keys);
+        thrust::sort_by_key(d_keys_sorted_ptr, d_keys_sorted_ptr + count, d_indices_ptr);
     }
 
-    cudaFree(d_keys);
-    cudaFree(d_segment_ids);
+    thrust::device_ptr<T> d_out_keys_ptr(out_keys);
+    thrust::device_ptr<int> d_out_segments_ptr(out_segments);
+    thrust::gather(d_indices_ptr, d_indices_ptr + count,
+                   thrust::device_ptr<const T>(d_keys_original), d_out_keys_ptr);
+    thrust::gather(d_indices_ptr, d_indices_ptr + count,
+                   thrust::device_ptr<const int>(d_segments_original), d_out_segments_ptr);
+
+    cudaFree(d_keys_sorted);
+    cudaFree(d_keys_original);
+    cudaFree(d_segments_original);
+    cudaFree(d_indices);
 }
 
 template <typename T>
